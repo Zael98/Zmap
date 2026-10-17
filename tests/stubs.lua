@@ -366,6 +366,11 @@ C_TooltipInfo = {
         STATE.asked = (STATE.asked or 0) + 1
         local id = tonumber(link:match("^unit:Creature%-0%-0%-0%-0%-(%d+)"))
         local name = id and STATE.cached and STATE.cached[id]
+        -- (what the client does not have comes back empty; the server's answer is there next time)
+        if not name and id and STATE.server and STATE.server[id] then
+            STATE.cached = STATE.cached or {}
+            STATE.cached[id] = STATE.server[id]
+        end
         return { lines = name and { { leftText = name } } or {} }
     end,
 }

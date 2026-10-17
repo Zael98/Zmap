@@ -6,12 +6,15 @@ local L = ns.L
 local LAYERS = {
     { "labels", "OPT_LABELS" }, { "levels", "OPT_LEVELS" }, { "flights", "OPT_FLIGHTS" }, { "dungeons", "OPT_DUNGEONS" },
     { "transports", "OPT_TRANSPORTS" }, { "quests", "OPT_QUESTS" }, { "group", "OPT_GROUP" }, { "guild", "OPT_GUILD" },
-    { "pins", "OPT_PINS" }, { "herbs", "OPT_HERBS" }, { "ore", "OPT_ORE" }, { "townsfolk", "OPT_TOWNSFOLK" },
+    { "pins", "OPT_PINS" }, { "herbs", "OPT_HERBS", "herb" }, { "ore", "OPT_ORE", "ore" }, { "townsfolk", "OPT_TOWNSFOLK" },
     { "rares", "OPT_RARES" }, { "minimap", "OPT_MINIMAP" }, { "available", "OPT_AVAILABLE" },
-    { "trivial", "OPT_TRIVIAL" }, { "objectives", "OPT_OBJECTIVES" }, { "nodesAll", "OPT_NODES_ALL" },
+    { "trivial", "OPT_TRIVIAL" }, { "objectives", "OPT_OBJECTIVES" },
     { "minimapPins", "OPT_MINIMAP_PINS" }, { "harmonize", "OPT_HARMONIZE" },
 }
 local UNEXPLORED = { "show", "dim", "hide" }
+
+-- herbs and ore are only offered to whom has Herbalism or Mining
+local function Offered(layer) return not layer[3] or ns.GatherSkill(layer[3]) ~= nil end
 
 function ns.LayersMenu(owner)
     if not MenuUtil then return end
@@ -19,7 +22,9 @@ function ns.LayersMenu(owner)
         root:CreateTitle(L.LAYERS)
         for _, layer in ipairs(LAYERS) do
             local key = layer[1]
-            root:CreateCheckbox(L[layer[2]], function() return ns.Opt(key) end, function() ns.SetOpt(key, not ns.Opt(key)) end)
+            if Offered(layer) then
+                root:CreateCheckbox(L[layer[2]], function() return ns.Opt(key) end, function() ns.SetOpt(key, not ns.Opt(key)) end)
+            end
         end
         local sub = root:CreateButton(L.OPT_UNEXPLORED)
         for _, mode in ipairs(UNEXPLORED) do
@@ -136,17 +141,29 @@ local function Build()
 
     y = -260
     Header(panel, L.OPT_SECTION_LAYERS, 16, y)
-    for i, layer in ipairs(LAYERS) do
-        local col, row = (i - 1) % 3, math.floor((i - 1) / 3)
-        Check(panel, layer[1], L[layer[2]], 16 + col * 200, y - 20 - row * 26)
+    -- (laid out each time the panel opens: herbs and ore come and go with the professions)
+    local layerChecks = {}
+    for i, layer in ipairs(LAYERS) do layerChecks[i] = Check(panel, layer[1], L[layer[2]], 0, 0) end
+    refreshers[#refreshers + 1] = function()
+        local n = 0
+        for i, layer in ipairs(LAYERS) do
+            local cb = layerChecks[i]
+            cb:SetShown(Offered(layer))
+            if Offered(layer) then
+                local col, row = n % 3, math.floor(n / 3)
+                cb:ClearAllPoints()
+                cb:SetPoint("TOPLEFT", 16 + col * 200, -260 - 20 - row * 26)
+                n = n + 1
+            end
+        end
     end
 
-    y = -410
+    y = -460 - 26
     Header(panel, L.OPT_SECTION_SHARE, 16, y)
     Check(panel, "shareGuild", L.OPT_SHARE_GUILD, 16, y - 20, L.OPT_SHARE_GUILD_TIP)
     Check(panel, "shareFinds", L.OPT_SHARE_FINDS, 16, y - 46, L.OPT_SHARE_FINDS_TIP)
 
-    y = -500
+    y = -576
     Header(panel, L.OPT_SECTION_NAV, 16, y)
     Check(panel, "arrow", L.OPT_ARROW, 16, y - 20, L.OPT_ARROW_TIP)
     Check(panel, "corpseArrow", L.OPT_CORPSE, 16, y - 46)

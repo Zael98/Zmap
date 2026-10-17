@@ -71,21 +71,29 @@ local function DataHerbs()
     end
     return n, grey, ore
 end
+-- and the layers menu offers herbs only with Herbalism, ore only with Mining
+local function Offered()
+    STATE.menus = {}
+    ZmapFrame.layersButton:Click()
+    local text = MENU_TEXTS()
+    return ("herbs %s, ore %s"):format(tostring(text:find(ZNS.L.OPT_HERBS, 1, true) ~= nil), tostring(text:find(ZNS.L.OPT_ORE, 1, true) ~= nil))
+end
 ZNS.Map.SetView(gu * W, gv * H, 9)
 STATE.skills = {}
 EVENT("SKILL_LINES_CHANGED")
 FRAMES(3)
-OUT(("no profession: herbs %d"):format((DataHerbs())))
+local n0, _, ore0 = DataHerbs()
+OUT(("no profession: herbs %d, ore %d, offered %s"):format(n0, ore0, Offered()))
 STATE.skills = { herb = 50 }
 EVENT("SKILL_LINES_CHANGED")
 FRAMES(3)
 local n, grey, ore = DataHerbs()
-OUT(("herbalism 50: herbs %d, above skill greyed %s, ore %d"):format(n, tostring(grey > 0), ore))
-ZNS.SetOpt("nodesAll", true)
+OUT(("herbalism 50: herbs %d, above skill greyed %s, ore %d, offered %s"):format(n, tostring(grey > 0), ore, Offered()))
+STATE.skills = { herb = 50, ore = 1 }
+EVENT("SKILL_LINES_CHANGED")
 FRAMES(3)
-local _, _, oreAll = DataHerbs()
-OUT(("all nodes: ore %s"):format(tostring(oreAll > 0)))
-ZNS.SetOpt("nodesAll", false)
+local _, _, oreNow = DataHerbs()
+OUT(("with mining: ore %s"):format(tostring(oreNow > 0)))
 
 -- mailboxes and anvils of Goldshire
 ZNS.Map.SetView(gu * W, gv * H, 12)

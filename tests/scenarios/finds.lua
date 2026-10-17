@@ -1,6 +1,7 @@
 -- What you find: herbs and ore you gather, townsfolk you talk to; what is sent to the guild and received.
 START()
 STATE.player.wx, STATE.player.wy = -9460, 62
+STATE.skills = { herb = 75, ore = 75 }   -- (herbs and ore only show with the profession)
 local function Nodes() local n = 0 for _, list in pairs(ZNS.db.nodes) do n = n + #list end return n end
 local function LastSent() return STATE.sent[#STATE.sent] and STATE.sent[#STATE.sent].msg or "" end
 

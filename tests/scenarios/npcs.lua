@@ -48,6 +48,10 @@ table.sort(ids)
 STATE.cached = { [ids[3]] = "Nombre de prueba" }
 ADVANCE(40)
 OUT(("asked in background: %s, learned: %s"):format(tostring((STATE.asked or 0) > 0), ZNS.Npcs.Name(ids[3])))
+local ahead = ids[ZNS.db.npcAskAt + 20]   -- (a little ahead of where the background asking is)
+STATE.server = { [ahead] = "Respuesta del servidor" }
+ADVANCE(15)
+OUT("not cached, asked again: " .. ZNS.Npcs.Name(ahead))
 -- an NPC the data lacks: targeted close by, remembered, sent to the guild, found by the search
 STATE.units.target = { id = 999001, name = "Vigía Torvo", sub = "Explorador", near = true }
 EVENT("PLAYER_TARGET_CHANGED")

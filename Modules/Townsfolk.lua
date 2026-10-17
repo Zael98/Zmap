@@ -36,7 +36,7 @@ local function Utilities()
     return utilities
 end
 local BINDER_ICON = 132052   -- the innkeeper's "make this inn your home" gossip option
-local MAX_PINS = 300
+local MAX_PINS = 600
 
 local P = ns.Pins.New("townsfolk", { level = 25, size = 16, option = "townsfolk", minZoom = 6, cull = true })
 
@@ -131,31 +131,29 @@ end)
 function P:Refresh()
     self:ReleaseAll()
     local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
-    local count = 0
-    local function Pin(kind, m, x, y)
+    -- what is in view: { kind, m, x, y, u, v, and npc, object or folk + key }; people before mailboxes and anvils
+    local people, things = {}, {}
+    local function Add(list, kind, m, x, y, e)
         local u, v = Geo.ToWorld(m, x, y)
-        if not u or u < u0 or u > u1 or v < v0 or v > v1 or count >= MAX_PINS or not ICONS[kind] then return end
-        count = count + 1
-        local pin = self:Acquire()
-        if ATLASES[kind] then pin.icon:SetAtlas(ATLASES[kind]) else pin.icon:SetTexture(ICONS[kind]) end
-        pin.m, pin.x, pin.y, pin.npc, pin.folk, pin.key, pin.object = m, x, y, nil, nil, nil, nil
-        self:Place(pin, u, v)
-        return pin
+        if not u or u < u0 or u > u1 or v < v0 or v > v1 or not ICONS[kind] then return end
+        e.kind, e.m, e.x, e.y, e.u, e.v = kind, m, x, y, u, v
+        list[#list + 1] = e
     end
-    for _, f in ipairs(ns.Npcs.Townsfolk()) do
-        local pin = Pin(f.kind, f.m, f.x, f.y)
-        if pin then pin.npc = f.id end
-    end
-    for _, o in ipairs(Utilities()) do
-        local pin = Pin(o.kind, o.m, o.x, o.y)
-        if pin then pin.object = o.kind end
-    end
+    for _, f in ipairs(ns.Npcs.Townsfolk()) do Add(people, f.kind, f.m, f.x, f.y, { npc = f.id }) end
     for key, f in pairs(ns.db.folk) do
         local npc = tonumber(key:match(":(%d+)$"))
         if not (npc and ns.NPCS and ns.NPCS[npc]) then   -- (the data shows it already)
-            local pin = Pin(f.kind, f.m, f.x, f.y)
-            if pin then pin.folk, pin.key = f, key end
+            Add(people, f.kind, f.m, f.x, f.y, { folk = f, key = key })
         end
+    end
+    for _, o in ipairs(Utilities()) do Add(things, o.kind, o.m, o.x, o.y, { object = o.kind }) end
+    local shown = ns.Pins.Spread(people, MAX_PINS)
+    for _, e in ipairs(ns.Pins.Spread(things, MAX_PINS - #shown)) do shown[#shown + 1] = e end
+    for _, e in ipairs(shown) do
+        local pin = self:Acquire()
+        if ATLASES[e.kind] then pin.icon:SetAtlas(ATLASES[e.kind]) else pin.icon:SetTexture(ICONS[e.kind]) end
+        pin.m, pin.x, pin.y, pin.npc, pin.folk, pin.key, pin.object = e.m, e.x, e.y, e.npc, e.folk, e.key, e.object
+        self:Place(pin, e.u, e.v)
     end
 end
 

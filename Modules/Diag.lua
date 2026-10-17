@@ -96,7 +96,9 @@ local function Report()
         local learned, total = 0, 0
         for _ in pairs(ns.NPCS or {}) do total = total + 1 end
         for _ in pairs(ns.db.npcNames and ns.db.npcNames[GetLocale()] or {}) do learned = learned + 1 end
-        return ("%d of %d (pass %s, at %s)"):format(learned, total, tostring(ns.db.npcAskPass), tostring(ns.db.npcAskAt))
+        local asked, answered, waiting, pass = ns.Npcs.AskStats()
+        return ("%d of %d (pass %s, at %s; this session asked %d, answered %d, waiting %d)"):format(learned, total,
+            tostring(pass), tostring(ns.db.npcAskAt), asked, answered, waiting)
     end)
     Line("npc link (Spirit Healer)", function()
         local data = C_TooltipInfo.GetHyperlink("unit:Creature-0-0-0-0-6491-0000000000")

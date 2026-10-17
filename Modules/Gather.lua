@@ -126,6 +126,13 @@ local function Skill(kind)
 end
 ns.GatherSkill = Skill
 
+-- herbs only with Herbalism and ore only with Mining, and their layer on
+local function Wanted(kind)
+    local option = OPTION[kind]
+    if not option then return ns.Opt("herbs") end
+    return ns.Opt(option) and Skill(kind) ~= nil
+end
+
 -- the item a node gives, by its name in your language when the game has it
 local function ItemName(item, fallback)
     local name = item and item > 0 and C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(item)
@@ -146,22 +153,18 @@ function P:Refresh()
     local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
     local count = 0
     if ns.Map.Zoom() >= DATA_MIN_ZOOM then
-        local all = ns.Opt("nodesAll")
         local found = {}
         for mapID, list in pairs(DataNodes()) do
             local l, r, t, b = Geo.Rect(mapID)
             if l and l < u1 and r > u0 and t < v1 and b > v0 then
                 for _, n in ipairs(list) do
-                    if ns.Opt(OPTION[n.kind]) and (all or Skill(n.kind)) and n.u > u0 and n.u < u1 and n.v > v0 and n.v < v1 then
+                    if Wanted(n.kind) and n.u > u0 and n.u < u1 and n.v > v0 and n.v < v1 then
                         found[#found + 1] = n
                     end
                 end
             end
         end
-        -- more than fit: every k-th, so they thin out evenly rather than end at some zone
-        local step = math.max(1, #found / MAX_PINS)
-        for i = 1, #found, step do
-            local n = found[math.floor(i)]
+        for _, n in ipairs(ns.Pins.Spread(found, MAX_PINS)) do
             count = count + 1
             local mine = Skill(n.kind)
             local pin = self:Acquire()
@@ -177,7 +180,7 @@ function P:Refresh()
         local l, r, t, b = Geo.Rect(mapID)
         if l and l < u1 and r > u0 and t < v1 and b > v0 then
             for i, n in ipairs(list) do
-                if ns.Opt(OPTION[n.kind] or "herbs") then
+                if Wanted(n.kind) then
                     local u, v = Geo.ToWorld(mapID, n.x, n.y)
                     if u > u0 and u < u1 and v > v0 and v < v1 and count < MAX_PINS then
                         count = count + 1
@@ -231,14 +234,12 @@ end
 -- the data's herbs and ore of a zone that you can gather now (for the minimap): { { u, v, icon }, ... }
 local near, nearKey = {}, nil
 function ns.GatherNear(mapID)
-    local key = ("%s:%s:%s:%s:%s:%s"):format(mapID, tostring(Skill("herb")), tostring(Skill("ore")),
-        tostring(ns.Opt("herbs")), tostring(ns.Opt("ore")), tostring(ns.Opt("nodesAll")))
+    local key = ("%s:%s:%s:%s:%s"):format(mapID, tostring(Skill("herb")), tostring(Skill("ore")),
+        tostring(ns.Opt("herbs")), tostring(ns.Opt("ore")))
     if key == nearKey then return near end
     nearKey, near = key, {}
-    local all = ns.Opt("nodesAll")
     for _, n in ipairs(DataNodes()[mapID] or {}) do
-        local mine = Skill(n.kind)
-        if ns.Opt(OPTION[n.kind]) and (all or (mine and mine >= n.skill)) then
+        if Wanted(n.kind) and Skill(n.kind) >= n.skill then
             near[#near + 1] = { u = n.u, v = n.v, icon = ItemIcon(n.item, n.kind) }
         end
     end
@@ -278,7 +279,7 @@ function ns.GatherList()
 end
 
 ns.On("ZMAP_OPTION", function(key)
-    if key == "herbs" or key == "ore" or key == "nodesAll" then P:Update() end
+    if key == "herbs" or key == "ore" then P:Update() end
 end)
 ns.On("SKILL_LINES_CHANGED", function() skillsAt = 0; P:Update() end)
 

@@ -164,6 +164,15 @@ function Pins.UpdateAll()
     for _, p in ipairs(providers) do p:Update() end
 end
 
+-- at most `max` of a list, every k-th: when more than fit are in view they thin out evenly, rather than some
+-- part of the view keeping them all and the rest none
+function Pins.Spread(list, max)
+    if #list <= max then return list end
+    local out, step = {}, #list / max
+    for i = 1, max do out[i] = list[math.floor((i - 1) * step) + 1] end
+    return out
+end
+
 -- the part of the map in view (with a margin), for providers that only place what can be seen: u, v box
 function Pins.ViewBox(margin)
     local left, top, right, bottom = ns.Map.ViewRect()

@@ -98,7 +98,7 @@ local EN = {
     QUEST = "Quest", QUESTS_HERE = "Quests to pick up", TURN_IN = "Turn in: %s", CLICK_NAVIGATE = "Click: go there",
     OPT_AVAILABLE = "Quests to pick up", OPT_TRIVIAL = "Low-level quests", OPT_OBJECTIVES = "Quest objectives",
     -- herbs and ore from the data
-    NEEDS_SKILL = "Needs %d %s", HERBALISM = "Herbalism", MINING = "Mining", OPT_NODES_ALL = "All herbs and ore",
+    NEEDS_SKILL = "Needs %d %s", HERBALISM = "Herbalism", MINING = "Mining",
     FOLK_anvil = "Anvil", FOLK_forge = "Forge", FOLK_stone = "Meeting stone",
     -- guildmates without Zmap, the minimap, colours, dungeon maps, /zmap diag
     ONLY_ZONE = "Without Zmap: only their zone is known (%s)", OPT_MINIMAP_PINS = "Pins on the minimap",
@@ -199,7 +199,7 @@ local ES = {
     FOUND_HINT = "Clic: ir hasta allí · Clic derecho: quitar las marcas",
     QUEST = "Misión", QUESTS_HERE = "Misiones para coger", TURN_IN = "Entregar: %s", CLICK_NAVIGATE = "Clic: ir hasta allí",
     OPT_AVAILABLE = "Misiones para coger", OPT_TRIVIAL = "Misiones de nivel bajo", OPT_OBJECTIVES = "Objetivos de misión",
-    NEEDS_SKILL = "Requiere %d de %s", HERBALISM = "Herboristería", MINING = "Minería", OPT_NODES_ALL = "Todas las hierbas y minerales",
+    NEEDS_SKILL = "Requiere %d de %s", HERBALISM = "Herboristería", MINING = "Minería",
     FOLK_anvil = "Yunque", FOLK_forge = "Forja", FOLK_stone = "Piedra de encuentro",
     ONLY_ZONE = "Sin Zmap: solo se sabe su zona (%s)", OPT_MINIMAP_PINS = "Marcas en el minimapa",
     OPT_HARMONIZE = "Igualar los colores de las zonas", BACK_TO_WORLD = "Volver al mundo",

@@ -146,15 +146,38 @@ end)
 -- for the search: the NPCs seen in game that the data lacks
 function N.SeenList() return ns.db.seen or {} end
 
--- In the background, a few a second: the game answers with names from its cache, or asks the server and
--- has them for the next pass. Two passes over everything, then only what is still missing next session.
+-- In the background, a few a second: the game answers with names from its cache, or asks the server. What
+-- the client does not have yet comes back empty the first time, so it is asked again a few seconds later,
+-- once the server has answered. Two passes over everything, then only what is still missing next session.
 local queue, at, pass
+local retry = {}                                -- { { id, when first asked }, ... }
+local stats = { asked = 0, answered = 0 }       -- this session's, for /zmap diag
+function N.AskStats() return stats.asked, stats.answered, #retry, pass end
+
+local function Query(id)
+    stats.asked = stats.asked + 1
+    local ok, data = pcall(C_TooltipInfo.GetHyperlink, ("unit:Creature-0-0-0-0-%d-0000000000"):format(id))
+    local line = ok and data and data.lines and data.lines[1]
+    local name = line and line.leftText
+    if name and name ~= "" and not IsSecret(name) and not name:find("^%?") then
+        stats.answered = stats.answered + 1
+        Learn(id, name, TitleOf(data))
+        return true
+    end
+end
+
 local function Ask()
     if InCombatLockdown() or not (C_TooltipInfo and C_TooltipInfo.GetHyperlink) then return end
     local names = Book("npcNames")
-    local asked = 0
+    local asked, now = 0, GetTime()
+    while retry[1] and now - retry[1][2] >= 3 and asked < 10 do
+        local id = table.remove(retry, 1)[1]
+        asked = asked + 1
+        if not names[id] then Query(id) end
+    end
     while asked < 10 do
         if at > #queue then
+            if retry[1] then return end   -- (the last answers first)
             pass = pass + 1
             ns.db.npcAskPass = pass
             if pass > 2 then return true end   -- done for this session
@@ -165,12 +188,7 @@ local function Ask()
         ns.db.npcAskAt = at
         if not names[id] then
             asked = asked + 1
-            local ok, data = pcall(C_TooltipInfo.GetHyperlink, ("unit:Creature-0-0-0-0-%d-0000000000"):format(id))
-            local line = ok and data and data.lines and data.lines[1]
-            local name = line and line.leftText
-            if name and name ~= "" and not IsSecret(name) and not name:find("^%?") then
-                Learn(id, name, TitleOf(data))
-            end
+            if not Query(id) then retry[#retry + 1] = { id, now } end
         end
     end
 end
