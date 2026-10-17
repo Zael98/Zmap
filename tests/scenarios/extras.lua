@@ -239,3 +239,28 @@ local alone = ZNS.Opt("townsfolk") and ZNS.FolkTypeShown("proftrainer") and not 
 allRow.scripts.OnClick(allRow)
 FRAMES(3)
 OUT(("layer off then one: alone %s; all again: %s"):format(tostring(alone), tostring(ZNS.AllFolkTypesShown())))
+
+-- only my class and professions: a warrior sees warrior trainers only, and every profession's while they
+-- have fewer than two
+ZNS.SetAllFolkTypes(true)
+STATE.skills = {}
+EVENT("SKILL_LINES_CHANGED")
+local function Classes()
+    local seen, n = {}, 0
+    for _, pin in ipairs(PINS("townsfolk")) do
+        local look = pin.npc and ZNS.FolkLook(pin.npc)
+        if look and look.class and not seen[look.class] then seen[look.class] = true; n = n + 1 end
+    end
+    return seen, n
+end
+ZNS.Map.SetView(gu * W, gv * H, 9)
+FRAMES(3)
+local seenMine, nMine = Classes()
+local profs = CountCat("proftrainer")
+ZNS.SetOpt("folkMine", false)
+FRAMES(3)
+local _, nAll = Classes()
+ZNS.SetOpt("folkMine", true)
+FRAMES(3)
+OUT(("only mine: classes %d (warrior %s), all %d; profession trainers shown without professions %s"):format(nMine,
+    tostring(seenMine.WARRIOR == true), nAll, tostring(profs > 0)))

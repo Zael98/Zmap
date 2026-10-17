@@ -27,20 +27,20 @@ local I = "Interface\\Icons\\"
 -- Each also says which type it is (cat: what the layers panel turns on and off; "profession" is a profession
 -- trainer, or as a vendor its supplies).
 local SPECIALTIES = {
-    { I .. "Spell_Holy_SealOfSacrifice", "first aid", "auxilios", cat = "profession" },
-    { I .. "Trade_Alchemy", "alchem", "alquim", cat = "profession" },
-    { I .. "Trade_BlackSmithing", "blacksmith", "herrer", cat = "profession" },
-    { I .. "Trade_Engraving", "enchant", "encant", cat = "profession" },
-    { I .. "Trade_Engineering", "engineer", "ingenier", cat = "profession" },
-    { I .. "Trade_Herbalism", "herbalis", "herbor", cat = "profession" },
-    { I .. "Trade_LeatherWorking", "leatherwork", "peleter", cat = "profession" },
-    { I .. "Trade_Mining", "mining", "miner", cat = "profession" },
-    { I .. "INV_Misc_Pelt_Wolf_01", "skinn", "desoll", cat = "profession" },
-    { I .. "Trade_Tailoring", "tailor", "sastr", cat = "profession" },
-    { I .. "Trade_Fishing", "fish", "pesca", cat = "profession" },
-    { I .. "INV_Misc_Food_15", "cook", "chef", "cocin", cat = "profession" },
-    { I .. "Ability_Hunter_BeastTaming", "pet trainer", "mascota", cat = "trainer" },
-    { I .. "Spell_Arcane_PortalIronForge", "portal", cat = "trainer" },
+    { I .. "Spell_Holy_SealOfSacrifice", "first aid", "auxilios", cat = "profession", skill = 129 },
+    { I .. "Trade_Alchemy", "alchem", "alquim", cat = "profession", skill = 171 },
+    { I .. "Trade_BlackSmithing", "blacksmith", "herrer", cat = "profession", skill = 164 },
+    { I .. "Trade_Engraving", "enchant", "encant", cat = "profession", skill = 333 },
+    { I .. "Trade_Engineering", "engineer", "ingenier", cat = "profession", skill = 202 },
+    { I .. "Trade_Herbalism", "herbalis", "herbor", cat = "profession", skill = 182 },
+    { I .. "Trade_LeatherWorking", "leatherwork", "peleter", cat = "profession", skill = 165 },
+    { I .. "Trade_Mining", "mining", "miner", cat = "profession", skill = 186 },
+    { I .. "INV_Misc_Pelt_Wolf_01", "skinn", "desoll", cat = "profession", skill = 393 },
+    { I .. "Trade_Tailoring", "tailor", "sastr", cat = "profession", skill = 197 },
+    { I .. "Trade_Fishing", "fish", "pesca", cat = "profession", skill = 356 },
+    { I .. "INV_Misc_Food_15", "cook", "chef", "cocin", cat = "profession", skill = 185 },
+    { I .. "Ability_Hunter_BeastTaming", "pet trainer", "mascota", cat = "trainer", class = "HUNTER" },
+    { I .. "Spell_Arcane_PortalIronForge", "portal", cat = "trainer", class = "MAGE" },
     { I .. "Trade_BrewPoison", "poison", "veneno", cat = "reagents" },
     { I .. "INV_Misc_Dust_02", "reagent", "componente", "reactivo", cat = "reagents" },
     { I .. "INV_Weapon_Bow_05", "bowyer", "arquer", "arco", cat = "weapons" },
@@ -102,7 +102,8 @@ local function Look(kind, title)
             for class, words in pairs(CLASS_WORDS) do
                 for _, w in ipairs(words) do
                     if t:find(w, 1, true) then
-                        look = { CLASS_TEXTURE, (CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class]) or CLASS_COORDS[class], cat = "trainer" }
+                        look = { CLASS_TEXTURE, (CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class]) or CLASS_COORDS[class], cat = "trainer",
+                            class = class }
                     end
                 end
             end
@@ -117,7 +118,7 @@ local function Look(kind, title)
                     elseif cat == "profession" or cat == "trainer" then
                         cat = "supplies"
                     end
-                    look = { s[1], CROPPED, cat = cat }
+                    look = { s[1], CROPPED, cat = cat, skill = s.skill, class = TRAINS[kind] and s.class or nil }
                     break
                 end
             end
@@ -132,6 +133,39 @@ local function Look(kind, title)
     end
     looks[key] = look
     return look
+end
+
+-- "only mine": trainers of your class and of your professions. The secondary ones (cooking, first aid,
+-- fishing) are anyone's; and while you have fewer than two primary professions, every primary one's trainer
+-- shows, to find where to learn them.
+local SECONDARY = { [185] = true, [129] = true, [356] = true }
+local mine, mineAt = {}, -1
+local function MyProfessions()
+    if GetTime() - mineAt > 5 then
+        mineAt = GetTime()
+        wipe(mine)
+        local primary = 0
+        if GetProfessions and GetProfessionInfo then
+            for i, index in ipairs({ GetProfessions() }) do
+                local _, _, _, _, _, _, line = GetProfessionInfo(index)
+                if line then
+                    mine[line] = true
+                    if not SECONDARY[line] then primary = primary + 1 end
+                end
+            end
+        end
+        mine.room = primary < 2
+    end
+    return mine
+end
+local function NotMine(look)
+    if not ns.Opt("folkMine") then return false end
+    if look.class then return look.class ~= select(2, UnitClass("player")) end
+    if look.cat == "proftrainer" and look.skill and not SECONDARY[look.skill] then
+        local have = MyProfessions()
+        return not have[look.skill] and not have.room
+    end
+    return false
 end
 
 -- the types the player turned off in the layers panel (saved): [cat] = true
@@ -287,7 +321,7 @@ function P:Refresh()
         local u, v = Geo.ToWorld(m, x, y)
         if not u or u < u0 or u > u1 or v < v0 or v > v1 or not ICONS[kind] then return end
         local look = Look(kind, title)
-        if hidden[look.cat] then return end
+        if hidden[look.cat] or NotMine(look) then return end
         e.kind, e.m, e.x, e.y, e.u, e.v, e.look = kind, m, x, y, u, v, look
         list[#list + 1] = e
     end
@@ -338,7 +372,8 @@ function P:OnClick(pin, button)
     end
 end
 
-ns.On("ZMAP_OPTION", function(key) if key == "folkTypes" then P:Update() end end)
+ns.On("ZMAP_OPTION", function(key) if key == "folkTypes" or key == "folkMine" then P:Update() end end)
+ns.On("SKILL_LINES_CHANGED", function() mineAt = -1; P:Update() end)
 
 -- for the search
 function ns.FolkList() return ns.db.folk end

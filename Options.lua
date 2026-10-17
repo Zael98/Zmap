@@ -37,6 +37,7 @@ local function Offered(layer) return not layer.needs or ns.GatherSkill(layer.nee
 --------------------------------------------------------------------------------------------------------------
 
 local WIDTH, ROW, HEAD, INDENT = 196, 20, 18, 16
+local CLASS_ICON = "Interface\\Minimap\\Tracking\\Class"
 local side
 
 local function Row(parent)
@@ -64,6 +65,8 @@ end
 local function Paint(b)
     if b.layer then
         Look(b, ns.Opt(b.layer[1]), b.layer.color)
+    elseif b.option then
+        Look(b, ns.Opt(b.option))
     elseif b.isAll then   -- (the townsfolk's "all" row: every type at once)
         Look(b, ns.Opt("townsfolk") and ns.AllFolkTypesShown())
     elseif b.cat then
@@ -205,6 +208,15 @@ local function CreateSide(frame)
         Layout()
     end)
     side.subs[1] = all
+    local only = Row(list)
+    only.option = "folkMine"
+    only.icon:SetTexture(CLASS_ICON)
+    only.text:SetText(L.FOLK_MINE)
+    only:SetScript("OnClick", function()
+        ns.SetOpt("folkMine", not ns.Opt("folkMine"))
+        Layout()
+    end)
+    side.subs[2] = only
     for _, t in ipairs(ns.FolkTypes()) do
         local b = Row(list)
         b.cat = t[1]
