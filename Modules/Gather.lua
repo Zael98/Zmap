@@ -91,22 +91,47 @@ end)
 --------------------------------------------------------------------------------------------------------------
 
 local PROFESSION = { herb = 182, ore = 186 }   -- skill lines: Herbalism, Mining
-local byZone   -- [uiMapID] = { { u, v, x, y, object, kind, skill, item }, ... }
 
-local function DataNodes()
-    if byZone then return byZone end
-    byZone = {}
+-- There are ~25,000 of them: a zone's are worked out the first time it is looked at, five numbers a node in
+-- one flat list (a table per node took ~17 MB); a node's table is made only for what is drawn.
+local zones    -- [uiMapID] = { object IDs with nodes there }
+local packed = {}   -- [uiMapID] = { u, v, x, y, object, u, v, ... }
+
+local function NodeZones()
+    if zones then return zones end
+    zones = {}
     for id, o in pairs(ns.OBJECTS or {}) do
         if o[2] == "herb" or o[2] == "ore" then
-            for _, s in ipairs(ns.Npcs.ObjectSpawns(id)) do
-                local u, v = Geo.ToWorld(s[1], s[2], s[3])
-                local list = byZone[s[1]] or {}
-                byZone[s[1]] = list
-                list[#list + 1] = { m = s[1], u = u, v = v, x = s[2], y = s[3], object = id, kind = o[2], skill = o[4], item = o[3] }
+            for i = 5, #o - 1, 2 do
+                local list = zones[o[i]] or {}
+                zones[o[i]] = list
+                if list[#list] ~= id then list[#list + 1] = id end
             end
         end
     end
-    return byZone
+    return zones
+end
+
+local function Nodes(mapID)
+    local p = packed[mapID]
+    if p then return p end
+    p = {}
+    for _, id in ipairs(NodeZones()[mapID] or {}) do
+        for _, s in ipairs(ns.Npcs.ObjectSpawns(id)) do
+            if s[1] == mapID then
+                local u, v = Geo.ToWorld(mapID, s[2], s[3])
+                p[#p + 1], p[#p + 2], p[#p + 3], p[#p + 4], p[#p + 5] = u, v, s[2], s[3], id
+            end
+        end
+    end
+    packed[mapID] = p
+    return p
+end
+
+-- one node as a table: { m, u, v, x, y, object, kind, skill, item }
+local function Node(mapID, p, i)
+    local o = ns.OBJECTS[p[i + 4]]
+    return { m = mapID, u = p[i], v = p[i + 1], x = p[i + 2], y = p[i + 3], object = p[i + 4], kind = o[2], skill = o[4], item = o[3] }
 end
 
 -- your skill in Herbalism / Mining (nil: you do not have it)
@@ -154,12 +179,17 @@ function P:Refresh()
     local count = 0
     if ns.Map.Zoom() >= DATA_MIN_ZOOM then
         local found = {}
-        for mapID, list in pairs(DataNodes()) do
-            local l, r, t, b = Geo.Rect(mapID)
-            if l and l < u1 and r > u0 and t < v1 and b > v0 then
-                for _, n in ipairs(list) do
-                    if Wanted(n.kind) and n.u > u0 and n.u < u1 and n.v > v0 and n.v < v1 then
-                        found[#found + 1] = n
+        local wanted = { herb = Wanted("herb"), ore = Wanted("ore") }
+        if wanted.herb or wanted.ore then
+            for mapID in pairs(NodeZones()) do
+                local l, r, t, b = Geo.Rect(mapID)
+                if l and l < u1 and r > u0 and t < v1 and b > v0 then
+                    local p = Nodes(mapID)
+                    for i = 1, #p, 5 do
+                        local u, v = p[i], p[i + 1]
+                        if u > u0 and u < u1 and v > v0 and v < v1 and wanted[ns.OBJECTS[p[i + 4]][2]] then
+                            found[#found + 1] = Node(mapID, p, i)
+                        end
                     end
                 end
             end
@@ -238,9 +268,12 @@ function ns.GatherNear(mapID)
         tostring(ns.Opt("herbs")), tostring(ns.Opt("ore")))
     if key == nearKey then return near end
     nearKey, near = key, {}
-    for _, n in ipairs(DataNodes()[mapID] or {}) do
-        if Wanted(n.kind) and Skill(n.kind) >= n.skill then
-            near[#near + 1] = { u = n.u, v = n.v, icon = ItemIcon(n.item, n.kind) }
+    if not (Wanted("herb") or Wanted("ore")) then return near end
+    local p = Nodes(mapID)
+    for i = 1, #p, 5 do
+        local o = ns.OBJECTS[p[i + 4]]
+        if Wanted(o[2]) and Skill(o[2]) >= o[4] then
+            near[#near + 1] = { u = p[i], v = p[i + 1], icon = ItemIcon(o[3], o[2]) }
         end
     end
     return near

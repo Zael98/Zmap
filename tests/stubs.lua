@@ -611,3 +611,5 @@ function GetBuildInfo() return "1.60.1", "70374", "Oct 1 2026", 16001 end
 function GetBindingAction(key) return key == "M" and "CLICK ZmapToggle:LeftButton" or "" end
 Minimap = CreateFrame("Frame", "Minimap", UIParent)
 Minimap:SetSize(140, 140)
+function UpdateAddOnMemoryUsage() end
+function GetAddOnMemoryUsage() return collectgarbage("count") end
