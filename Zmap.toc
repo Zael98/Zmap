@@ -10,6 +10,7 @@
 ## SavedVariablesPerCharacter: ZmapCharDB
 ## AddonCompartmentFunc: Zmap_OnCompartmentClick
 ## X-Category: Map
+## X-Curse-Project-ID: 1750856
 ## X-License: GPL-3.0 (the NPC, quest and object data come from Questie, GPL-3.0)
 
 Locales.lua
