@@ -77,7 +77,7 @@ CHECKS = {
                        r"^with mining: ore true$",
                        r"^utilities: mailbox true, anvil true, tooltip .+", r"^guild without zmap: 2, tooltip .*Sin Zmap.*",
                        r"^apart: true$", r"^minimap pins: [1-9]\d*$", r"^inside deadmines: shown true$",
-                       r"^back to the world: true$", r"^outside: dungeon map shown false$", r"^tinted: true$",
+                       r"^back to the world: true$", r"^deadmines bosses: 8, 1\. Rhahk'Zor, .*Cocinitas, 8\. Edwin VanCleef$", r"^brd: to floor 2, numbered on it true$", r"^outside: dungeon map shown false$", r"^tinted: true$",
                        r"^diag: shown true, lines \d\d, quests line true$", r"^layers fold: folded true, open again true$", r"^folk types: rows 19, food true -> 0, innkeepers kept true, row alpha 0.45$", r"^food back: true$",
                        r"^all off then one: none true, only profession trainers true, all row alpha 0.45$",
                        r"^layer off then one: alone true; all again: true$",

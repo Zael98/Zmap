@@ -102,7 +102,7 @@ local EN = {
     -- guildmates without Zmap, the minimap, colours, dungeon maps, /zmap diag
     ONLY_ZONE = "Without Zmap: only their zone is known (%s)", OPT_MINIMAP_PINS = "Pins on the minimap",
     OPT_HARMONIZE = "Even out the zones' colours", BACK_TO_WORLD = "Back to the world",
-    DUNGEON_MAP_HINT = "Click: the dungeon's map", DUNGEON_BACK_HINT = "Right-click: back to the world",
+    DUNGEON_MAP_HINT = "Click: the dungeon's map", DUNGEON_BACK_HINT = "Right-click: back to the world", BOSSES = "Bosses",
     LAYER_GROUP_MAP = "Map", LAYER_GROUP_TRAVEL = "Travel", LAYER_GROUP_QUESTS = "Quests", LAYER_GROUP_PEOPLE = "People",
     LAYER_GROUP_GATHER = "Gathering", LAYER_GROUP_MINIMAP = "Minimap",
     FOLK_ALL = "All of them", FOLK_TYPE_innkeeper = "Innkeepers", FOLK_TYPE_banker = "Bankers",
@@ -210,7 +210,7 @@ local ES = {
     FOLK_anvil = "Yunque", FOLK_forge = "Forja", FOLK_stone = "Piedra de encuentro",
     ONLY_ZONE = "Sin Zmap: solo se sabe su zona (%s)", OPT_MINIMAP_PINS = "Marcas en el minimapa",
     OPT_HARMONIZE = "Igualar los colores de las zonas", BACK_TO_WORLD = "Volver al mundo",
-    DUNGEON_MAP_HINT = "Clic: mapa de la mazmorra", DUNGEON_BACK_HINT = "Clic derecho: volver al mundo",
+    DUNGEON_MAP_HINT = "Clic: mapa de la mazmorra", DUNGEON_BACK_HINT = "Clic derecho: volver al mundo", BOSSES = "Jefes",
     LAYER_GROUP_MAP = "Mapa", LAYER_GROUP_TRAVEL = "Viajes", LAYER_GROUP_QUESTS = "Misiones", LAYER_GROUP_PEOPLE = "Gente",
     LAYER_GROUP_GATHER = "Recolección", LAYER_GROUP_MINIMAP = "Minimapa",
     FOLK_ALL = "Todos", FOLK_TYPE_innkeeper = "Taberneros", FOLK_TYPE_banker = "Banqueros",

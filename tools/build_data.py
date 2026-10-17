@@ -574,7 +574,7 @@ MISTS = "5.5.4.70449"
 REBUILT = {311, 316, 246}   # journal instances: Scarlet Halls, Scarlet Monastery, Scholomance (Pandaria's)
 
 
-def build_dungeon_maps(forever_npc_names):
+def build_dungeon_maps():
     um = {r["ID"]: r for r in table("UiMap", build=MISTS)}
     inst_of = {}
     for r in table("UiMapAssignment", build=MISTS):
@@ -588,7 +588,6 @@ def build_dungeon_maps(forever_npc_names):
     floor_names = {loc: {r["UiMapID"]: r["Name_lang"] for r in table("UiMapGroupMember", loc, MISTS)} for loc in LOCALES}
     order = {r["UiMapID"]: int(r["FloorIndex"]) for r in table("UiMapGroupMember", build=MISTS)}
     journal = {r["ID"]: r for r in table("JournalInstance", build=MISTS)}
-    boss_names = {loc: {r["ID"]: r["Name_lang"] for r in table("JournalEncounter", loc, MISTS)} for loc in LOCALES}
     out = {}
     for m, inst in inst_of.items():
         ts = sorted(tiles.get(art.get(m), []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
@@ -601,12 +600,6 @@ def build_dungeon_maps(forever_npc_names):
     for inst in list(out):
         if inst in rebuilt or inst not in forever:
             del out[inst]
-    by_ui = {f["ui"]: f for floors in out.values() for f in floors}
-    for r in table("JournalEncounter", build=MISTS):
-        f = by_ui.get(int(r["UiMapID"]))
-        if f and r["Name_lang"] in forever_npc_names:
-            f["bosses"].append({"names": {loc: boss_names[loc].get(r["ID"], r["Name_lang"]) for loc in LOCALES},
-                                "x": float(r["Map_0"]), "y": float(r["Map_1"])})
     for floors in out.values():
         floors.sort(key=lambda f: f["order"])
     # make sure the pictures are in Forever's install (the first tile of each floor)
@@ -614,20 +607,45 @@ def build_dungeon_maps(forever_npc_names):
         out[inst] = [f for f in out[inst] if casc(f["tiles"][0])]
         if not out[inst]:
             del out[inst]
-    return out
+    # The bosses: Forever's own encounters (every one, in order, in each language). Where they stand, from Mists'
+    # journal: by the encounter's ID, else by its English name; Mists has the Cataclysm versions of some dungeons
+    # (the Deadmines, Shadowfang Keep, the Stockade...), so their bosses stay without a place.
+    names = {loc: {r["ID"]: r["Name_lang"] for r in table("DungeonEncounter", loc)} for loc in LOCALES}
+    encounters = {}
+    for r in sorted(table("DungeonEncounter"), key=lambda r: (int(r["OrderIndex"]), int(r["ID"]))):
+        inst = int(r["MapID"])
+        if inst in out and all(e["names"]["enUS"] != r["Name_lang"] for e in encounters.get(inst, [])):
+            encounters.setdefault(inst, []).append({"id": r["ID"], "names": {loc: names[loc].get(r["ID"], r["Name_lang"]) for loc in LOCALES}})
+    journal_by_id, journal_by_name = {}, {}
+    for r in table("JournalEncounter", build=MISTS):
+        journal_by_id.setdefault(r["DungeonEncounterID"], r)
+        journal_by_name.setdefault(r["Name_lang"], r)
+    result = {}
+    for inst, floors in out.items():
+        index = {f["ui"]: i + 1 for i, f in enumerate(floors)}
+        bosses = []
+        for e in encounters.get(inst, []):
+            j = journal_by_id.get(e["id"]) or journal_by_name.get(e["names"]["enUS"])
+            floor = j and index.get(int(j["UiMapID"]))
+            bosses.append({"names": e["names"], "floor": floor or 0,
+                           "x": float(j["Map_0"]) if floor else 0, "y": float(j["Map_1"]) if floor else 0})
+        result[inst] = {"floors": floors, "bosses": bosses}
+    return result
 
 
 def write_dungeon_maps(dmaps):
     L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
-         "-- [instance map] = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX },",
-         "--                      { { { boss names }, x, y }, ... } }, ... } (floors in order)",
+         "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX } }, ... },",
+         "--   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)",
          "ns.DUNGEON_MAPS = {"]
-    for inst, floors in sorted(out_sorted(dmaps)):
-        L.append(f"    [{inst}] = {{")
-        for f in floors:
-            bosses = ", ".join(f"{{ {loc_names(b['names'])}, {b['x']:.3f}, {b['y']:.3f} }}" for b in f["bosses"])
-            L.append(f"        {{ {{ {', '.join(str(t) for t in f['tiles'])} }}, {loc_names(f['names'])}, {{ {bosses} }} }},")
-        L.append("    },")
+    for inst, d in sorted(out_sorted(dmaps)):
+        L.append(f"    [{inst}] = {{ floors = {{")
+        for f in d["floors"]:
+            L.append(f"        {{ {{ {', '.join(str(t) for t in f['tiles'])} }}, {loc_names(f['names'])} }},")
+        L.append("    }, bosses = {")
+        for b in d["bosses"]:
+            L.append(f"        {{ {loc_names(b['names'])}, {b['floor']}, {b['x']:.3f}, {b['y']:.3f} }},")
+        L.append("    } },")
     L.append("}")
     (ROOT / "Data" / "DungeonMaps.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
 
@@ -688,11 +706,10 @@ def main():
     entrances, levels = build_dungeons()
     print(f"places: {len(transports)} transports, {len(entrances)} dungeon entrances, {len(levels)} dungeon levels")
     write_places(transports, entrances, levels)
-    import build_npcs   # (Forever's NPCs, to keep only bosses that exist there)
-    names = {row.get(1) for row in build_npcs.entities("Npc").values()}
-    dmaps = build_dungeon_maps(names)
-    print(f"dungeon maps: {len(dmaps)} instances, {sum(len(f) for f in dmaps.values())} floors, "
-          f"{sum(len(fl['bosses']) for f in dmaps.values() for fl in f)} bosses")
+    dmaps = build_dungeon_maps()
+    print(f"dungeon maps: {len(dmaps)} instances, {sum(len(d['floors']) for d in dmaps.values())} floors, "
+          f"{sum(len(d['bosses']) for d in dmaps.values())} bosses, "
+          f"{sum(1 for d in dmaps.values() for b in d['bosses'] if b['floor'])} placed")
     write_dungeon_maps(dmaps)
     tints = build_tints(maps)
     with open(ROOT / "Data" / "Maps.lua", "a", encoding="utf-8") as f:

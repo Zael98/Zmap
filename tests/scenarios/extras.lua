@@ -130,10 +130,23 @@ ZNS.Map.Close()
 STATE.instance, STATE.instanceID, STATE.instanceName = true, 36, "Las Minas de la Muerte"
 OPEN()
 OUT(("inside deadmines: shown %s"):format(tostring(ZNS.Dungeon.IsShown())))
+local listed = ZNS.Dungeon.Shown()
+OUT(("deadmines bosses: %d, %s"):format(#listed, table.concat(listed, ", ")))
 local dview
 for _, w in ipairs(ALL_WIDGETS) do if w.parent == ZmapFrame.viewport and w.scripts.OnMouseUp and w ~= ZmapFrame.layersPanel and w:IsShown() and w._level and w.kind == "Frame" and w.scripts.OnMouseWheel and w ~= ZmapFrame.viewport then dview = w end end
 dview.scripts.OnMouseUp(dview, "RightButton")
 OUT("back to the world: " .. tostring(not ZNS.Dungeon.IsShown()))
+-- Blackrock Depths: a boss on another floor, chosen in the list
+ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
+local bossesBRD = ZNS.DUNGEON_MAPS[230].bosses
+local target
+for i, b in ipairs(bossesBRD) do if b[2] == 2 and not target then target = i end end
+ZNS.Dungeon.GoToBoss(target)
+local _, placed, floor = ZNS.Dungeon.Shown()
+local numbered = false
+for _, text in ipairs(placed) do if text:find("^" .. target .. "%. ") then numbered = true end end
+OUT(("brd: to floor %s, numbered on it %s"):format(tostring(floor), tostring(numbered)))
+ZNS.Dungeon.Close()
 ZNS.Map.Close()
 STATE.instance = false
 OPEN()
