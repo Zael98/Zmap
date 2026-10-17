@@ -39,8 +39,28 @@ CLICK_MAP(u, v)
 FRAMES(20)
 OUT("double click: zoom up " .. tostring(ZNS.Map.Zoom() > z1 * 1.5))
 
+-- the map always fills the window: zoom right out and drag it far away, in a wide and in a tall window
+local function Inside()
+    local l, t, r, b = ZNS.Map.ViewRect()
+    return l >= -1e-6 and t >= -1e-6 and r <= ZNS.Geo.W + 1e-6 and b <= ZNS.Geo.H + 1e-6
+end
+local fills = true
+for _, size in ipairs({ { 1700, 700 }, { 800, 900 } }) do
+    ZmapFrame:SetSize(size[1], size[2])
+    VIEWPORT().scripts.OnSizeChanged(VIEWPORT())
+    WHEEL(u, v, -12, 40)
+    fills = fills and Inside()
+    local cl, ct, cr, cb = ZNS.Map.ViewRect()
+    DRAG((cl + cr) / 2 / ZNS.Geo.W, (ct + cb) / 2 / ZNS.Geo.H, 0.95, 0.95)
+    DRAG(0.9, 0.9, 0.05, 0.05)
+    fills = fills and Inside() and ZNS.Map.Zoom() >= 1
+end
+OUT(("zoomed out and dragged away: map fills the window %s, zoom %.2f"):format(tostring(fills), ZNS.Map.Zoom()))
+ZmapFrame:SetSize(1382, 842)
+VIEWPORT().scripts.OnSizeChanged(VIEWPORT())
+
 ZNS.Map.Close()
-OUT("closed: saved view " .. tostring(ZNS.db.view ~= nil and ZNS.db.view.z > 1))
+OUT("closed: saved view " .. tostring(ZNS.db.view ~= nil and ZNS.db.view.z >= 1))
 OPEN()
 local _, _, m2 = ZNS.Geo.UnitPosition("player")
 OUT("reopen on player: zone " .. tostring(m2))

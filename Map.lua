@@ -7,7 +7,7 @@ local Map = {}
 ns.Map = Map
 
 local W, H = Geo.W, Geo.H
-local MIN_ZOOM, MAX_ZOOM = 0.8, 64
+local MIN_ZOOM, MAX_ZOOM = 1, 64   -- 1: the world's map just fills the window
 local WHEEL = 1.35           -- zoom per wheel notch
 local EASE = 14              -- how fast the zoom eases towards its goal (per second)
 local GLIDE = 0.5            -- seconds a "go there" takes
@@ -40,9 +40,11 @@ local function ViewSize()
     return vw, vh
 end
 
+-- viewport units per world unit at zoom 1: the world's map covering the whole window (cropped to its shape
+-- rather than leaving empty space beside it)
 local function Fit()
     local vw, vh = ViewSize()
-    return math.min(vw / W, vh / H)
+    return math.max(vw / W, vh / H)
 end
 
 -- viewport units per world unit
@@ -77,11 +79,13 @@ end
 
 local function ApplyView()
     view.z = math.max(MIN_ZOOM, math.min(MAX_ZOOM, view.z))
-    view.x = math.max(-0.2 * W, math.min(1.2 * W, view.x))
-    view.y = math.max(-0.2 * H, math.min(1.2 * H, view.y))
     local vw, vh = ViewSize()
     local k = Map.K()
     if not (k > 0) then return end   -- (not laid out yet)
+    -- the map always fills the window: neither zooming out nor dragging brings its edges into view
+    local hw, hh = vw / (2 * k), vh / (2 * k)
+    view.x = math.max(hw, math.min(W - hw, view.x))
+    view.y = math.max(hh, math.min(H - hh, view.y))
     canvas:SetScale(k)
     canvas:ClearAllPoints()
     canvas:SetPoint("TOPLEFT", viewport, "TOPLEFT", vw / (2 * k) - view.x, -(vh / (2 * k) - view.y))

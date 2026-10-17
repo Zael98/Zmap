@@ -1,6 +1,6 @@
 -- The stitched map art, all of it the game's own textures (loaded by file ID), on the canvas in world units.
--- Bottom to top, and the zoom (1 = the whole world in view) where each comes in:
---   world      Azeroth's map, until the continents take over (~2)
+-- Bottom to top, and the zoom (1 = Azeroth's map filling the window) where each comes in:
+--   world      Azeroth's map; muted once the continents are in (~2), it stays under everything
 --   continents each continent's map, frame faded off, as Blizzard's continent map; muted once the zones
 --              are in (~3.5), so its big lettering does not show through the gaps
 --   zones      every zone's own map: its base art twice, through a wide soft "halo" mask (its mountains and
@@ -268,11 +268,10 @@ function Art.Update()
 
     -- the world's map until the continents' are in; the continent's as Blizzard's continent map until the
     -- zones come in, then muted (its lettering would show through the gaps)
-    local worldA = 1 - Smooth(1.5, 2.3, z)
+    local worldA = 1 - 0.65 * Smooth(1.5, 2.3, z)   -- (it stays under everything, muted: nowhere is left empty)
     local contA = Smooth(1.1, 1.6, z) * (1 - 0.75 * Smooth(2.8, 3.8, z))
     local zoneA = Smooth(2.6, 3.6, z)
     worldFrame:SetAlpha(worldA)
-    worldFrame:SetShown(worldA > 0.01)
     contFrame:SetAlpha(contA)
     contFrame:SetShown(contA > 0.01)
     zoneRoot:SetAlpha(zoneA)

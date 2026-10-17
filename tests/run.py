@@ -21,6 +21,7 @@ CHECKS = {
                     r"^first open: zoom (9|1\d)\.\d, on the player true$",
                     r"^labels \d\d+$", r"^unexplored dimmed [1-9]\d*$", r"^after wheel: zoom up true, point held true$",
                     r"^after drag: moved true, following false$", r"^double click: zoom up true$",
+                    r"^zoomed out and dragged away: map fills the window true, zoom 1\.00$",
                     r"^closed: saved view true$", r"^reopen on player: zone 1429$"]),
     "art": (False, [r"^world: world shown true, zones shown 0$", r"^continent: zones built [1-9]\d*, all of them in view true$",
                     r"^zone: halo masks \d+ core masks \d+, every tile masked true$", r"^tiles inside rects: true$",
