@@ -1,0 +1,592 @@
+"""Generates Zmap's data from the WoW Forever client's own tables (wago.tools exports of its DB2 files) and
+the masks that stitch the zone maps into one map. Run it again when Forever patches its maps:
+
+    python tools/build_data.py [--build 1.60.1.70374]
+
+Writes Data/Maps.lua, Data/Flights.lua, Data/Minimap.lua and Media/Masks/*.tga. Downloads (tables, the
+exploration overlays the masks are cut from, the continents' WDT files) are cached in tools/cache.
+
+How the stitching works (Art.lua draws it): every zone map is the zone's painted art plus "overlays", the
+pieces you reveal by exploring. The base art carries a parchment frame and the neighbours' names, so it
+is drawn through two masks cut from the union of the zone's overlays: a wide soft "halo" (its mountains
+and coasts, under every other zone's own land) and a tighter "core" (its land). The overlays go on top.
+"""
+import argparse
+import csv
+import io
+import math
+import struct
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageFilter
+from scipy import ndimage
+
+ROOT = Path(__file__).resolve().parent.parent
+CACHE = Path(__file__).resolve().parent / "cache"
+BUILD = "1.60.1.70374"
+LOCALES = ["enUS", "esES", "esMX"]
+WORLD = 947
+CONTINENT_MAPS = {0: 1415, 1: 1414}       # instance map -> its continent uiMap
+ART_W, ART_H, TILE = 1002, 668, 256       # every map art here: 1002x668 in 256 px tiles (UiMapArtStyleLayer 1)
+HALO_SIZE, CORE_SIZE = 64, 128            # mask textures (stretched over the zone)
+SPEED = 30                                # flights, yards a second (calibrated in game by Modules/Flights.lua)
+
+
+def fetch(url, path):
+    if path.exists():
+        return path.read_bytes()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    for attempt in range(4):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Zmap build_data)"})
+            data = urllib.request.urlopen(req, timeout=90).read()
+            path.write_bytes(data)
+            return data
+        except Exception as e:  # wago.tools throttles bursts: retry
+            if attempt == 3:
+                raise RuntimeError(f"{url}: {e}") from e
+            time.sleep(2 + attempt * 3)
+
+
+def table(name, locale="enUS"):
+    data = fetch(f"https://wago.tools/db2/{name}/csv?build={BUILD}&locale={locale}",
+                 CACHE / BUILD / f"{name}.{locale}.csv")
+    rows = list(csv.DictReader(io.StringIO(data.decode("utf-8"))))
+    if not rows:
+        raise RuntimeError(f"{name}: empty table for build {BUILD}")
+    return rows
+
+
+def casc(fdid):
+    return fetch(f"https://wago.tools/api/casc/{fdid}?version={BUILD}", CACHE / "casc" / f"{fdid}.bin")
+
+
+def texture(fdid):
+    png = CACHE / "tex" / f"{fdid}.png"
+    if not png.exists():
+        img = Image.open(io.BytesIO(casc(fdid)))
+        img.load()
+        png.parent.mkdir(parents=True, exist_ok=True)
+        img.convert("RGBA").save(png)
+    return Image.open(png)
+
+
+def num(v):
+    """A Lua number literal, short."""
+    f = float(v)
+    if f == int(f):
+        return str(int(f))
+    return f"{f:.5f}".rstrip("0")
+
+
+def lua_str(s):
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'
+
+
+def names_by_locale(name, key="Name_lang", id_key="ID"):
+    out = {}
+    for loc in LOCALES:
+        for r in table(name, loc):
+            out.setdefault(r[id_key], {})[loc] = r[key]
+    return out
+
+
+def loc_names(entry):
+    """{enUS, esES, esMX} -> Lua table, dropping translations equal to English."""
+    en = entry.get("enUS", "")
+    parts = [lua_str(en)]
+    for loc in LOCALES[1:]:
+        v = entry.get(loc) or en
+        parts.append(lua_str(v) if v != en else "nil")
+    while parts[-1] == "nil":
+        parts.pop()
+    return "{ " + ", ".join(parts) + " }"
+
+
+# --------------------------------------------------------------------------------------------------------------
+# Maps
+# --------------------------------------------------------------------------------------------------------------
+
+def build_maps():
+    uimap = {r["ID"]: r for r in table("UiMap")}
+    names = names_by_locale("UiMap")
+    assign = {}
+    world_assign = {}
+    for r in sorted(table("UiMapAssignment"), key=lambda r: int(r["OrderIndex"])):
+        if r["UiMapID"] == str(WORLD):
+            world_assign[int(r["MapID"])] = r
+        else:
+            assign.setdefault(r["UiMapID"], r)
+    xart = {r["UiMapID"]: r["UiMapArtID"] for r in table("UiMapXMapArt") if r["PhaseID"] == "0"}
+    tiles = {}
+    for r in table("UiMapArtTile"):
+        if r["LayerIndex"] == "0":
+            tiles.setdefault(r["UiMapArtID"], []).append(r)
+    overlays = {}
+    for r in table("WorldMapOverlay"):
+        overlays.setdefault(r["UiMapArtID"], []).append(r)
+    otiles = {}
+    for r in table("WorldMapOverlayTile"):
+        if r["LayerIndex"] == "0":
+            otiles.setdefault(r["WorldMapOverlayID"], []).append(r)
+
+    # instance map -> 947 placement: u = a + b * worldY, v = c + d * worldX (the continents' affine maps)
+    transforms = {}
+    for inst, r in world_assign.items():
+        min_x, min_y, max_x, max_y = (float(r[k]) for k in ("Region_0", "Region_1", "Region_3", "Region_4"))
+        u0, v0, u1, v1 = (float(r[k]) for k in ("UiMin_0", "UiMin_1", "UiMax_0", "UiMax_1"))
+        b = -(u1 - u0) / (max_y - min_y)
+        d = -(v1 - v0) / (max_x - min_x)
+        transforms[inst] = (u0 - b * max_y, b, v0 - d * max_x, d)
+
+    def rect_on_world(m):
+        a = assign[m]
+        inst = int(a["MapID"])
+        if inst not in transforms:
+            return None
+        ta, tb, tc, td = transforms[inst]
+        min_x, min_y, max_x, max_y = (float(a[k]) for k in ("Region_0", "Region_1", "Region_3", "Region_4"))
+        return ta + tb * max_y, ta + tb * min_y, tc + td * max_x, tc + td * min_x   # l, r, t, b
+
+    def art_tiles(m):
+        rows = sorted(tiles.get(xart.get(m), []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
+        return [int(r["FileDataID"]) for r in rows]
+
+    maps = {}
+    world_rows = art_tiles(str(WORLD))
+    maps[WORLD] = {"kind": "world", "rect": (0, 1, 0, 1), "art": world_rows, "parent": 0, "inst": -1}
+    for inst, m in CONTINENT_MAPS.items():
+        maps[m] = {"kind": "continent", "rect": rect_on_world(str(m)), "art": art_tiles(str(m)), "parent": WORLD, "inst": inst}
+    area_ids = set()
+    for m, r in uimap.items():
+        if r["Type"] != "3" or m not in assign:
+            continue
+        inst = int(assign[m]["MapID"])
+        if inst not in CONTINENT_MAPS:
+            continue   # its own instance (Zephras Isle, Darkspear Islands): not on the continents
+        art = xart.get(m)
+        ovs = []
+        for o in sorted(overlays.get(art, []), key=lambda o: int(o["ID"])):
+            ts = sorted(otiles.get(o["ID"], []), key=lambda t: (int(t["RowIndex"]), int(t["ColIndex"])))
+            if not ts:
+                continue
+            areas = [int(o[f"AreaID_{i}"]) for i in range(4) if o[f"AreaID_{i}"] != "0"]
+            area_ids.update(areas)
+            ovs.append({"w": int(o["TextureWidth"]), "h": int(o["TextureHeight"]), "x": int(o["OffsetX"]),
+                        "y": int(o["OffsetY"]), "areas": areas, "fdids": [int(t["FileDataID"]) for t in ts]})
+        a = assign[m]
+        maps[int(m)] = {
+            "kind": "zone" if ovs else "city",
+            "rect": rect_on_world(m),
+            "parent": int(r["ParentUiMapID"]),
+            "inst": inst,
+            "world": tuple(float(a[k]) for k in ("Region_0", "Region_1", "Region_3", "Region_4")),
+            "art": art_tiles(m),
+            "overlays": ovs,
+        }
+    return maps, transforms, names, area_ids
+
+
+def compose_overlays(zone):
+    """The union of a zone's overlays, as an alpha image the size of its art."""
+    img = Image.new("RGBA", (ART_W + TILE * 2, ART_H + TILE * 2))
+    for o in zone["overlays"]:
+        cols = math.ceil(o["w"] / TILE)
+        for i, fdid in enumerate(o["fdids"]):
+            row, col = divmod(i, cols)
+            img.alpha_composite(texture(fdid), (o["x"] + col * TILE, o["y"] + row * TILE))
+    return img.crop((0, 0, ART_W, ART_H)).getchannel("A")
+
+
+def disk(r):
+    y, x = np.mgrid[-r:r + 1, -r:r + 1]
+    return np.hypot(x, y) <= r
+
+
+def edge_ramp(w, h, inset=18, ramp=48):
+    """1 inside, falling to 0 at the art's frame: no straight cut where the zone's rectangle ends."""
+    xs = np.minimum(np.arange(w), np.arange(w)[::-1]).astype(float)
+    ys = np.minimum(np.arange(h), np.arange(h)[::-1]).astype(float)
+    return np.outer(np.clip((ys - inset) / ramp, 0, 1), np.clip((xs - inset) / ramp, 0, 1))
+
+
+def save_mask(alpha, size, path):
+    a = Image.fromarray(np.clip(alpha, 0, 255).astype(np.uint8)).resize((size, size), Image.LANCZOS)
+    white = Image.new("L", a.size, 255)
+    Image.merge("RGBA", (white, white, white, a)).save(path)
+
+
+def rects_overlap(a, b):
+    return a[0] < b[1] and a[1] > b[0] and a[2] < b[3] and a[3] > b[2]
+
+
+def resample(mask, src_rect, dst_rect):
+    """A mask over one zone's map, as it falls on another zone's map (both in their art's pixels)."""
+    sl, sr, st, sb = src_rect
+    dl, dr, dt, db = dst_rect
+    a = (dr - dl) / (sr - sl)
+    c = (dl - sl) / (sr - sl) * ART_W
+    e = (db - dt) / (sb - st)
+    f = (dt - st) / (sb - st) * ART_H
+    img = Image.fromarray(mask.astype(np.uint8) * 255)
+    out = img.transform((ART_W, ART_H), Image.AFFINE, (a, 0, c, 0, e, f), Image.BILINEAR, fillcolor=0)
+    return np.array(out).astype(float) / 255
+
+
+def edge_depth(rect, grid_rect):
+    """How far inside `rect` each pixel of the map over `grid_rect` is (to its nearest edge, in world map
+    pixels); 0 outside it."""
+    gl, gr, gt, gb = grid_rect
+    us = gl + (np.arange(ART_W) + 0.5) / ART_W * (gr - gl)
+    vs = gt + (np.arange(ART_H) + 0.5) / ART_H * (gb - gt)
+    l, r, t, b = rect
+    dx = np.minimum(us - l, r - us) * ART_W
+    dy = np.minimum(vs - t, b - vs) * ART_H
+    return np.clip(np.minimum.outer(dy, dx), 0, None)
+
+
+def land(zone):
+    """The zone's land in its art's pixels: its overlays joined up (the gaps between them closed) and filled."""
+    a = np.array(compose_overlays(zone)) > 40
+    close = 30
+    a = ndimage.binary_closing(np.pad(a, close), structure=disk(close))[close:-close, close:-close]
+    return ndimage.binary_fill_holes(a)
+
+
+def build_masks(maps, write=True):
+    """Writes each zone's halo and core masks (and the shared city / frame masks); returns each zone's label
+    point: the most inland spot of its land, as a share of its map (where its name goes)."""
+    out = ROOT / "Media" / "Masks"
+    out.mkdir(parents=True, exist_ok=True)
+    from concurrent.futures import ThreadPoolExecutor
+    wanted = {f for z in maps.values() for o in z.get("overlays", []) for f in o["fdids"]}
+    with ThreadPoolExecutor(8) as pool:   # download them all first, in parallel
+        list(pool.map(texture, sorted(wanted)))
+    ramp = edge_ramp(ART_W, ART_H)
+    zones = {m: z for m, z in sorted(maps.items()) if z["kind"] == "zone"}
+    grounds = {m: land(z) for m, z in zones.items()}
+    labels = {}
+    for m, zone in zones.items():
+        ground = grounds[m]
+        dist = ndimage.distance_transform_edt(np.pad(ground, 1))[1:-1, 1:-1]   # (the frame counts as shore)
+        y, x = np.unravel_index(np.argmax(dist), dist.shape)
+        labels[m] = (x / ART_W, y / ART_H)
+        if not write:
+            continue
+        # Neighbours: a zone's rectangle runs into theirs, and cut straight there it showed as a line. So its
+        # core stops where their land begins, and where both claim the land (the strip their rectangles share)
+        # each fades out towards its own edge: a cross-fade between the two paintings, deeper in wins.
+        others = np.zeros((ART_H, ART_W))
+        deep = edge_depth(zone["rect"], zone["rect"])
+        rivals = np.zeros((ART_H, ART_W))
+        for n, other in zones.items():
+            if n != m and rects_overlap(zone["rect"], other["rect"]):
+                theirs = resample(grounds[n], other["rect"], zone["rect"])
+                others = np.maximum(others, theirs)
+                rivals += edge_depth(other["rect"], zone["rect"]) * theirs
+        others = np.array(Image.fromarray((others * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(6))).astype(float) / 255
+        share = deep / (deep + rivals + 1e-6)
+        for suffix, grow, blur, size in (("h", 55, 25, HALO_SIZE), ("c", 12, 8, CORE_SIZE)):
+            g = ndimage.binary_dilation(ground, structure=disk(grow)).astype(np.uint8) * 255
+            g = np.array(Image.fromarray(g).filter(ImageFilter.GaussianBlur(blur))).astype(float)
+            if suffix == "c":
+                g = g * np.maximum(1 - others, ground) * np.clip(share * 2, 0, 1)
+            save_mask(g * ramp, size, out / f"{m}{suffix}.tga")
+    if write:
+        # cities: their map without its frame, faded round; continents: their art without the frame
+        y, x = np.mgrid[0:ART_H, 0:ART_W]
+        ell = np.hypot((x - ART_W / 2) / (ART_W * 0.47), (y - ART_H / 2) / (ART_H * 0.47))
+        save_mask(np.clip((1 - ell) / 0.25, 0, 1) * 255, CORE_SIZE, out / "city.tga")
+        save_mask(edge_ramp(ART_W, ART_H, inset=24, ramp=90) * 255, CORE_SIZE, out / "frame.tga")
+    return labels
+
+
+# --------------------------------------------------------------------------------------------------------------
+# Minimap tiles (the close-up terrain): the continents' WDT lists each ADT tile's minimap texture
+# --------------------------------------------------------------------------------------------------------------
+
+def build_minimap():
+    wdt_of = {int(r["ID"]): int(r["WdtFileDataID"]) for r in table("Map")}
+    out = {}
+    for inst in CONTINENT_MAPS:
+        data = casc(wdt_of[inst])
+        i = 0
+        while i + 8 <= len(data):
+            tag = data[i:i + 4][::-1]
+            size = struct.unpack("<I", data[i + 4:i + 8])[0]
+            if tag == b"MAID":
+                ids = struct.unpack(f"<{size // 4}I", data[i + 8:i + 8 + size])
+                per = size // (64 * 64 * 4)
+                out[inst] = {k: ids[k * per + 7] for k in range(64 * 64) if ids[k * per + 7]}
+            i += 8 + size
+        if inst not in out:
+            raise RuntimeError(f"WDT {wdt_of[inst]} has no MAID chunk")
+    return out
+
+
+# --------------------------------------------------------------------------------------------------------------
+# Flights
+# --------------------------------------------------------------------------------------------------------------
+
+def simplify(points, eps):
+    """Ramer-Douglas-Peucker on [(x, y)]."""
+    if len(points) < 3:
+        return points
+    (x1, y1), (x2, y2) = points[0], points[-1]
+    dx, dy = x2 - x1, y2 - y1
+    norm = math.hypot(dx, dy) or 1e-9
+    best, idx = 0, 0
+    for i in range(1, len(points) - 1):
+        x, y = points[i]
+        d = abs(dy * x - dx * y + x2 * y1 - y2 * x1) / norm
+        if d > best:
+            best, idx = d, i
+    if best <= eps:
+        return [points[0], points[-1]]
+    return simplify(points[:idx + 1], eps)[:-1] + simplify(points[idx:], eps)
+
+
+def build_flights():
+    names = names_by_locale("TaxiNodes")
+    nodes = {}
+    for r in table("TaxiNodes"):
+        inst, flags, name = int(r["ContinentID"]), int(r["Flags"]), r["Name_lang"]
+        if inst not in CONTINENT_MAPS or not flags & 3:
+            continue
+        if name.startswith(("zzOLD", "Quest Path", "Transport", "Generic")):
+            continue
+        nodes[int(r["ID"])] = {"inst": inst, "x": float(r["Pos_0"]), "y": float(r["Pos_1"]),
+                               "fac": {1: "A", 2: "H", 3: "N"}[flags & 3], "names": names[r["ID"]]}
+    points = {}
+    for r in table("TaxiPathNode"):
+        points.setdefault(r["PathID"], []).append((int(r["NodeIndex"]), float(r["Loc_0"]), float(r["Loc_1"]), int(r["ContinentID"])))
+    paths = []
+    for r in table("TaxiPath"):
+        a, b = int(r["FromTaxiNode"]), int(r["ToTaxiNode"])
+        if a not in nodes or b not in nodes or nodes[a]["inst"] != nodes[b]["inst"]:
+            continue
+        pts = [(x, y) for _, x, y, c in sorted(points.get(r["ID"], [])) if c == nodes[a]["inst"]]
+        if len(pts) < 2:
+            continue
+        length = sum(math.hypot(x2 - x1, y2 - y1) for (x1, y1), (x2, y2) in zip(pts, pts[1:]))
+        paths.append({"from": a, "to": b, "len": length, "cost": int(r["Cost"]), "poly": simplify(pts, 40)})
+    return nodes, paths
+
+
+# Boats and zeppelins sail the "Transport" taxi paths: points per continent, docking where a point has a delay.
+# The tables don't say which route a path is, so they are named here (by the docks their points reach).
+TRANSPORTS = {
+    241: ("boat", "N", "Booty Bay - Ratchet"),
+    285: ("zeppelin", "H", "Grom'gol - Orgrimmar"),
+    292: ("boat", "A", "Menethil Harbor - Theramore"),
+    293: ("boat", "A", "Rut'theran Village - Auberdine"),
+    295: ("boat", "A", "Menethil Harbor - Auberdine"),
+    301: ("zeppelin", "H", "Undercity - Grom'gol"),
+    302: ("zeppelin", "H", "Orgrimmar - Undercity"),
+    303: ("boat", "A", "Feathermoon Stronghold - Feralas"),
+}
+
+
+def build_transports():
+    points = {}
+    for r in table("TaxiPathNode"):
+        points.setdefault(r["PathID"], []).append(r)
+    out = []
+    for pid, (kind, fac, name) in sorted(TRANSPORTS.items()):
+        pts = sorted(points.get(str(pid), []), key=lambda r: int(r["NodeIndex"]))
+        if not pts:
+            raise RuntimeError(f"transport path {pid} is gone: check TRANSPORTS against TaxiPath")
+        pieces, docks = [], []
+        for r in pts:
+            inst, x, y = int(r["ContinentID"]), float(r["Loc_0"]), float(r["Loc_1"])
+            if inst not in CONTINENT_MAPS:
+                continue
+            # a new piece on another continent, or where the path jumps (the vessel is moved at sea)
+            if not pieces or pieces[-1][0] != inst or math.dist(pieces[-1][1][-1], (x, y)) > 2000:
+                pieces.append((inst, []))
+            pieces[-1][1].append((x, y))
+            if r["Delay"] != "0":
+                docks.append((inst, x, y))
+        if len(docks) > 2:   # its two docks: the stops farthest apart (a ferry's path is a loop)
+            docks = list(max(((a, b) for i, a in enumerate(docks) for b in docks[i + 1:]),
+                             key=lambda ab: (ab[0][0] != ab[1][0], math.dist(ab[0][1:], ab[1][1:]))))
+        out.append({"kind": kind, "fac": fac, "name": name,
+                    "pieces": [(inst, simplify(p, 25)) for inst, p in pieces], "docks": docks})
+    return out
+
+
+def fold(text):
+    """The search's form of a name (Core.lua's ns.Fold): lower case, no accents."""
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn").lower()
+
+
+def build_dungeons():
+    """Entrances (where a ghost returns to: Map.db2's corpse point) and the levels Forever tunes each
+    dungeon to (its group finder entry's ContentTuning), matched by name."""
+    tuning = {r["ID"]: int(r["MinLevelSquish"]) for r in table("ContentTuning")}
+    lfg = names_by_locale("LFGDungeons")
+    levels = {}
+    for r in table("LFGDungeons"):
+        level = tuning.get(r["ContentTuningID"], 0)
+        if r["TypeID"] in ("0", "1", "2") and level:
+            for name in set(lfg[r["ID"]].values()):
+                levels[fold(name)] = level
+    map_names = names_by_locale("Map", key="MapName_lang")
+    entrances = []
+    for r in table("Map"):
+        inst = int(r["CorpseMapID"])
+        x, y = float(r["Corpse_0"]), float(r["Corpse_1"])
+        if r["InstanceType"] not in ("1", "2") or inst not in CONTINENT_MAPS or (x == 0 and y == 0):
+            continue
+        if r["MapName_lang"].startswith("<"):
+            continue
+        names = map_names[r["ID"]]
+        # its level: the group finder's entry of the same name (or its wings: "Dire Maul - East")
+        key = fold(names["enUS"])
+        level = levels.get(key) or min((lv for k, lv in levels.items() if key in k or k in key), default=0)
+        entrances.append({"map": int(r["ID"]), "inst": inst, "x": x, "y": y, "raid": r["InstanceType"] == "2",
+                          "names": names, "level": level})
+    return entrances, levels
+
+
+# --------------------------------------------------------------------------------------------------------------
+# Lua output
+# --------------------------------------------------------------------------------------------------------------
+
+HEADER = ("-- Generated by tools/build_data.py from the WoW Forever client's tables (build {build}).\n"
+          "-- Regenerate rather than edit.\n")
+
+
+def write_maps(maps, transforms, names, area_ids, labels):
+    area_names = names_by_locale("AreaTable", key="AreaName_lang")
+    L = [HEADER.format(build=BUILD), "local _, ns = ...", "", f'ns.DATA_BUILD = "{BUILD}"', ""]
+    L.append("-- instance map -> where its world positions (yards) land on Azeroth's map (947, 0..1):")
+    L.append("--   u = a + b * worldY, v = c + d * worldX")
+    L.append("ns.WORLD_TRANSFORM = {")
+    for inst, (a, b, c, d) in sorted(transforms.items()):
+        L.append(f"    [{inst}] = {{ {a!r}, {b!r}, {c!r}, {d!r} }},")
+    L.append("}")
+    L.append("")
+    L.append("-- [uiMapID] = { kind, parent, instance, { l, r, t, b on 947 }, { art tiles, row by row },")
+    L.append("--               { names enUS, esES, esMX }, overlays = { { w, h, x, y, { areaIDs }, fileIDs... } } }")
+    L.append("ns.MAPS = {")
+    for m, z in sorted(maps.items()):
+        rect = "{ " + ", ".join(repr(round(v, 7)) for v in z["rect"]) + " }"
+        art = "{ " + ", ".join(str(f) for f in z["art"]) + " }"
+        line = f'    [{m}] = {{ "{z["kind"]}", {z["parent"]}, {z["inst"]}, {rect}, {art}, {loc_names(names.get(str(m), {}))}'
+        if z.get("overlays"):
+            L.append(line + ", {")
+            for o in z["overlays"]:
+                areas = "{ " + ", ".join(str(a) for a in o["areas"]) + " }"
+                L.append(f'        {{ {o["w"]}, {o["h"]}, {o["x"]}, {o["y"]}, {areas}, {", ".join(str(f) for f in o["fdids"])} }},')
+            L.append("    } },")
+        else:
+            L.append(line + " },")
+    L.append("}")
+    L.append("")
+    L.append("-- where each zone's name goes: [uiMapID] = { x, y } on its own map (the most inland spot of its land)")
+    L.append("ns.LABELS = {")
+    for m, (x, y) in sorted(labels.items()):
+        L.append(f"    [{m}] = {{ {x:.3f}, {y:.3f} }},")
+    L.append("}")
+    L.append("")
+    L.append("-- subzone names (the overlays' areas), for the search: [areaID] = { enUS, esES, esMX }")
+    L.append("ns.AREAS = {")
+    for a in sorted(area_ids):
+        if str(a) in area_names:
+            L.append(f"    [{a}] = {loc_names(area_names[str(a)])},")
+    L.append("}")
+    (ROOT / "Data" / "Maps.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+def write_minimap(tiles):
+    L = [HEADER.format(build=BUILD), "local _, ns = ...", "",
+         "-- [instance map] = { [row * 64 + col] = minimap texture (fileID) }: each ADT tile's top-down terrain",
+         "ns.MINIMAP = {"]
+    for inst, t in sorted(tiles.items()):
+        L.append(f"    [{inst}] = {{")
+        items = [f"[{k}]={v}" for k, v in sorted(t.items())]
+        for i in range(0, len(items), 8):
+            L.append("        " + ", ".join(items[i:i + 8]) + ",")
+        L.append("    },")
+    L.append("}")
+    (ROOT / "Data" / "Minimap.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+def write_flights(nodes, paths):
+    L = [HEADER.format(build=BUILD), "local _, ns = ...", "", f"ns.FLIGHT_SPEED = {SPEED}   -- yards a second, until flights measured in game refine it", "",
+         "-- [nodeID] = { instance, worldX, worldY, faction (A, H or N), { names enUS, esES, esMX } }",
+         "ns.TAXI_NODES = {"]
+    for i, n in sorted(nodes.items()):
+        L.append(f'    [{i}] = {{ {n["inst"]}, {num(round(n["x"], 1))}, {num(round(n["y"], 1))}, "{n["fac"]}", {loc_names(n["names"])} }},')
+    L.append("}")
+    L.append("")
+    L.append("-- { from, to, length (yards), cost (copper), { x1, y1, x2, y2, ... } (world yards, simplified) }")
+    L.append("ns.TAXI_PATHS = {")
+    for p in sorted(paths, key=lambda p: (p["from"], p["to"])):
+        poly = ", ".join(f"{num(round(x))}, {num(round(y))}" for x, y in p["poly"])
+        L.append(f'    {{ {p["from"]}, {p["to"]}, {round(p["len"])}, {p["cost"]}, {{ {poly} }} }},')
+    L.append("}")
+    (ROOT / "Data" / "Flights.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+def write_places(transports, entrances, levels):
+    L = [HEADER.format(build=BUILD), "local _, ns = ...", "",
+         "-- boats and zeppelins: { kind, faction (A, H or N), route name (English; Locales.lua translates it),",
+         "--   { { instance, { x1, y1, x2, y2, ... } }, ... } (the way it sails, per continent, world yards),",
+         "--   { { instance, x, y } at each end } (its docks) }",
+         "ns.TRANSPORTS = {"]
+    for t in transports:
+        pieces = ", ".join("{ %d, { %s } }" % (inst, ", ".join(f"{num(round(x))}, {num(round(y))}" for x, y in pts))
+                           for inst, pts in t["pieces"])
+        docks = ", ".join(f"{{ {inst}, {num(round(x))}, {num(round(y))} }}" for inst, x, y in t["docks"])
+        L.append(f'    {{ "{t["kind"]}", "{t["fac"]}", {lua_str(t["name"])}, {{ {pieces} }}, {{ {docks} }} }},')
+    L.append("}")
+    L.append("")
+    L.append("-- dungeon and raid entrances: { instance map, continent, worldX, worldY, raid, level, { names } }")
+    L.append("ns.DUNGEONS = {")
+    for e in sorted(entrances, key=lambda e: e["map"]):
+        L.append(f'    {{ {e["map"]}, {e["inst"]}, {num(round(e["x"], 1))}, {num(round(e["y"], 1))}, {"true" if e["raid"] else "false"}, '
+                 f'{e["level"]}, {loc_names(e["names"])} }},')
+    L.append("}")
+    L.append("")
+    L.append("-- the level Forever tunes each dungeon to, by its name as the search folds it (any language)")
+    L.append("ns.DUNGEON_LEVELS = {")
+    for k, v in sorted(levels.items()):
+        L.append(f"    [{lua_str(k)}] = {v},")
+    L.append("}")
+    (ROOT / "Data" / "Places.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+def main():
+    global BUILD
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--build", default=BUILD)
+    ap.add_argument("--no-masks", action="store_true")
+    args = ap.parse_args()
+    BUILD = args.build
+    maps, transforms, names, area_ids = build_maps()
+    zones = sum(1 for z in maps.values() if z["kind"] == "zone")
+    print(f"maps: {len(maps)} ({zones} zones with overlays)")
+    labels = build_masks(maps, write=not args.no_masks)
+    print(f"masks: {len(labels)} zones")
+    write_maps(maps, transforms, names, area_ids, labels)
+    tiles = build_minimap()
+    print("minimap tiles:", {k: len(v) for k, v in tiles.items()})
+    write_minimap(tiles)
+    nodes, paths = build_flights()
+    print(f"flights: {len(nodes)} nodes, {len(paths)} paths")
+    write_flights(nodes, paths)
+    transports = build_transports()
+    entrances, levels = build_dungeons()
+    print(f"places: {len(transports)} transports, {len(entrances)} dungeon entrances, {len(levels)} dungeon levels")
+    write_places(transports, entrances, levels)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
