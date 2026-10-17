@@ -51,6 +51,7 @@ Modules\Rares.lua
 Modules\Townsfolk.lua
 Modules\Dungeon.lua
 Modules\Minimap.lua
+Modules\Route.lua
 Modules\Search.lua
 Modules\Diag.lua
 

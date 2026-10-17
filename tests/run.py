@@ -82,6 +82,9 @@ CHECKS = {
                        r"^all off then one: none true, only profession trainers true, all row alpha 0.45$",
                        r"^layer off then one: alone true; all again: true$", r"^rares: warned 3, sent 1, marks 3, last .*Golpeador.*Lyra.*$", r"^quests to reach and buy: fargodeep offered true, places [1-9]\d*, sellers [1-9]\d*$",
                        r"^specialties: enchanting Trade_Engraving, cooking INV_Misc_Food_15, warrior UI-Classes-Circles, weaponsmith INV_Sword_04, food INV_Drink_05, tailoring Trade_Tailoring, cook trainer INV_Misc_Food_15, enchanter Trade_Engraving$", r"^errors 0$"]),
+    "route": (False, [r"^goldshire: walk$", r"^ironforge: fly(,walk)?, arrow Vuela de .+",
+                      r"^darnassus: .*boat.*, \d+:\d\d$", r"^step after reaching the first: 2, panel rows \d+$",
+                      r"^cleared: true$", r"^errors 0$"]),
     "locales": (False,[r"^missing en: none$", r"^missing es: none$", r"^format mismatch: none$"]),
 }
 

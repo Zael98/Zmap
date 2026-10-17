@@ -106,6 +106,19 @@ function F.Route(from, to)
     return ns.db.flights[from .. "-" .. to] or dist[to], hops
 end
 
+-- for the route planner: the flight masters you can use { [id] = { instance, x, y } }, and their hops
+-- { { from, to, seconds } }
+function F.Network()
+    local nodes, hops = {}, {}
+    for id, n in pairs(NODES) do
+        if Usable(id) and Known(id) then nodes[id] = { n[1], n[2], n[3] } end
+    end
+    for _, p in ipairs(PATHS) do
+        if nodes[p[1]] and nodes[p[2]] then hops[#hops + 1] = { p[1], p[2], HopTime(p) } end
+    end
+    return nodes, hops
+end
+
 -- the known flight master nearest to you on this continent
 function F.Nearest()
     local px, py, instance = Geo.PlayerYards()
