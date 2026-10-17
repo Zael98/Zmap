@@ -264,3 +264,18 @@ ZNS.SetOpt("folkMine", true)
 FRAMES(3)
 OUT(("only mine: classes %d (warrior %s), all %d; profession trainers shown without professions %s"):format(nMine,
     tostring(seenMine.WARRIOR == true), nAll, tostring(profs > 0)))
+
+-- a rare on a nameplate: warned once, marked, told to the guild; a guildmate's too
+local sentBefore = #STATE.sent
+local printedBefore = #STATE.printed
+STATE.units.nameplate7 = { id = 471, name = "Madre Colmillo" }
+EVENT("NAME_PLATE_UNIT_ADDED", "nameplate7")
+EVENT("NAME_PLATE_UNIT_ADDED", "nameplate7")
+local rareSent = 0
+for i = sentBefore + 1, #STATE.sent do if STATE.sent[i].msg:sub(1, 2) == "R\t" then rareSent = rareSent + 1 end end
+STATE.units.nameplate8 = { id = 999123, name = "Bicho Raro", class = "rareelite" }
+EVENT("NAME_PLATE_UNIT_ADDED", "nameplate8")
+EVENT("CHAT_MSG_ADDON", "Zmap", "R\t0\t1429\t0.3000\t0.4000\tGolpeador\t0", "GUILD", "Lyra-Realm")
+FRAMES(3)
+local marks = #PINS("rareseen")
+OUT(("rares: warned %d, sent %d, marks %d, last %s"):format(#STATE.printed - printedBefore, rareSent, marks, LAST_PRINT()))

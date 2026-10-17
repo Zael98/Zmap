@@ -613,3 +613,5 @@ Minimap = CreateFrame("Frame", "Minimap", UIParent)
 Minimap:SetSize(140, 140)
 function UpdateAddOnMemoryUsage() end
 function GetAddOnMemoryUsage() return collectgarbage("count") end
+function UnitClassification(u) return STATE.units[u] and STATE.units[u].class or "normal" end
+function UnitIsDead(u) return STATE.units[u] and STATE.units[u].dead or false end

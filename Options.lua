@@ -21,6 +21,7 @@ local LAYERS = {
     { "objectives", "OPT_OBJECTIVES", "WhiteCircle-RaidBlips", atlas = true, color = { 1, 0.35, 0.3 }, group = "LAYER_GROUP_QUESTS" },
     { "townsfolk", "OPT_TOWNSFOLK", I .. "INV_Misc_Coin_01", types = true, group = "LAYER_GROUP_PEOPLE" },
     { "rares", "OPT_RARES", "VignetteKill", atlas = true, group = "LAYER_GROUP_PEOPLE" },
+    { "rareAlert", "OPT_RARE_ALERT", "VignetteKillElite", atlas = true, group = "LAYER_GROUP_PEOPLE" },
     { "group", "OPT_GROUP", I .. "INV_Misc_GroupNeedMore", group = "LAYER_GROUP_PEOPLE" },
     { "guild", "OPT_GUILD", I .. "INV_Misc_Tournaments_Banner_Human", group = "LAYER_GROUP_PEOPLE" },
     { "herbs", "OPT_HERBS", I .. "INV_Misc_Herb_01", needs = "herb", group = "LAYER_GROUP_GATHER" },
