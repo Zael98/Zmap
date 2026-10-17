@@ -143,10 +143,138 @@ end
 
 ns.Diag = Report
 
-ns.commands.diag = function()
+--------------------------------------------------------------------------------------------------------------
+-- /zmap check: each feature tried with the game's own API, OK or FAIL and what it found
+--------------------------------------------------------------------------------------------------------------
+
+local function Check()
+    local out, failed = {}, 0
+    local function Try(label, fn)
+        local ok, good, detail = pcall(fn)
+        if not ok then good, detail = false, tostring(good) end
+        if not good then failed = failed + 1 end
+        out[#out + 1] = ("%s %s: %s"):format(good and "OK  " or "FAIL", label, tostring(detail or ""))
+    end
+    local _, _, m = Geo.UnitPosition("player")
+    Try("your position", function() return m ~= nil, m and Geo.Name(m) or "none (instance?)" end)
+    Try("zone art", function()
+        local tiles = m and ns.MAPS[m] and ns.MAPS[m][5]
+        local client = m and C_Map.GetMapArtLayerTextures(m, 1)
+        return tiles and client and tiles[1] == client[1], ("data %s, client %s"):format(tostring(tiles and tiles[1]), tostring(client and client[1]))
+    end)
+    Try("quest givers near you", function()
+        local n = 0
+        for _, mark in ipairs(ns.QuestMap.Givers()) do if mark.m == m then n = n + 1 end end
+        return n > 0, n .. " in this zone"
+    end)
+    Try("quest log read", function()
+        local log = ns.QuestMap.InLog()
+        return true, #log .. " quests, " .. #ns.QuestMap.Objectives() .. " objective marks"
+    end)
+    Try("quest titles in your language", function()
+        local id = ns.QuestMap.InLog()[1]
+        if not id then return true, "(no quest in the log)" end
+        return C_QuestLog.GetTitleForQuestID(id) ~= nil, ns.QuestMap.Title(id)
+    end)
+    Try("townsfolk here", function()
+        local kinds = {}
+        for _, f in ipairs(ns.Npcs.Townsfolk()) do
+            if f.m == m then
+                local look = ns.FolkLook(f.id)
+                if look then kinds[look.cat] = (kinds[look.cat] or 0) + 1 end
+            end
+        end
+        local parts = {}
+        for cat, n in pairs(kinds) do parts[#parts + 1] = cat .. " " .. n end
+        return true, #parts > 0 and table.concat(parts, ", ") or "none in this zone"
+    end)
+    Try("professions read", function()
+        return true, ("herbalism %s, mining %s"):format(tostring(ns.GatherSkill("herb")), tostring(ns.GatherSkill("ore")))
+    end)
+    Try("item names (herbs, ore)", function()
+        local name = C_Item.GetItemNameByID(2447)   -- Peacebloom
+        if not name then C_Item.RequestLoadItemDataByID(2447) end
+        return true, name or "asked for, try again in a moment"
+    end)
+    Try("guild roster -> zones", function()
+        if not IsInGuild() then return true, "(not in a guild)" end
+        local online, placed = 0, 0
+        for i = 1, GetNumGuildMembers() do
+            local _, _, _, _, _, zone, _, _, isOnline = GetGuildRosterInfo(i)
+            if isOnline then
+                online = online + 1
+                for _, id in ipairs(Geo.Zones()) do
+                    if Geo.Name(id) == zone then placed = placed + 1 break end
+                end
+            end
+        end
+        return online == 0 or placed > 0, ("%d online, %d in a known zone"):format(online, placed)
+    end)
+    Try("group positions", function()
+        if not IsInGroup() then return true, "(not in a group)" end
+        local seen = 0
+        for i = 1, GetNumSubgroupMembers() do
+            if Geo.UnitPosition("party" .. i) then seen = seen + 1 end
+        end
+        return seen > 0, ("%d of %d placed"):format(seen, GetNumSubgroupMembers())
+    end)
+    Try("flight masters known", function()
+        local nodes = ns.Flights.Network()
+        local n = 0
+        for _ in pairs(nodes) do n = n + 1 end
+        return n > 0, n
+    end)
+    Try("route to your capital", function()
+        local capital = UnitFactionGroup("player") == "Horde" and 1454 or 1453
+        local u, v = Geo.ToWorld(capital, 0.5, 0.5)
+        local saved = ns.Route.Current()
+        local ok = ns.Route.To(u, v, Geo.Name(capital))
+        local r = ns.Route.Current()
+        local legs = {}
+        for _, leg in ipairs(r and r.legs or {}) do legs[#legs + 1] = leg.mode end
+        if not saved then ns.Route.Clear() end
+        return ok, r and (table.concat(legs, ", ") .. ", " .. ns.Duration(r.seconds)) or "none"
+    end)
+    Try("dungeon maps", function()
+        local n = 0
+        for _ in pairs(ns.DUNGEON_MAPS) do n = n + 1 end
+        local _, kind, _, _, _, _, _, inst = GetInstanceInfo()
+        local here = IsInInstance() and (ns.Dungeon.Has(inst) and "this one has a map" or "no map for this one") or "outside"
+        return n > 0, n .. " instances; " .. here
+    end)
+    Try("minimap pins", function()
+        return ZmapMinimapPins ~= nil and Minimap:GetWidth() > 0, ("minimap %d px, %s, rotating %s"):format(Minimap:GetWidth(),
+            GetMinimapShape and GetMinimapShape() or "ROUND", tostring(GetCVar("rotateMinimap") == "1"))
+    end)
+    Try("rare detection", function()
+        return UnitClassification ~= nil, "nameplates, mouse over and target are watched"
+    end)
+    Try("NPC names in your language", function()
+        local learned, total = 0, 0
+        for _ in pairs(ns.NPCS) do total = total + 1 end
+        for _ in pairs(ns.db.npcNames and ns.db.npcNames[GetLocale()] or {}) do learned = learned + 1 end
+        return learned > 0 or GetLocale() == "enUS", ("%d of %d"):format(learned, total)
+    end)
+    Try("taxi API", function() return C_TaxiMap.GetAllTaxiNodes ~= nil, "flight advice at flight masters" end)
+    Try("memory", function()
+        UpdateAddOnMemoryUsage()
+        local mb = GetAddOnMemoryUsage("Zmap") / 1024
+        return mb < 80, ("%.1f MB"):format(mb)
+    end)
+    table.insert(out, 1, ("Zmap check: %d failed of %d"):format(failed, #out))
+    return table.concat(out, "\n"), failed
+end
+
+ns.Check = Check
+
+local function Show(text)
     local f = Window()
-    f.edit:SetText(Report())
+    f.edit:SetText(text)
     f:Show()
     f.edit:SetFocus()
     f.edit:HighlightText()
 end
+
+ns.commands.diag = function() Show(Report()) end
+ns.commands.check = function() Show((Check()) .. "\n\n" .. Report()) end
+ns.commands.comprobar = ns.commands.check

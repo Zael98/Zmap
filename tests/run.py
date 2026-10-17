@@ -80,7 +80,7 @@ CHECKS = {
                        r"^back to the world: true$", r"^deadmines bosses: 8, 1\. Rhahk'Zor, .*Cocinitas, 8\. Edwin VanCleef$", r"^brd: to floor 2, numbered on it true$", r"^outside: dungeon map shown false$", r"^tinted: true$",
                        r"^diag: shown true, lines \d\d, quests line true$", r"^layers fold: folded true, open again true$", r"^folk types: rows 20, food true -> 0, innkeepers kept true, row alpha 0.45$", r"^only mine: classes 1 \(warrior true\), all [2-9]; profession trainers shown without professions true$", r"^food back: true$",
                        r"^all off then one: none true, only profession trainers true, all row alpha 0.45$",
-                       r"^layer off then one: alone true; all again: true$", r"^rares: warned 3, sent 1, marks 3, last .*Golpeador.*Lyra.*$", r"^quests to reach and buy: fargodeep offered true, places [1-9]\d*, sellers [1-9]\d*$",
+                       r"^layer off then one: alone true; all again: true$", r"^rares: warned 3, sent 1, marks 3, last .*Golpeador.*Lyra.*$", r"^check: Zmap check: \d+ failed of \d+, ok 1\d, failed: ((zone art|quest titles in your language)(, )?)*$", r"^quests to reach and buy: fargodeep offered true, places [1-9]\d*, sellers [1-9]\d*$",
                        r"^specialties: enchanting Trade_Engraving, cooking INV_Misc_Food_15, warrior UI-Classes-Circles, weaponsmith INV_Sword_04, food INV_Drink_05, tailoring Trade_Tailoring, cook trainer INV_Misc_Food_15, enchanter Trade_Engraving$", r"^errors 0$"]),
     "route": (False, [r"^goldshire: walk$", r"^ironforge: fly(,walk)?, arrow Vuela de .+",
                       r"^darnassus: .*boat.*, \d+:\d\d$", r"^step after reaching the first: 2, panel rows \d+$",

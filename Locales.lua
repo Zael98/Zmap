@@ -15,7 +15,7 @@ local EN = {
     MENU_PIN_HERE = "Put a pin here", MENU_GO_HERE = "Go here (arrow)", MENU_LINK_HERE = "Link this point in chat",
     MENU_ZOOM_OUT = "Zoom out", MENU_CENTER_ME = "Center on me",
     ZONE = "Zone", CITY = "City",
-    HELP = "/zmap: open or close the map · /zmap options · /zmap pins · /zmap search <text> · /zway [zone] x y [name] · /zmap clearnodes · /zmap reset (window) · /zmap diag",
+    HELP = "/zmap: open or close the map · /zmap options · /zmap pins · /zmap search <text> · /zway [zone] x y [name] · /zmap clearnodes · /zmap reset (window) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Open/close Zmap",
     -- pins and navigation
     MY_PIN = "My pin", MY_PINS = "My pins", NO_PINS = "No pins yet: Ctrl+click on the map",
@@ -129,7 +129,7 @@ local ES = {
     MENU_PIN_HERE = "Poner un pin aquí", MENU_GO_HERE = "Ir hasta aquí (flecha)", MENU_LINK_HERE = "Enlazar este punto en el chat",
     MENU_ZOOM_OUT = "Alejar", MENU_CENTER_ME = "Centrar en mí",
     ZONE = "Zona", CITY = "Ciudad",
-    HELP = "/zmap: abrir o cerrar el mapa · /zmap opciones · /zmap pines · /zmap buscar <texto> · /zway [zona] x y [nombre] · /zmap borrarnodos · /zmap reset (ventana) · /zmap diag",
+    HELP = "/zmap: abrir o cerrar el mapa · /zmap opciones · /zmap pines · /zmap buscar <texto> · /zway [zona] x y [nombre] · /zmap borrarnodos · /zmap reset (ventana) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Abrir/cerrar Zmap",
     MY_PIN = "Mi pin", MY_PINS = "Mis pines", NO_PINS = "Aún no hay pines: Ctrl+clic en el mapa",
     NAVIGATE = "Ir hasta allí", STOP_NAV = "Dejar de ir", RENAME = "Renombrar...", EDIT_NOTE = "Nota...",

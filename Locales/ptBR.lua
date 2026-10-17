@@ -14,7 +14,7 @@ ns.LOCALES.PT = {
     MENU_PIN_HERE = "Pôr um marcador aqui", MENU_GO_HERE = "Ir até aqui (seta)", MENU_LINK_HERE = "Vincular este ponto no chat",
     MENU_ZOOM_OUT = "Afastar", MENU_CENTER_ME = "Centralizar em mim",
     ZONE = "Zona", CITY = "Cidade",
-    HELP = "/zmap: abrir ou fechar o mapa · /zmap options · /zmap pins · /zmap search <texto> · /zway [zona] x y [nome] · /zmap clearnodes · /zmap reset (janela) · /zmap diag",
+    HELP = "/zmap: abrir ou fechar o mapa · /zmap options · /zmap pins · /zmap search <texto> · /zway [zona] x y [nome] · /zmap clearnodes · /zmap reset (janela) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Abrir/fechar o Zmap",
     MY_PIN = "Meu marcador", MY_PINS = "Meus marcadores", NO_PINS = "Nenhum marcador: Ctrl+clique no mapa",
     NAVIGATE = "Ir até lá", STOP_NAV = "Parar de ir", RENAME = "Renomear...", EDIT_NOTE = "Nota...",

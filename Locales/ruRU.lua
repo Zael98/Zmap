@@ -14,7 +14,7 @@ ns.LOCALES.RU = {
     MENU_PIN_HERE = "Поставить метку здесь", MENU_GO_HERE = "Идти сюда (стрелка)", MENU_LINK_HERE = "Ссылка на точку в чат",
     MENU_ZOOM_OUT = "Отдалить", MENU_CENTER_ME = "Центр на мне",
     ZONE = "Зона", CITY = "Город",
-    HELP = "/zmap: открыть или закрыть карту · /zmap options · /zmap pins · /zmap search <текст> · /zway [зона] x y [имя] · /zmap clearnodes · /zmap reset (окно) · /zmap diag",
+    HELP = "/zmap: открыть или закрыть карту · /zmap options · /zmap pins · /zmap search <текст> · /zway [зона] x y [имя] · /zmap clearnodes · /zmap reset (окно) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Открыть/закрыть Zmap",
     MY_PIN = "Моя метка", MY_PINS = "Мои метки", NO_PINS = "Меток пока нет: Ctrl+щелчок по карте",
     NAVIGATE = "Идти туда", STOP_NAV = "Не идти туда", RENAME = "Переименовать...", EDIT_NOTE = "Заметка...",

@@ -14,7 +14,7 @@ ns.LOCALES.IT = {
     MENU_PIN_HERE = "Metti un segnalino qui", MENU_GO_HERE = "Vai qui (freccia)", MENU_LINK_HERE = "Collega questo punto in chat",
     MENU_ZOOM_OUT = "Riduci zoom", MENU_CENTER_ME = "Centra su di me",
     ZONE = "Zona", CITY = "Città",
-    HELP = "/zmap: apri o chiudi la mappa · /zmap options · /zmap pins · /zmap search <testo> · /zway [zona] x y [nome] · /zmap clearnodes · /zmap reset (finestra) · /zmap diag",
+    HELP = "/zmap: apri o chiudi la mappa · /zmap options · /zmap pins · /zmap search <testo> · /zway [zona] x y [nome] · /zmap clearnodes · /zmap reset (finestra) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Apri/chiudi Zmap",
     MY_PIN = "Il mio segnalino", MY_PINS = "I miei segnalini", NO_PINS = "Nessun segnalino: Ctrl+clic sulla mappa",
     NAVIGATE = "Vai lì", STOP_NAV = "Smetti di andarci", RENAME = "Rinomina...", EDIT_NOTE = "Nota...",

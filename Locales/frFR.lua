@@ -14,7 +14,7 @@ ns.LOCALES.FR = {
     MENU_PIN_HERE = "Placer un repère ici", MENU_GO_HERE = "Aller ici (flèche)", MENU_LINK_HERE = "Lier ce point dans le chat",
     MENU_ZOOM_OUT = "Dézoomer", MENU_CENTER_ME = "Centrer sur moi",
     ZONE = "Zone", CITY = "Ville",
-    HELP = "/zmap : ouvrir ou fermer la carte · /zmap options · /zmap pins · /zmap search <texte> · /zway [zone] x y [nom] · /zmap clearnodes · /zmap reset (fenêtre) · /zmap diag",
+    HELP = "/zmap : ouvrir ou fermer la carte · /zmap options · /zmap pins · /zmap search <texte> · /zway [zone] x y [nom] · /zmap clearnodes · /zmap reset (fenêtre) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Ouvrir/fermer Zmap",
     MY_PIN = "Mon repère", MY_PINS = "Mes repères", NO_PINS = "Aucun repère : Ctrl+clic sur la carte",
     NAVIGATE = "Y aller", STOP_NAV = "Ne plus y aller", RENAME = "Renommer...", EDIT_NOTE = "Note...",

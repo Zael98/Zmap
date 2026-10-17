@@ -14,7 +14,7 @@ ns.LOCALES.TW = {
     MENU_PIN_HERE = "在這裡放置標記", MENU_GO_HERE = "前往這裡（箭頭）", MENU_LINK_HERE = "在聊天中連結此點",
     MENU_ZOOM_OUT = "縮小", MENU_CENTER_ME = "以我為中心",
     ZONE = "區域", CITY = "城市",
-    HELP = "/zmap：開啟或關閉地圖 · /zmap options · /zmap pins · /zmap search <文字> · /zway [區域] x y [名稱] · /zmap clearnodes · /zmap reset（視窗） · /zmap diag",
+    HELP = "/zmap：開啟或關閉地圖 · /zmap options · /zmap pins · /zmap search <文字> · /zway [區域] x y [名稱] · /zmap clearnodes · /zmap reset（視窗） · /zmap diag · /zmap check",
     BINDING_TOGGLE = "開啟/關閉 Zmap",
     MY_PIN = "我的標記", MY_PINS = "我的標記", NO_PINS = "還沒有標記：在地圖上 Ctrl+點擊",
     NAVIGATE = "前往", STOP_NAV = "停止前往", RENAME = "重新命名...", EDIT_NOTE = "備註...",

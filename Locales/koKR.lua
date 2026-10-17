@@ -14,7 +14,7 @@ ns.LOCALES.KO = {
     MENU_PIN_HERE = "여기에 핀 놓기", MENU_GO_HERE = "여기로 가기 (화살표)", MENU_LINK_HERE = "이 지점을 대화창에 링크",
     MENU_ZOOM_OUT = "축소", MENU_CENTER_ME = "내 위치로",
     ZONE = "지역", CITY = "도시",
-    HELP = "/zmap: 지도 열기/닫기 · /zmap options · /zmap pins · /zmap search <텍스트> · /zway [지역] x y [이름] · /zmap clearnodes · /zmap reset (창) · /zmap diag",
+    HELP = "/zmap: 지도 열기/닫기 · /zmap options · /zmap pins · /zmap search <텍스트> · /zway [지역] x y [이름] · /zmap clearnodes · /zmap reset (창) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Zmap 열기/닫기",
     MY_PIN = "내 핀", MY_PINS = "내 핀", NO_PINS = "아직 핀이 없습니다: 지도에서 Ctrl+클릭",
     NAVIGATE = "그곳으로 가기", STOP_NAV = "가기 중지", RENAME = "이름 바꾸기...", EDIT_NOTE = "메모...",

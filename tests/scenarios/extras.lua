@@ -300,3 +300,12 @@ for _, mark in ipairs(ZNS.QuestMap.Objectives()) do
     if mark.quest == 116 and mark.buy then buy = buy + 1 end
 end
 OUT(("quests to reach and buy: fargodeep offered %s, places %d, sellers %d"):format(tostring(fargodeepOffered), reach, buy))
+
+-- /zmap check: every feature tried, OK or FAIL each
+SlashCmdList.ZMAP("check")
+local checkText = ZmapDiag.edit:GetText()
+local okLines, failLines = 0, {}
+for line in checkText:gmatch("[^\n]+") do
+    if line:find("^OK  ") then okLines = okLines + 1 elseif line:find("^FAIL") then failLines[#failLines + 1] = line:match("^FAIL ([^:]+)") end
+end
+OUT(("check: %s, ok %d, failed: %s"):format(checkText:match("^Zmap check: [^\n]+") or "none", okLines, table.concat(failLines, ", ")))

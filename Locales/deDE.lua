@@ -14,7 +14,7 @@ ns.LOCALES.DE = {
     MENU_PIN_HERE = "Hier einen Pin setzen", MENU_GO_HERE = "Hierhin gehen (Pfeil)", MENU_LINK_HERE = "Diesen Punkt im Chat verlinken",
     MENU_ZOOM_OUT = "Herauszoomen", MENU_CENTER_ME = "Auf mich zentrieren",
     ZONE = "Zone", CITY = "Stadt",
-    HELP = "/zmap: Karte öffnen oder schließen · /zmap options · /zmap pins · /zmap search <Text> · /zway [Zone] x y [Name] · /zmap clearnodes · /zmap reset (Fenster) · /zmap diag",
+    HELP = "/zmap: Karte öffnen oder schließen · /zmap options · /zmap pins · /zmap search <Text> · /zway [Zone] x y [Name] · /zmap clearnodes · /zmap reset (Fenster) · /zmap diag · /zmap check",
     BINDING_TOGGLE = "Zmap öffnen/schließen",
     MY_PIN = "Mein Pin", MY_PINS = "Meine Pins", NO_PINS = "Noch keine Pins: Strg+Klick auf die Karte",
     NAVIGATE = "Hingehen", STOP_NAV = "Nicht mehr hingehen", RENAME = "Umbenennen...", EDIT_NOTE = "Notiz...",
