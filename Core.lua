@@ -163,7 +163,7 @@ function ns.Fold(text)
 end
 
 -- The client's language among the data's (enUS, esES, esMX): the index into the data's name lists.
-local LOCALE_INDEX = { esES = 2, esMX = 3 }
+local LOCALE_INDEX = { esES = 2, esMX = 3, deDE = 4, frFR = 5, ptBR = 6, itIT = 7, ruRU = 8, koKR = 9, zhCN = 10, zhTW = 11 }
 function ns.Name(names)
     if not names then return "?" end
     return names[LOCALE_INDEX[GetLocale()] or 1] or names[1]

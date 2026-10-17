@@ -44,10 +44,10 @@ local function Places(start, dest)
     for _, t in ipairs(ns.TRANSPORTS) do
         if Mine(t[2]) then
             local a, b = t[5][1], t[5][2]
-            local pa = { instance = a[1], x = a[2], y = a[3], name = L.DOCK:format(L["ROUTE_" .. t[3]]) }
+            local pa = { instance = a[1], x = a[2], y = a[3], name = L.DOCK:format(ns.Name(t[6])) }
             local pb = { instance = b[1], x = b[2], y = b[3], name = pa.name }
             places[#places + 1], places[#places + 2] = pa, pb
-            sails[#sails + 1] = { pa, pb, t[1], t[3] }
+            sails[#sails + 1] = { pa, pb, t[1], ns.Name(t[6]) }
         end
     end
     for _, p in ipairs(places) do p.island = Island(p) end
@@ -72,7 +72,7 @@ local function Plan(start, dest)
     end
     for _, h in ipairs(hops) do Edge(fly[h[1]], fly[h[2]], h[3] + TAKE_OFF, "fly") end
     for _, s in ipairs(sails) do
-        local name = L["ROUTE_" .. s[4]]
+        local name = s[4]
         Edge(s[1], s[2], CROSSING, s[3], name)
         Edge(s[2], s[1], CROSSING, s[3], name)
     end

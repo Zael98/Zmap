@@ -46,7 +46,7 @@ function P:Refresh()
                 local u, v = Geo.FromYards(d[1], d[2], d[3])
                 local pin = self:Acquire()
                 pin.icon:SetTexture(ICONS[kind])
-                pin.route, pin.kind = name, kind
+                pin.route, pin.kind = ns.Name(t[6]), kind
                 self:Place(pin, u, v)
             end
         end
@@ -54,7 +54,7 @@ function P:Refresh()
 end
 
 function P:Tooltip(pin, tip)
-    tip:SetText(L["ROUTE_" .. pin.route] or pin.route, 1, 1, 1)
+    tip:SetText(pin.route, 1, 1, 1)
     tip:AddLine(pin.kind == "boat" and L.BOAT or L.ZEPPELIN, 0.7, 0.7, 0.7)
 end
 

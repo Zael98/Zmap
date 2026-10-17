@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FILES = ["Zmap.toc", "Bindings.xml", "*.lua", "Data", "Modules", "Media"]
+FILES = ["Zmap.toc", "Bindings.xml", "*.lua", "Locales", "Data", "Modules", "Media"]
 
 
 def main():

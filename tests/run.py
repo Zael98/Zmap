@@ -85,7 +85,7 @@ CHECKS = {
     "route": (False, [r"^goldshire: walk$", r"^ironforge: fly(,walk)?, arrow Vuela de .+",
                       r"^darnassus: .*boat.*, \d+:\d\d$", r"^step after reaching the first: 2, panel rows \d+$",
                       r"^cleared: true$", r"^errors 0$"]),
-    "locales": (False,[r"^missing en: none$", r"^missing es: none$", r"^format mismatch: none$"]),
+    "locales": (False, [r"^languages: DE EN ES FR IT KO PT RU TW ZH$", r"^DE: missing none; format mismatch none$", r"^EN: missing none; format mismatch none$", r"^ES: missing none; format mismatch none$", r"^FR: missing none; format mismatch none$", r"^IT: missing none; format mismatch none$", r"^KO: missing none; format mismatch none$", r"^PT: missing none; format mismatch none$", r"^RU: missing none; format mismatch none$", r"^TW: missing none; format mismatch none$", r"^ZH: missing none; format mismatch none$"]),
 }
 
 

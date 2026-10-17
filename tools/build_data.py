@@ -28,7 +28,7 @@ from scipy import ndimage
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = Path(__file__).resolve().parent / "cache"
 BUILD = "1.60.1.70374"
-LOCALES = ["enUS", "esES", "esMX"]
+LOCALES = ["enUS", "esES", "esMX", "deDE", "frFR", "ptBR", "itIT", "ruRU", "koKR", "zhCN", "zhTW"]
 WORLD = 947
 CONTINENT_MAPS = {0: 1415, 1: 1414}       # instance map -> its continent uiMap
 ART_W, ART_H, TILE = 1002, 668, 256       # every map art here: 1002x668 in 256 px tiles (UiMapArtStyleLayer 1)
@@ -97,7 +97,7 @@ def names_by_locale(name, key="Name_lang", id_key="ID"):
 
 
 def loc_names(entry):
-    """{enUS, esES, esMX} -> Lua table, dropping translations equal to English."""
+    """{enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW} -> Lua table, dropping translations equal to English."""
     en = entry.get("enUS", "")
     parts = [lua_str(en)]
     for loc in LOCALES[1:]:
@@ -380,15 +380,15 @@ def build_flights():
 
 # Boats and zeppelins sail the "Transport" taxi paths: points per continent, docking where a point has a delay.
 # The tables don't say which route a path is, so they are named here (by the docks their points reach).
-TRANSPORTS = {
-    241: ("boat", "N", "Booty Bay - Ratchet"),
-    285: ("zeppelin", "H", "Grom'gol - Orgrimmar"),
-    292: ("boat", "A", "Menethil Harbor - Theramore"),
-    293: ("boat", "A", "Rut'theran Village - Auberdine"),
-    295: ("boat", "A", "Menethil Harbor - Auberdine"),
-    301: ("zeppelin", "H", "Undercity - Grom'gol"),
-    302: ("zeppelin", "H", "Orgrimmar - Undercity"),
-    303: ("boat", "A", "Feathermoon Stronghold - Feralas"),
+TRANSPORTS = {   # path: kind, faction, name (the key), the areas at its ends (their names, in each language)
+    241: ("boat", "N", "Booty Bay - Ratchet", (35, 392)),
+    285: ("zeppelin", "H", "Grom'gol - Orgrimmar", (117, 1637)),
+    292: ("boat", "A", "Menethil Harbor - Theramore", (150, 513)),
+    293: ("boat", "A", "Rut'theran Village - Auberdine", (702, 442)),
+    295: ("boat", "A", "Menethil Harbor - Auberdine", (150, 442)),
+    301: ("zeppelin", "H", "Undercity - Grom'gol", (1497, 117)),
+    302: ("zeppelin", "H", "Orgrimmar - Undercity", (1637, 1497)),
+    303: ("boat", "A", "Feathermoon Stronghold - Feralas", (1116, 357)),
 }
 
 
@@ -397,7 +397,8 @@ def build_transports():
     for r in table("TaxiPathNode"):
         points.setdefault(r["PathID"], []).append(r)
     out = []
-    for pid, (kind, fac, name) in sorted(TRANSPORTS.items()):
+    areas = names_by_locale("AreaTable", "AreaName_lang")
+    for pid, (kind, fac, name, ends) in sorted(TRANSPORTS.items()):
         pts = sorted(points.get(str(pid), []), key=lambda r: int(r["NodeIndex"]))
         if not pts:
             raise RuntimeError(f"transport path {pid} is gone: check TRANSPORTS against TaxiPath")
@@ -415,7 +416,9 @@ def build_transports():
         if len(docks) > 2:   # its two docks: the stops farthest apart (a ferry's path is a loop)
             docks = list(max(((a, b) for i, a in enumerate(docks) for b in docks[i + 1:]),
                              key=lambda ab: (ab[0][0] != ab[1][0], math.dist(ab[0][1:], ab[1][1:]))))
+        a, b = (areas[str(e)] for e in ends)
         out.append({"kind": kind, "fac": fac, "name": name,
+                    "names": {loc: f"{a.get(loc) or a['enUS']} - {b.get(loc) or b['enUS']}" for loc in LOCALES},
                     "pieces": [(inst, simplify(p, 25)) for inst, p in pieces], "docks": docks})
     return out
 
@@ -474,7 +477,7 @@ def write_maps(maps, transforms, names, area_ids, labels):
     L.append("}")
     L.append("")
     L.append("-- [uiMapID] = { kind, parent, instance, { l, r, t, b on 947 }, { art tiles, row by row },")
-    L.append("--               { names enUS, esES, esMX }, overlays = { { w, h, x, y, { areaIDs }, fileIDs... } } }")
+    L.append("--               { names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW }, overlays = { { w, h, x, y, { areaIDs }, fileIDs... } } }")
     L.append("ns.MAPS = {")
     for m, z in sorted(maps.items()):
         rect = "{ " + ", ".join(repr(round(v, 7)) for v in z["rect"]) + " }"
@@ -496,7 +499,7 @@ def write_maps(maps, transforms, names, area_ids, labels):
         L.append(f"    [{m}] = {{ {x:.3f}, {y:.3f} }},")
     L.append("}")
     L.append("")
-    L.append("-- subzone names (the overlays' areas), for the search: [areaID] = { enUS, esES, esMX }")
+    L.append("-- subzone names (the overlays' areas), for the search: [areaID] = { enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW }")
     L.append("ns.AREAS = {")
     for a in sorted(area_ids):
         if str(a) in area_names:
@@ -521,7 +524,7 @@ def write_minimap(tiles):
 
 def write_flights(nodes, paths):
     L = [HEADER.format(build=BUILD), "local _, ns = ...", "", f"ns.FLIGHT_SPEED = {SPEED}   -- yards a second, until flights measured in game refine it", "",
-         "-- [nodeID] = { instance, worldX, worldY, faction (A, H or N), { names enUS, esES, esMX } }",
+         "-- [nodeID] = { instance, worldX, worldY, faction (A, H or N), { names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW } }",
          "ns.TAXI_NODES = {"]
     for i, n in sorted(nodes.items()):
         L.append(f'    [{i}] = {{ {n["inst"]}, {num(round(n["x"], 1))}, {num(round(n["y"], 1))}, "{n["fac"]}", {loc_names(n["names"])} }},')
@@ -538,15 +541,15 @@ def write_flights(nodes, paths):
 
 def write_places(transports, entrances, levels):
     L = [HEADER.format(build=BUILD), "local _, ns = ...", "",
-         "-- boats and zeppelins: { kind, faction (A, H or N), route name (English; Locales.lua translates it),",
-         "--   { { instance, { x1, y1, x2, y2, ... } }, ... } (the way it sails, per continent, world yards),",
-         "--   { { instance, x, y } at each end } (its docks) }",
+         "-- boats and zeppelins: { kind, faction (A, H or N), route (its key), { { instance, { x1, y1, x2, y2, ... } },",
+         "--   ... } (the way it sails, per continent, world yards), { { instance, x, y } at each end } (its docks),",
+         "--   { route names, one per language } }",
          "ns.TRANSPORTS = {"]
     for t in transports:
         pieces = ", ".join("{ %d, { %s } }" % (inst, ", ".join(f"{num(round(x))}, {num(round(y))}" for x, y in pts))
                            for inst, pts in t["pieces"])
         docks = ", ".join(f"{{ {inst}, {num(round(x))}, {num(round(y))} }}" for inst, x, y in t["docks"])
-        L.append(f'    {{ "{t["kind"]}", "{t["fac"]}", {lua_str(t["name"])}, {{ {pieces} }}, {{ {docks} }} }},')
+        L.append(f'    {{ "{t["kind"]}", "{t["fac"]}", {lua_str(t["name"])}, {{ {pieces} }}, {{ {docks} }}, {loc_names(t["names"])} }},')
     L.append("}")
     L.append("")
     L.append("-- dungeon and raid entrances: { instance map, continent, worldX, worldY, raid, level, { names } }")
@@ -635,7 +638,7 @@ def build_dungeon_maps():
 
 def write_dungeon_maps(dmaps):
     L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
-         "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX } }, ... },",
+         "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW } }, ... },",
          "--   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)",
          "ns.DUNGEON_MAPS = {"]
     for inst, d in sorted(out_sorted(dmaps)):

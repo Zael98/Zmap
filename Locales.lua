@@ -47,14 +47,6 @@ local EN = {
     FLIGHT_TIMER = "Flying to %s: %s", FLIGHT_TIMER_UP = "Flying to %s: %s (timing it)",
     DUNGEON = "Dungeon", RAID = "Raid", DUNGEON_LEVEL = "Level %s",
     BOAT = "Boat", ZEPPELIN = "Zeppelin",
-    ["ROUTE_Booty Bay - Ratchet"] = "Booty Bay - Ratchet",
-    ["ROUTE_Grom'gol - Orgrimmar"] = "Grom'gol - Orgrimmar",
-    ["ROUTE_Menethil Harbor - Theramore"] = "Menethil Harbor - Theramore",
-    ["ROUTE_Rut'theran Village - Auberdine"] = "Rut'theran Village - Auberdine",
-    ["ROUTE_Menethil Harbor - Auberdine"] = "Menethil Harbor - Auberdine",
-    ["ROUTE_Undercity - Grom'gol"] = "Undercity - Grom'gol",
-    ["ROUTE_Orgrimmar - Undercity"] = "Orgrimmar - Undercity",
-    ["ROUTE_Feathermoon Stronghold - Feralas"] = "Feathermoon Stronghold - Feralas",
     QUEST_DONE = "Complete: hand it in",
     QUEST_HINT = "Click: open in the quest log · Ctrl+click: go there",
     HERB = "Herb", ORE = "Ore", GATHERED_TIMES = "Gathered %d times", FOUND_BY = "Found by %s",
@@ -107,8 +99,6 @@ local EN = {
     LAYER_GROUP_GATHER = "Gathering", LAYER_GROUP_MINIMAP = "Minimap",
     OPT_RARE_ALERT = "Warn me of rares", RARE_SEEN = "Rare: %s", RARE_SEEN_BY = "Rare: %s (seen by %s)",
     RARE_SEEN_AGO = "Seen %d min ago",
-    FLY = "Fly", FLIGHT_ADVICE = "Zmap: for %s, fly to |cffffd100%s|r (~%s with the ride after)",
-    FLIGHT_ADVICE_LAND = "Zmap: %s is quicker by land from here",
     FLY = "Fly", FLIGHT_ADVICE = "For %s, fly to |cffffd100%s|r (~%s with the ride after)",
     FLIGHT_ADVICE_LAND = "%s is quicker by land from here",
     QUEST_BUY = "Sells what the quest asks for", QUEST_REACH = "Get here",
@@ -169,14 +159,6 @@ local ES = {
     FLIGHT_TIMER = "Volando a %s: %s", FLIGHT_TIMER_UP = "Volando a %s: %s (midiendo)",
     DUNGEON = "Mazmorra", RAID = "Banda", DUNGEON_LEVEL = "Nivel %s",
     BOAT = "Barco", ZEPPELIN = "Zepelín",
-    ["ROUTE_Booty Bay - Ratchet"] = "Bahía del Botín - Trinquete",
-    ["ROUTE_Grom'gol - Orgrimmar"] = "Grom'gol - Orgrimmar",
-    ["ROUTE_Menethil Harbor - Theramore"] = "Puerto de Menethil - Theramore",
-    ["ROUTE_Rut'theran Village - Auberdine"] = "Aldea Rut'theran - Auberdine",
-    ["ROUTE_Menethil Harbor - Auberdine"] = "Puerto de Menethil - Auberdine",
-    ["ROUTE_Undercity - Grom'gol"] = "Entrañas - Grom'gol",
-    ["ROUTE_Orgrimmar - Undercity"] = "Orgrimmar - Entrañas",
-    ["ROUTE_Feathermoon Stronghold - Feralas"] = "Bastión Plumaluna - Feralas",
     QUEST_DONE = "Completada: entrégala",
     QUEST_HINT = "Clic: abrir en el registro de misiones · Ctrl+clic: ir hasta allí",
     HERB = "Hierba", ORE = "Mineral", GATHERED_TIMES = "Recogido %d veces", FOUND_BY = "Encontrado por %s",
@@ -225,8 +207,6 @@ local ES = {
     LAYER_GROUP_GATHER = "Recolección", LAYER_GROUP_MINIMAP = "Minimapa",
     OPT_RARE_ALERT = "Avisarme de raros", RARE_SEEN = "Raro: %s", RARE_SEEN_BY = "Raro: %s (visto por %s)",
     RARE_SEEN_AGO = "Visto hace %d min",
-    FLY = "Volar", FLIGHT_ADVICE = "Zmap: para %s, vuela a |cffffd100%s|r (~%s contando el trayecto final)",
-    FLIGHT_ADVICE_LAND = "Zmap: a %s se llega antes por tierra desde aquí",
     FLY = "Volar", FLIGHT_ADVICE = "Para %s, vuela a |cffffd100%s|r (~%s con el trayecto final)",
     FLIGHT_ADVICE_LAND = "A %s se llega antes por tierra desde aquí",
     QUEST_BUY = "Vende lo que pide la misión", QUEST_REACH = "Llega hasta aquí",
@@ -243,10 +223,16 @@ local ES = {
     WELCOME = "M abre ahora Zmap. Quien use Zmap en tu hermandad te verá en su mapa (/zmap opciones para desactivarlo).",
 }
 
-local locale = GetLocale()
-local T = (locale == "esES" or locale == "esMX") and ES or {}
-ns.L = setmetatable({}, { __index = function(_, k) return T[k] or EN[k] or k end })
-ns.LOCALES = { EN = EN, ES = ES }   -- (the tests check both have every text)
+-- The other languages are in Locales\*.lua, each adding its table here (loaded right after this file). A text
+-- a language lacks is shown in English.
+ns.LOCALES = { EN = EN, ES = ES }   -- (the tests check every language has every text)
+local PICK = { esES = "ES", esMX = "ES", deDE = "DE", frFR = "FR", ptBR = "PT", ptPT = "PT", itIT = "IT",
+    ruRU = "RU", koKR = "KO", zhCN = "ZH", zhTW = "TW" }
+local T
+ns.L = setmetatable({}, { __index = function(_, k)
+    T = T or ns.LOCALES[PICK[GetLocale()]] or EN
+    return T[k] or EN[k] or k
+end })
 
 -- NPC titles from the NPC data (English) in Spanish, the common ones; the game's own wording replaces them
 -- as Zmap learns it (Modules/Npcs.lua)
@@ -267,7 +253,7 @@ local TRAINERS_ES = {
     ["First Aid"] = "primeros auxilios", Fishing = "pesca", ["Weapon Master"] = "maestros de armas",
 }
 function ns.TranslateTitle(title)
-    if T ~= ES then return title end
+    if PICK[GetLocale()] ~= "ES" then return title end
     if TITLES_ES[title] then return TITLES_ES[title] end
     local what = title:match("^(.-) Trainer$")
     if what and TRAINERS_ES[what] then return "Instructor de " .. TRAINERS_ES[what] end
