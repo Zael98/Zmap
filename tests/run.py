@@ -40,7 +40,7 @@ CHECKS = {
                         r"^tooltip: .*Desde .*~\d+:\d\d", r"^hover lines: [1-9]\d*$",
                         r"^origin chosen: true, tooltip from it: true$",
                         r"^timer: bar shown true, text .*Volando a .*$", r"^landed: recorded 9\d\.?\d* s, bar hidden true$",
-                        r"^speed learned: true$", r"^errors 0$"]),
+                        r"^speed learned: true$", r"^advice: fly to 6, text Para Forjaz, vuela a .*, button true$", r"^advice goldshire: A Villadorada se llega antes por tierra desde aquí$", r"^errors 0$"]),
     "social": (False, [r"^broadcast on login: P\t1429\t", r"^no broadcast in instance: true$",
                        r"^guildmate shown: Lyra$", r"^guildmate tooltip: .*Nivel 33.*$", r"^expired: 0$",
                        r"^group shown: Thrall$", r"^query answered: true$", r"^errors 0$"]),

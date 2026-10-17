@@ -313,4 +313,105 @@ local function OnTake(slot)
 end
 
 if TakeTaxiNode then hooksecurefunc("TakeTaxiNode", OnTake) end
-ns.On("TAXIMAP_OPENED", function() known = nil; ScanKnown() end)
+
+--------------------------------------------------------------------------------------------------------------
+-- At a flight master: where to fly for your destination (the arrow's, else the nearest quest to turn in), the
+-- flight and the ride after it weighed together, with a button to take it
+--------------------------------------------------------------------------------------------------------------
+
+local RIDE = 7   -- yards a second on foot or a slow mount, for the last stretch
+
+-- where you are heading: { name, instance, x, y } (yards)
+local function Heading()
+    local t = ns.Arrow.Target()
+    if t then
+        local x, y = Geo.ToYards(t.instance, t.u, t.v)
+        if x then return { name = t.name, instance = t.instance, x = x, y = y } end
+    end
+    local px, py, instance = Geo.PlayerYards()
+    if not px then return end
+    local best, bd
+    for _, mark in ipairs(ns.QuestMap.Objectives()) do
+        if mark.turnIn then
+            local x, y = Geo.ToYards(instance, mark.u, mark.v)
+            if x then
+                local d = (x - px) ^ 2 + (y - py) ^ 2
+                if not bd or d < bd then best, bd = { name = ns.QuestMap.Title(mark.quest), instance = instance, x = x, y = y }, d end
+            end
+        end
+    end
+    return best
+end
+
+-- From this flight master to where you are heading: the best flight { slot, node, seconds (flight + ride) }
+-- (nil: quicker by land), and what was weighed { heading, seconds by land }.
+function F.Advice(heading)
+    heading = heading or Heading()
+    if not heading then return end
+    local ok, list = pcall(C_TaxiMap.GetAllTaxiNodes, TaxiMapID())
+    if not ok or type(list) ~= "table" then return end
+    local here
+    for _, n in ipairs(list) do
+        if n.state == Enum.FlightPathState.Current then here = n.nodeID end
+    end
+    if not here or not NODES[here] or NODES[here][1] ~= heading.instance then return end
+    local land = math.sqrt((heading.x - NODES[here][2]) ^ 2 + (heading.y - NODES[here][3]) ^ 2) / RIDE
+    local best
+    for _, n in ipairs(list) do
+        local node = NODES[n.nodeID]
+        if n.state == Enum.FlightPathState.Reachable and node and node[1] == heading.instance then
+            local flight = F.Route(here, n.nodeID)
+            if flight then
+                local seconds = flight + math.sqrt((heading.x - node[2]) ^ 2 + (heading.y - node[3]) ^ 2) / RIDE
+                if seconds < (best and best.seconds or land) then best = { slot = n.slotIndex, node = n.nodeID, seconds = seconds } end
+            end
+        end
+    end
+    return best, { heading = heading, land = land }
+end
+
+local advisor
+local function ShowAdvice()
+    local parent = (FlightMapFrame and FlightMapFrame:IsShown() and FlightMapFrame) or (TaxiFrame and TaxiFrame:IsShown() and TaxiFrame)
+    local advice, weighed = F.Advice()
+    if not parent or not weighed then
+        if advisor then advisor:Hide() end
+        return
+    end
+    if not advisor then
+        advisor = CreateFrame("Frame", "ZmapFlightAdvice", UIParent, "BackdropTemplate")
+        advisor:SetSize(340, 50)
+        advisor:SetFrameStrata("DIALOG")
+        advisor:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+        advisor:SetBackdropColor(0.05, 0.05, 0.06, 0.95)
+        advisor:SetBackdropBorderColor(0.62, 0.55, 0.38, 1)
+        advisor.text = advisor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        advisor.text:SetPoint("LEFT", 10, 0)
+        advisor.text:SetPoint("RIGHT", -96, 0)
+        advisor.text:SetJustifyH("LEFT")
+        advisor.fly = CreateFrame("Button", nil, advisor, "UIPanelButtonTemplate")
+        advisor.fly:SetSize(80, 22)
+        advisor.fly:SetPoint("RIGHT", -8, 0)
+        advisor.fly:SetText(L.FLY)
+    end
+    advisor:ClearAllPoints()
+    advisor:SetPoint("BOTTOM", parent, "TOP", 0, 4)
+    local dest = weighed.heading.name or "?"
+    if advice then
+        advisor.text:SetText(L.FLIGHT_ADVICE:format(dest, F.Name(advice.node), ns.Duration(advice.seconds)))
+        advisor.fly:SetScript("OnClick", function() TakeTaxiNode(advice.slot) end)
+        advisor.fly:Show()
+    else
+        advisor.text:SetText(L.FLIGHT_ADVICE_LAND:format(dest))
+        advisor.fly:Hide()
+    end
+    advisor:Show()
+end
+
+ns.On("TAXIMAP_OPENED", function()
+    known = nil
+    ScanKnown()
+    C_Timer.After(0, function() ns.Safe(ShowAdvice) end)   -- (once the game has shown its flight map)
+end)
+ns.On("TAXIMAP_CLOSED", function() if advisor then advisor:Hide() end end)

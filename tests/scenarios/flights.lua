@@ -31,6 +31,26 @@ OUT(("origin chosen: %s, tooltip from it: %s"):format(tostring(Find(7).glow.show
     tostring(tip:find(ZNS.Flights.Name(7), 1, true) ~= nil)))
 Find(7).scripts.OnClick(Find(7), "RightButton")
 
+-- at Stormwind's flight master, heading to Ironforge's: the advice is to fly there; to Goldshire, by land
+STATE.taxiCurrent = 2
+TaxiFrame = CreateFrame("Frame", "TaxiFrame", UIParent)
+local ifu, ifv = ZNS.Geo.FromYards(0, -4821, -1155)
+local ifm, ifx, ify = ZNS.Geo.ZoneAt(ifu, ifv)
+ZNS.Waypoints.Add(ifm, ifx, ify, "Forjaz", { navigate = true })
+EVENT("TAXIMAP_OPENED")
+ADVANCE(0.1)
+local advice = ZNS.Flights.Advice()
+OUT(("advice: fly to %s, text %s, button %s"):format(tostring(advice and advice.node), ZmapFlightAdvice and ZmapFlightAdvice.text:GetText() or "none",
+    tostring(ZmapFlightAdvice and ZmapFlightAdvice.fly.shown)))
+local gu, gv = ZNS.Geo.ToWorld(1429, 0.42, 0.65)
+local gm, gx, gy = ZNS.Geo.ZoneAt(gu, gv)
+ZNS.Waypoints.Add(gm, gx, gy, "Villadorada", { navigate = true })
+EVENT("TAXIMAP_OPENED")
+ADVANCE(0.1)
+OUT(("advice goldshire: %s"):format(ZmapFlightAdvice.text:GetText()))
+EVENT("TAXIMAP_CLOSED")
+ZNS.Waypoints.Stop()
+
 -- a flight: Stormwind to Ironforge
 STATE.taxiCurrent = 2
 TakeTaxiNode(6)
