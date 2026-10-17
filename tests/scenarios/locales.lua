@@ -1,7 +1,9 @@
 -- Every text the code uses exists in English and Spanish, with the same %s / %d in both.
 local used = {}
 for _, file in ipairs(FILES) do
-    for key in SOURCES[file]:gmatch("L%.([%w_]+)") do used[key] = true end
+    if not file:find("^Data/") then   -- (the data's NPC names are not texts of ours)
+        for key in SOURCES[file]:gmatch("L%.([%w_]+)") do used[key] = true end
+    end
 end
 for _, prefix in ipairs({ "COLOR_1", "COLOR_2", "COLOR_3", "COLOR_4", "COLOR_5", "COLOR_6", "UNEXPLORED_show",
     "UNEXPLORED_dim", "UNEXPLORED_hide", "FOLK_vendor", "FOLK_repair", "FOLK_trainer", "FOLK_profession",

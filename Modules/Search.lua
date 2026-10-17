@@ -31,12 +31,35 @@ local function NpcText(e)
     if services ~= "" and services ~= sub then e.subKey = e.subKey .. " " .. ns.Fold(services) end
 end
 
--- what does not change while you play: built once (each NPC's entry is kept up to date as Zmap learns its name)
-local static
-local function Static()
-    if static then return static end
+-- what does not change while you play: built once (each NPC's entry is kept up to date as Zmap learns its name).
+-- The thousands of NPCs are added a few hundred at a time after logging in, so the first search does not
+-- stall the game; a search before that finishes them at once.
+local static, npcIds, npcAt
+local function Add(e) if e.text and e.u then static[#static + 1] = e end end
+
+local function AddNpcs(budget)
+    local N = ns.Npcs
+    while npcAt <= #npcIds and budget > 0 do
+        local id = npcIds[npcAt]
+        npcAt, budget = npcAt + 1, budget - 1
+        local spawn = N.Spawns(id)[1]
+        if spawn then
+            local kind = N.Kind(id)
+            local e = { kind = "npc", npc = id, zoom = 10, icon = kind and ns.FOLK_ICONS[kind] or NPC_ICON,
+                atlas = N.Rare(id) and "VignetteKill" or nil, zone = Geo.Name(spawn[1]) }
+            e.u, e.v = Geo.ToWorld(spawn[1], spawn[2], spawn[3])
+            NpcText(e)
+            npcEntries[id] = e
+            Add(e)
+        end
+    end
+    return npcAt > #npcIds
+end
+
+-- the zones, places, flight masters and dungeons; the NPCs still to add
+local function Base()
+    if static then return end
     static = {}
-    local function Add(e) if e.text and e.u then static[#static + 1] = e end end
     for _, id in ipairs(Geo.Zones()) do
         local l, r, t, b = Geo.Rect(id)
         Add(Entry("zone", Geo.Name(id), Geo.Kind(id) == "city" and L.CITY or L.ZONE, (l + r) / 2, (t + b) / 2, nil, nil, nil, id))
@@ -56,21 +79,26 @@ local function Static()
     for _, e in ipairs(ns.DungeonList()) do
         Add(Entry("dungeon", e.name, e.raid and L.RAID or L.DUNGEON, e.u, e.v, 7, nil, e.raid and "Raid" or "Dungeon"))
     end
-    local N = ns.Npcs
-    for id in pairs(ns.NPCS or {}) do
-        local spawn = N.Spawns(id)[1]
-        if spawn then
-            local kind = N.Kind(id)
-            local e = { kind = "npc", npc = id, zoom = 10, icon = kind and ns.FOLK_ICONS[kind] or NPC_ICON,
-                atlas = N.Rare(id) and "VignetteKill" or nil, zone = Geo.Name(spawn[1]) }
-            e.u, e.v = Geo.ToWorld(spawn[1], spawn[2], spawn[3])
-            NpcText(e)
-            npcEntries[id] = e
-            Add(e)
-        end
-    end
+    npcIds, npcAt = {}, 1
+    for id in pairs(ns.NPCS or {}) do npcIds[#npcIds + 1] = id end
+    table.sort(npcIds)
+end
+
+local function Static()
+    Base()
+    AddNpcs(math.huge)
     return static
 end
+
+ns.On("PLAYER_LOGIN", function()
+    C_Timer.After(8, function()
+        Base()
+        local ticker
+        ticker = C_Timer.NewTicker(0.1, function()
+            if AddNpcs(300) and ticker then ticker:Cancel() end
+        end)
+    end)
+end)
 
 ns.Npcs.OnLearn = function(id)
     local e = npcEntries[id]

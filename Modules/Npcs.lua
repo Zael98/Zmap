@@ -153,7 +153,7 @@ local function Ask()
     if InCombatLockdown() or not (C_TooltipInfo and C_TooltipInfo.GetHyperlink) then return end
     local names = Book("npcNames")
     local asked = 0
-    while asked < 6 do
+    while asked < 10 do
         if at > #queue then
             pass = pass + 1
             ns.db.npcAskPass = pass
