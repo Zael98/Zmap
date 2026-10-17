@@ -58,6 +58,7 @@ local function ShowFloor(index)
             pin.label = pin:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             pin.label:SetPoint("TOP", pin, "BOTTOM", 0, -1)
             pin.label:SetShadowOffset(1, -1)
+            pin:SetScript("OnMouseUp", function(_, button) if button == "RightButton" then D.Close() end end)
             bossPins[i] = pin
         end
         pin.x, pin.y = boss[2], boss[3]
@@ -81,6 +82,7 @@ local function Create(viewport)
     view:EnableMouse(true)       -- (the world map under it does not take the clicks)
     view:EnableMouseWheel(true)
     view:SetScript("OnMouseWheel", function() end)
+    view:SetScript("OnMouseUp", function(_, button) if button == "RightButton" then D.Close() end end)
     view:Hide()
     local bg = view:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
@@ -97,6 +99,9 @@ local function Create(viewport)
     back:SetPoint("TOPRIGHT", -6, -6)
     back:SetText(L.BACK_TO_WORLD)
     back:SetScript("OnClick", function() D.Close() end)
+    local hint = view:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    hint:SetPoint("BOTTOMRIGHT", -8, 8)
+    hint:SetText(L.DUNGEON_BACK_HINT)
     view:SetScript("OnSizeChanged", Layout)
 end
 
