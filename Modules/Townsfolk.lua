@@ -143,6 +143,21 @@ function ns.SetFolkTypeShown(cat, on)
     ns.db.folkHidden[cat] = not on or nil
     ns.Fire("ZMAP_OPTION", "folkTypes")
 end
+-- every type shown?
+function ns.AllFolkTypesShown()
+    for _, t in ipairs(TYPES) do
+        if Hidden()[t[1]] then return false end
+    end
+    return true
+end
+-- every type on, or every type off
+function ns.SetAllFolkTypes(on)
+    ns.db.folkHidden = {}
+    if not on then
+        for _, t in ipairs(TYPES) do ns.db.folkHidden[t[1]] = true end
+    end
+    ns.Fire("ZMAP_OPTION", "folkTypes")
+end
 
 local function Draw(icon, look)
     if look[3] then icon:SetAtlas(look[1]) else icon:SetTexture(look[1]) end

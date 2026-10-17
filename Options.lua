@@ -64,8 +64,8 @@ end
 local function Paint(b)
     if b.layer then
         Look(b, ns.Opt(b.layer[1]), b.layer.color)
-    elseif b.all then   -- (the townsfolk's "all" row: the layer itself)
-        Look(b, ns.Opt("townsfolk"))
+    elseif b.isAll then   -- (the townsfolk's "all" row: every type at once)
+        Look(b, ns.Opt("townsfolk") and ns.AllFolkTypesShown())
     elseif b.cat then
         Look(b, ns.Opt("townsfolk") and ns.FolkTypeShown(b.cat))
     end
@@ -193,13 +193,15 @@ local function CreateSide(frame)
         side.rows[#side.rows + 1] = b
     end
 
-    -- the townsfolk's types: "all" (the layer), then one row each
+    -- the townsfolk's types: "all" (every type on, or every type off), then one row each
     local all = Row(list)
-    all.all = true
+    all.isAll = true
     all.icon:SetTexture(I .. "INV_Misc_Coin_01")
     all.text:SetText(L.FOLK_ALL)
     all:SetScript("OnClick", function()
-        ns.SetOpt("townsfolk", not ns.Opt("townsfolk"))
+        local on = not (ns.Opt("townsfolk") and ns.AllFolkTypesShown())
+        ns.SetAllFolkTypes(on)
+        if on and not ns.Opt("townsfolk") then ns.SetOpt("townsfolk", true) end
         Layout()
     end)
     side.subs[1] = all
@@ -209,9 +211,14 @@ local function CreateSide(frame)
         if t.atlas then b.icon:SetAtlas(t[2]) else b.icon:SetTexture(t[2]) end
         b.text:SetText(L["FOLK_TYPE_" .. t[1]])
         b:SetScript("OnClick", function(self)
-            local on = not ns.FolkTypeShown(self.cat)
-            ns.SetFolkTypeShown(self.cat, on)
-            if on and not ns.Opt("townsfolk") then ns.SetOpt("townsfolk", true) end   -- (asked for one: the layer on)
+            -- (with the layer off, every type looks off: a click asks for this one alone)
+            if not ns.Opt("townsfolk") then
+                ns.SetAllFolkTypes(false)
+                ns.SetFolkTypeShown(self.cat, true)
+                ns.SetOpt("townsfolk", true)
+            else
+                ns.SetFolkTypeShown(self.cat, not ns.FolkTypeShown(self.cat))
+            end
             Layout()
         end)
         side.subs[#side.subs + 1] = b

@@ -198,3 +198,29 @@ OUT(("folk types: rows %d, food %s -> %d, innkeepers kept %s, row alpha %.2f"):f
 foodRow.scripts.OnClick(foodRow)
 FRAMES(3)
 OUT("food back: " .. tostring(CountCat("food") == foodBefore))
+
+-- "all" off, then one type: only that type
+local allRow, profRow
+for _, b in ipairs(side2.subs) do
+    if b.isAll then allRow = b elseif b.cat == "proftrainer" then profRow = b end
+end
+allRow.scripts.OnClick(allRow)
+FRAMES(3)
+local noneLeft = #PINS("townsfolk")
+profRow.scripts.OnClick(profRow)
+FRAMES(3)
+local onlyProf = #PINS("townsfolk") > 0
+for _, pin in ipairs(PINS("townsfolk")) do
+    if not (pin.npc and ZNS.FolkLook(pin.npc).cat == "proftrainer") then onlyProf = false end
+end
+OUT(("all off then one: none %s, only profession trainers %s, all row alpha %.2f"):format(tostring(noneLeft == 0),
+    tostring(onlyProf), allRow.icon:GetAlpha()))
+-- the layer off from elsewhere, then a type: that one alone
+ZNS.SetOpt("townsfolk", false)
+FRAMES(2)
+profRow.scripts.OnClick(profRow)
+FRAMES(3)
+local alone = ZNS.Opt("townsfolk") and ZNS.FolkTypeShown("proftrainer") and not ZNS.FolkTypeShown("food")
+allRow.scripts.OnClick(allRow)
+FRAMES(3)
+OUT(("layer off then one: alone %s; all again: %s"):format(tostring(alone), tostring(ZNS.AllFolkTypesShown())))
