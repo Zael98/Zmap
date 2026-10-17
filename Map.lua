@@ -339,7 +339,7 @@ local function Create()
     frame:SetToplevel(true)
     frame:SetMovable(true)
     frame:SetResizable(true)
-    frame:SetResizeBounds(520, 360)
+    frame:SetResizeBounds(780, 420)   -- (narrower, the top bar's buttons would cover the search box)
     frame:SetClampedToScreen(true)
     frame:EnableMouse(true)
     frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
