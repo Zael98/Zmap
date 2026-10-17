@@ -3,7 +3,8 @@
 local _, ns = ...
 local L = ns.L
 
--- what the map shows, by group: { option, its text, icon (texture, or atlas = true), needs = a profession }
+-- what the map shows, by group: { option, its text, icon (texture, or atlas = true), needs = a profession,
+--   types = unfolds into the townsfolk's types }
 local I = "Interface\\Icons\\"
 local LAYERS = {
     { "labels", "OPT_LABELS", I .. "INV_Misc_Note_01", group = "LAYER_GROUP_MAP" },
@@ -18,7 +19,7 @@ local LAYERS = {
     { "available", "OPT_AVAILABLE", "QuestNormal", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "trivial", "OPT_TRIVIAL", "TrivialQuests", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "objectives", "OPT_OBJECTIVES", "WhiteCircle-RaidBlips", atlas = true, color = { 1, 0.35, 0.3 }, group = "LAYER_GROUP_QUESTS" },
-    { "townsfolk", "OPT_TOWNSFOLK", I .. "INV_Misc_Coin_01", group = "LAYER_GROUP_PEOPLE" },
+    { "townsfolk", "OPT_TOWNSFOLK", I .. "INV_Misc_Coin_01", types = true, group = "LAYER_GROUP_PEOPLE" },
     { "rares", "OPT_RARES", "VignetteKill", atlas = true, group = "LAYER_GROUP_PEOPLE" },
     { "group", "OPT_GROUP", I .. "INV_Misc_GroupNeedMore", group = "LAYER_GROUP_PEOPLE" },
     { "guild", "OPT_GUILD", I .. "INV_Misc_Tournaments_Banner_Human", group = "LAYER_GROUP_PEOPLE" },
@@ -35,7 +36,7 @@ local function Offered(layer) return not layer.needs or ns.GatherSkill(layer.nee
 -- The layers panel: down the map's left side, a click on a layer turns it on or off; folded, a tab
 --------------------------------------------------------------------------------------------------------------
 
-local WIDTH, ROW, HEAD = 196, 20, 18
+local WIDTH, ROW, HEAD, INDENT = 196, 20, 18, 16
 local side
 
 local function Row(parent)
@@ -52,28 +53,47 @@ local function Row(parent)
     return b
 end
 
--- each row as its option stands: on in full colour, off greyed
-local function Paint(b)
-    local on = ns.Opt(b.layer[1])
+local function Look(b, on, color)
     b.icon:SetDesaturated(not on)
     b.icon:SetAlpha(on and 1 or 0.45)
-    local c = b.layer.color
-    if c and on then b.icon:SetVertexColor(c[1], c[2], c[3]) else b.icon:SetVertexColor(1, 1, 1) end
+    if color and on then b.icon:SetVertexColor(color[1], color[2], color[3]) else b.icon:SetVertexColor(1, 1, 1) end
     if on then b.text:SetTextColor(1, 1, 1) else b.text:SetTextColor(0.5, 0.5, 0.5) end
 end
 
--- rows in place (herbs and ore come and go with the professions) and as their options stand
+-- each row as its option stands: on in full colour, off greyed
+local function Paint(b)
+    if b.layer then
+        Look(b, ns.Opt(b.layer[1]), b.layer.color)
+    elseif b.all then   -- (the townsfolk's "all" row: the layer itself)
+        Look(b, ns.Opt("townsfolk"))
+    elseif b.cat then
+        Look(b, ns.Opt("townsfolk") and ns.FolkTypeShown(b.cat))
+    end
+end
+
+-- rows in place (herbs and ore come and go with the professions; the townsfolk's types unfold under them) and
+-- as their options stand
 local function Layout()
     if not side then return end
     local y = -4
+    local function Put(b, indent)
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", indent or 0, y)
+        b:SetPoint("RIGHT", side.list, "RIGHT")
+        b:Show()
+        y = y - ROW
+        Paint(b)
+    end
     local lastGroup
     for _, h in pairs(side.heads) do h:Hide() end
+    for _, b in ipairs(side.subs) do b:Hide() end
     for _, b in ipairs(side.rows) do
         local shown = Offered(b.layer)
         b:SetShown(shown)
         if shown then
             local g = b.layer.group
             if g ~= lastGroup then
+                if lastGroup == "LAYER_GROUP_MAP" then Put(side.unexplored) end
                 lastGroup = g
                 local h = side.heads[g]
                 h:ClearAllPoints()
@@ -81,23 +101,19 @@ local function Layout()
                 h:Show()
                 y = y - HEAD - 2
             end
-            b:ClearAllPoints()
-            b:SetPoint("TOPLEFT", 0, y)
-            b:SetPoint("RIGHT", side.list, "RIGHT")
-            y = y - ROW
-            Paint(b)
+            Put(b)
+            if b.layer.types then
+                local open = ns.db.window.folkOpen
+                b.fold:SetTexture(open and "Interface\\Buttons\\UI-MinusButton-Up" or "Interface\\Buttons\\UI-PlusButton-Up")
+                if open then
+                    for _, sub in ipairs(side.subs) do Put(sub, INDENT) end
+                end
+            end
         end
     end
     y = y - 6
-    side.unexplored:ClearAllPoints()
-    side.unexplored:SetPoint("TOPLEFT", 0, y)
-    side.unexplored:SetPoint("RIGHT", side.list, "RIGHT")
+    Put(side.more)
     side.unexplored.text:SetText(L.OPT_UNEXPLORED .. ": " .. L["UNEXPLORED_" .. ns.Opt("unexplored")])
-    y = y - ROW
-    side.more:ClearAllPoints()
-    side.more:SetPoint("TOPLEFT", 0, y)
-    side.more:SetPoint("RIGHT", side.list, "RIGHT")
-    y = y - ROW
     side.list:SetHeight(-y + 4)
 end
 
@@ -131,6 +147,7 @@ local function CreateSide(frame)
     fold:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Down")
     fold:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
     fold:SetScript("OnClick", function() SetOpen(false) end)
+    side.foldButton = fold
 
     -- the list scrolls with the wheel when the window is too short for it
     local scroll = CreateFrame("ScrollFrame", nil, side)
@@ -146,7 +163,7 @@ local function CreateSide(frame)
     end)
     side.list = list
 
-    side.heads, side.rows = {}, {}
+    side.heads, side.rows, side.subs = {}, {}, {}
     for _, layer in ipairs(LAYERS) do
         if not side.heads[layer.group] then
             local h = list:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -157,12 +174,49 @@ local function CreateSide(frame)
         b.layer = layer
         if layer.atlas then b.icon:SetAtlas(layer[3]) else b.icon:SetTexture(layer[3]) end
         b.text:SetText(L[layer[2]])
-        b:SetScript("OnClick", function(self)
-            ns.SetOpt(layer[1], not ns.Opt(layer[1]))
-            Paint(self)
-        end)
+        if layer.types then
+            -- a click unfolds its types, each turned on and off by itself
+            b.fold = b:CreateTexture(nil, "OVERLAY")
+            b.fold:SetSize(14, 14)
+            b.fold:SetPoint("RIGHT", -4, 0)
+            b.text:SetPoint("RIGHT", b.fold, "LEFT", -2, 0)
+            b:SetScript("OnClick", function()
+                ns.db.window.folkOpen = not ns.db.window.folkOpen
+                Layout()
+            end)
+        else
+            b:SetScript("OnClick", function(self)
+                ns.SetOpt(layer[1], not ns.Opt(layer[1]))
+                Paint(self)
+            end)
+        end
         side.rows[#side.rows + 1] = b
     end
+
+    -- the townsfolk's types: "all" (the layer), then one row each
+    local all = Row(list)
+    all.all = true
+    all.icon:SetTexture(I .. "INV_Misc_Coin_01")
+    all.text:SetText(L.FOLK_ALL)
+    all:SetScript("OnClick", function()
+        ns.SetOpt("townsfolk", not ns.Opt("townsfolk"))
+        Layout()
+    end)
+    side.subs[1] = all
+    for _, t in ipairs(ns.FolkTypes()) do
+        local b = Row(list)
+        b.cat = t[1]
+        if t.atlas then b.icon:SetAtlas(t[2]) else b.icon:SetTexture(t[2]) end
+        b.text:SetText(L["FOLK_TYPE_" .. t[1]])
+        b:SetScript("OnClick", function(self)
+            local on = not ns.FolkTypeShown(self.cat)
+            ns.SetFolkTypeShown(self.cat, on)
+            if on and not ns.Opt("townsfolk") then ns.SetOpt("townsfolk", true) end   -- (asked for one: the layer on)
+            Layout()
+        end)
+        side.subs[#side.subs + 1] = b
+    end
+
     local unexplored = Row(list)
     unexplored.icon:SetTexture(I .. "INV_Misc_Map_01")
     unexplored:SetScript("OnClick", function()
@@ -177,7 +231,6 @@ local function CreateSide(frame)
     local more = Row(list)
     more.icon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
     more.text:SetText(L.MORE_OPTIONS)
-    more.text:SetTextColor(1, 0.82, 0)
     more:SetScript("OnClick", function() ns.OpenOptions() end)
     side.more = more
 

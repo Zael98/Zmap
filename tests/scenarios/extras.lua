@@ -171,3 +171,30 @@ local function IconOf(id)
 end
 OUT(("specialties: enchanting %s, cooking %s, warrior %s, weaponsmith %s, food %s, tailoring %s, cook trainer %s, enchanter %s"):format(
     IconOf(1318), IconOf(3085), IconOf(911), IconOf(54), IconOf(2303), IconOf(1347), IconOf(1355), IconOf(3606)))
+
+-- the townsfolk unfold into their types, each on or off by itself
+ZNS.Map.SetView(gu * W, gv * H, 12)
+FRAMES(3)
+local side2 = ZmapFrame.layersPanel
+local folkRow
+for _, b in ipairs(side2.rows) do if b.layer[1] == "townsfolk" then folkRow = b end end
+folkRow.scripts.OnClick(folkRow)
+local subsShown = 0
+for _, b in ipairs(side2.subs) do if b:IsShown() then subsShown = subsShown + 1 end end
+local function CountCat(cat)
+    local n = 0
+    for _, pin in ipairs(PINS("townsfolk")) do
+        if pin.npc and ZNS.FolkLook(pin.npc).cat == cat then n = n + 1 end
+    end
+    return n
+end
+local foodBefore, innBefore = CountCat("food"), CountCat("innkeeper")
+local foodRow
+for _, b in ipairs(side2.subs) do if b.cat == "food" then foodRow = b end end
+foodRow.scripts.OnClick(foodRow)
+FRAMES(3)
+OUT(("folk types: rows %d, food %s -> %d, innkeepers kept %s, row alpha %.2f"):format(subsShown, tostring(foodBefore > 0),
+    CountCat("food"), tostring(CountCat("innkeeper") >= innBefore and innBefore > 0), foodRow.icon:GetAlpha()))
+foodRow.scripts.OnClick(foodRow)
+FRAMES(3)
+OUT("food back: " .. tostring(CountCat("food") == foodBefore))

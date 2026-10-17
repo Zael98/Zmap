@@ -28,7 +28,7 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 
 Rueda: zoom en el cursor · Arrastrar: moverse · Doble clic: acercar · Clic derecho: menú · Ctrl+clic: pin · Mayús+clic: enlazar el punto en el chat · Esc: cerrar.
 
-Capas: el panel de la izquierda del mapa, agrupado (Mapa, Viajes, Misiones, Gente, Recolección, Minimapa); un clic enciende o apaga cada capa. Se pliega con la flecha y vuelve con la pestaña «Capas».
+Capas: el panel de la izquierda del mapa, agrupado (Mapa, Viajes, Misiones, Gente, Recolección, Minimapa); un clic enciende o apaga cada capa. «PNJ de ciudad» se despliega en sus tipos (taberneros, banqueros, instructores de clase y de profesión, armas, armaduras, comida, suministros, buzones, yunques...), cada uno se enciende o apaga por separado. Se pliega con la flecha y vuelve con la pestaña «Capas».
 
 Comandos: `/zmap` (abrir/cerrar), `/zmap opciones`, `/zmap pines`, `/zmap buscar <texto>`, `/zmap borrarnodos`, `/zmap reset` (posición de la ventana), `/zmap diag`.
 
