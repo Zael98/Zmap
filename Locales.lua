@@ -16,7 +16,7 @@ local EN = {
     MENU_PIN_HERE = "Put a pin here", MENU_GO_HERE = "Go here (arrow)", MENU_LINK_HERE = "Link this point in chat",
     MENU_ZOOM_OUT = "Zoom out", MENU_CENTER_ME = "Center on me",
     ZONE = "Zone", CITY = "City",
-    HELP = "/zmap: open or close the map · /zmap options · /zmap pins · /zmap search <text> · /zway [zone] x y [name] · /zmap clearnodes · /zmap reset (window)",
+    HELP = "/zmap: open or close the map · /zmap options · /zmap pins · /zmap search <text> · /zway [zone] x y [name] · /zmap clearnodes · /zmap reset (window) · /zmap diag",
     BINDING_TOGGLE = "Open/close Zmap",
     -- pins and navigation
     MY_PIN = "My pin", MY_PINS = "My pins", NO_PINS = "No pins yet: Ctrl+click on the map",
@@ -94,6 +94,16 @@ local EN = {
     SERVICE_guildbank = "Guild banker", SERVICE_mailbox = "Mailbox",
     NPC = "NPC", RARE = "Rare", RARE_ELITE = "Rare elite", ELITE = "Elite", OPT_RARES = "Rares",
     FOUND_HINT = "Click: go there · Right-click: clear the marks",
+    -- quests from the data
+    QUEST = "Quest", QUESTS_HERE = "Quests to pick up", TURN_IN = "Turn in: %s", CLICK_NAVIGATE = "Click: go there",
+    OPT_AVAILABLE = "Quests to pick up", OPT_TRIVIAL = "Low-level quests", OPT_OBJECTIVES = "Quest objectives",
+    -- herbs and ore from the data
+    NEEDS_SKILL = "Needs %d %s", HERBALISM = "Herbalism", MINING = "Mining", OPT_NODES_ALL = "All herbs and ore",
+    FOLK_anvil = "Anvil", FOLK_forge = "Forge", FOLK_stone = "Meeting stone",
+    -- guildmates without Zmap, the minimap, colours, dungeon maps, /zmap diag
+    ONLY_ZONE = "Without Zmap: only their zone is known (%s)", OPT_MINIMAP_PINS = "Pins on the minimap",
+    OPT_HARMONIZE = "Even out the zones' colours", BACK_TO_WORLD = "Back to the world",
+    DUNGEON_MAP_HINT = "Click: the dungeon's map", DIAG_TITLE = "Zmap diagnostics (Ctrl+A, Ctrl+C to copy)",
     -- first login
     WELCOME = "M now opens Zmap. Your guildmates with Zmap will see you on their map (/zmap options to turn it off).",
 }
@@ -112,7 +122,7 @@ local ES = {
     MENU_PIN_HERE = "Poner un pin aquí", MENU_GO_HERE = "Ir hasta aquí (flecha)", MENU_LINK_HERE = "Enlazar este punto en el chat",
     MENU_ZOOM_OUT = "Alejar", MENU_CENTER_ME = "Centrar en mí",
     ZONE = "Zona", CITY = "Ciudad",
-    HELP = "/zmap: abrir o cerrar el mapa · /zmap opciones · /zmap pines · /zmap buscar <texto> · /zway [zona] x y [nombre] · /zmap borrarnodos · /zmap reset (ventana)",
+    HELP = "/zmap: abrir o cerrar el mapa · /zmap opciones · /zmap pines · /zmap buscar <texto> · /zway [zona] x y [nombre] · /zmap borrarnodos · /zmap reset (ventana) · /zmap diag",
     BINDING_TOGGLE = "Abrir/cerrar Zmap",
     MY_PIN = "Mi pin", MY_PINS = "Mis pines", NO_PINS = "Aún no hay pines: Ctrl+clic en el mapa",
     NAVIGATE = "Ir hasta allí", STOP_NAV = "Dejar de ir", RENAME = "Renombrar...", EDIT_NOTE = "Nota...",
@@ -187,6 +197,13 @@ local ES = {
     SERVICE_guildbank = "Banco de hermandad", SERVICE_mailbox = "Buzón",
     NPC = "PNJ", RARE = "Raro", RARE_ELITE = "Raro élite", ELITE = "Élite", OPT_RARES = "Raros",
     FOUND_HINT = "Clic: ir hasta allí · Clic derecho: quitar las marcas",
+    QUEST = "Misión", QUESTS_HERE = "Misiones para coger", TURN_IN = "Entregar: %s", CLICK_NAVIGATE = "Clic: ir hasta allí",
+    OPT_AVAILABLE = "Misiones para coger", OPT_TRIVIAL = "Misiones de nivel bajo", OPT_OBJECTIVES = "Objetivos de misión",
+    NEEDS_SKILL = "Requiere %d de %s", HERBALISM = "Herboristería", MINING = "Minería", OPT_NODES_ALL = "Todas las hierbas y minerales",
+    FOLK_anvil = "Yunque", FOLK_forge = "Forja", FOLK_stone = "Piedra de encuentro",
+    ONLY_ZONE = "Sin Zmap: solo se sabe su zona (%s)", OPT_MINIMAP_PINS = "Marcas en el minimapa",
+    OPT_HARMONIZE = "Igualar los colores de las zonas", BACK_TO_WORLD = "Volver al mundo",
+    DUNGEON_MAP_HINT = "Clic: mapa de la mazmorra", DIAG_TITLE = "Diagnóstico de Zmap (Ctrl+A, Ctrl+C para copiar)",
     WELCOME = "M abre ahora Zmap. Quien use Zmap en tu hermandad te verá en su mapa (/zmap opciones para desactivarlo).",
 }
 

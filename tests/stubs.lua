@@ -299,10 +299,11 @@ function UnitGUID(u)
 end
 function UnitIsPlayer(u) return u == "player" end
 function UnitClass(u)
-    if u == "player" then return "Guerrero", STATE.player.class end
+    if u == "player" then return "Guerrero", STATE.player.class, STATE.player.classID or 1 end
     local m = STATE.group[tonumber((u or ""):match("%d+") or 0)]
     return "x", m and m.class or "MAGE"
 end
+function UnitRace(u) return "Humano", "Human", STATE.player.raceID or 1 end
 function UnitLevel(u) return u == "player" and STATE.player.level or 20 end
 function UnitFactionGroup() return STATE.player.faction end
 function UnitExists(u) return u == "player" or STATE.units[u] ~= nil or STATE.group[tonumber((u or ""):match("%d+") or 0)] ~= nil end
@@ -559,6 +560,49 @@ C_QuestLog = {
     end,
     GetTitleForQuestID = function(id) return ({ [101] = "Lobos en la linde", [102] = "El collar de Fargodeep" })[id] end,
     GetQuestObjectives = function(id) return { { text = "Lobo matado: 3/8", finished = false } } end,
-    IsComplete = function(id) return id == 102 end,
+    IsComplete = function(id) return id == 102 or (STATE.finished or {})[id] == true end,
+    -- the log: STATE.log = { questID, ... } (default 101 and 102); STATE.completed = { questID, ... }
+    GetNumQuestLogEntries = function() return #(STATE.log or { 101, 102 }) end,
+    GetInfo = function(i)
+        local id = (STATE.log or { 101, 102 })[i]
+        return id and { questID = id, isHeader = false, title = "q" .. id }
+    end,
+    GetAllCompletedQuestIDs = function() return STATE.completed or {} end,
+    RequestLoadQuestByID = function() end,
     GetLogIndexForQuestID = function(id) return id - 100 end,
 }
+
+function GetQuestGreenRange() return 8 end
+-- professions: STATE.skills = { herb = 75, ore = 150 }
+function GetProfessions()
+    local sk = STATE.skills or {}
+    return sk.herb and 1 or nil, sk.ore and 2 or nil
+end
+function GetProfessionInfo(i)
+    local sk = STATE.skills or {}
+    if i == 1 then return "Herboristería", 136065, sk.herb, 300, 0, 0, 182 end
+    if i == 2 then return "Minería", 136248, sk.ore, 300, 0, 0, 186 end
+end
+C_Item = {
+    GetItemNameByID = function(id) return "item" .. id end,
+    GetItemIconByID = function(id) return 134000 + id % 100 end,
+    RequestLoadItemDataByID = function() end,
+}
+-- the guild roster: STATE.roster = { { name, level, zone, online, class }, ... }
+function GetNumGuildMembers() return #(STATE.roster or {}) end
+function GetGuildRosterInfo(i)
+    local r = STATE.roster[i]
+    return r.name .. "-Forever", "Miembro", 2, r.level, "x", r.zone, "", "", r.online, 0, r.class
+end
+C_GuildInfo = { GuildRoster = function() STATE.rosterAsked = (STATE.rosterAsked or 0) + 1 end }
+function GetInstanceInfo()
+    if not STATE.instance then return "Azeroth", "none", 0, "", 5, 0, false, 0 end
+    return STATE.instanceName or "Las Minas de la Muerte", "party", 1, "Normal", 5, 0, false, STATE.instanceID or 36
+end
+function GetCVar(k) return STATE.cvars and STATE.cvars[k] end
+function IsIndoors() return STATE.indoors end
+function GetFramerate() return 60 end
+function GetBuildInfo() return "1.60.1", "70374", "Oct 1 2026", 16001 end
+function GetBindingAction(key) return key == "M" and "CLICK ZmapToggle:LeftButton" or "" end
+Minimap = CreateFrame("Frame", "Minimap", UIParent)
+Minimap:SetSize(140, 140)

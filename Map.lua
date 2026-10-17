@@ -77,6 +77,7 @@ function Map.CursorUV()
     return x / W, y / H
 end
 
+local applied = {}   -- the view the canvas was last set to
 local function ApplyView()
     view.z = math.max(MIN_ZOOM, math.min(MAX_ZOOM, view.z))
     local vw, vh = ViewSize()
@@ -86,6 +87,9 @@ local function ApplyView()
     local hw, hh = vw / (2 * k), vh / (2 * k)
     view.x = math.max(hw, math.min(W - hw, view.x))
     view.y = math.max(hh, math.min(H - hh, view.y))
+    -- (following someone standing still: nothing moved, so nothing for the layers to redo)
+    if view.x == applied.x and view.y == applied.y and k == applied.k and vw == applied.vw and vh == applied.vh then return end
+    applied.x, applied.y, applied.k, applied.vw, applied.vh = view.x, view.y, k, vw, vh
     canvas:SetScale(k)
     canvas:ClearAllPoints()
     canvas:SetPoint("TOPLEFT", viewport, "TOPLEFT", vw / (2 * k) - view.x, -(vh / (2 * k) - view.y))

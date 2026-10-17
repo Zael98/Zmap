@@ -19,8 +19,11 @@ Data\Maps.lua
 Data\Minimap.lua
 Data\Flights.lua
 Data\Places.lua
-# from tools/build_npcs.py (Warcraft DB)
+Data\DungeonMaps.lua
+# from tools/build_npcs.py (Warcraft DB and Questie's database)
 Data\Npcs.lua
+Data\Objects.lua
+Data\Quests.lua
 
 Geo.lua
 Art.lua
@@ -41,8 +44,12 @@ Modules\Transports.lua
 Modules\Quests.lua
 Modules\Gather.lua
 Modules\Npcs.lua
+Modules\QuestMap.lua
 Modules\Townsfolk.lua
+Modules\Dungeon.lua
+Modules\Minimap.lua
 Modules\Search.lua
+Modules\Diag.lua
 
 Options.lua
 Bindings.lua

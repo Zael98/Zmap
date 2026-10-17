@@ -119,6 +119,12 @@ local function Overlays(parent, mapID, mask)
     return out
 end
 
+-- the zone's tint towards the zones' common colour (Data/Maps.lua's TINTS), with the option on
+local WHITE = { 1, 1, 1 }
+function Art.Tint(mapID)
+    return ns.Opt("harmonize") and ns.TINTS and ns.TINTS[mapID] or WHITE
+end
+
 --------------------------------------------------------------------------------------------------------------
 -- Exploration: overlays you have explored are drawn as they are; the rest shown, dimmed or hidden
 --------------------------------------------------------------------------------------------------------------
@@ -135,17 +141,19 @@ function Art.ApplyExplored(mapID)
         end
     end
     local mode = ns.Opt("unexplored")
+    local t = Art.Tint(mapID)
+    for _, tex in ipairs(z.base) do tex:SetVertexColor(t[1], t[2], t[3]) end
     for _, o in ipairs(z.overlays) do
         local seen = not explored or explored[o.first] == true
         o.explored = seen
         for _, tex in ipairs(o.tex) do
             if seen or mode == "show" then
-                tex:SetVertexColor(1, 1, 1)
+                tex:SetVertexColor(t[1], t[2], t[3])
                 if tex.SetDesaturation then tex:SetDesaturation(0) end
                 tex:SetDrawLayer("ARTWORK", seen and 1 or 0)
                 tex:Show()
             elseif mode == "dim" then
-                tex:SetVertexColor(DIM[1], DIM[2], DIM[3])
+                tex:SetVertexColor(DIM[1] * t[1], DIM[2] * t[2], DIM[3] * t[3])
                 if tex.SetDesaturation then tex:SetDesaturation(DIM_DESAT) end
                 tex:SetDrawLayer("ARTWORK", 0)
                 tex:Show()
@@ -166,8 +174,8 @@ local function BuildZone(mapID)
     z.halo = Layer(zoneRoot, base + 1)
     z.core = Layer(zoneRoot, base + 2)
     z.over = Layer(zoneRoot, base + 3)
-    Tiles(z.halo, mapID, "BORDER", 0, Mask(z.halo, mapID, mapID .. "h"))
-    Tiles(z.core, mapID, "BORDER", 0, Mask(z.core, mapID, mapID .. "c"))
+    z.base = Tiles(z.halo, mapID, "BORDER", 0, Mask(z.halo, mapID, mapID .. "h"))
+    for _, tex in ipairs(Tiles(z.core, mapID, "BORDER", 0, Mask(z.core, mapID, mapID .. "c"))) do z.base[#z.base + 1] = tex end
     z.overlays = Overlays(z.over, mapID, Mask(z.over, mapID, mapID .. "c"))
     zones[mapID] = z
     Art.ApplyExplored(mapID)
@@ -258,6 +266,15 @@ local function UpdateTerrain(left, top, right, bottom, alpha)
     terrainRoot:SetShown(alpha > 0.01)
 end
 
+-- for /zmap diag: zones and cities built, terrain tiles in use
+function Art.Stats()
+    local z, c, t = 0, 0, 0
+    for _ in pairs(zones) do z = z + 1 end
+    for _ in pairs(cities) do c = c + 1 end
+    for _ in pairs(terrain) do t = t + 1 end
+    return z, c, t
+end
+
 function Art.Update()
     if not worldFrame then return end
     local left, top, right, bottom = ns.Map.ViewRect()
@@ -318,7 +335,7 @@ ns.On("MAP_EXPLORATION_UPDATED", function()
 end)
 
 ns.On("ZMAP_OPTION", function(key)
-    if key == "unexplored" then
+    if key == "unexplored" or key == "harmonize" then
         for id in pairs(zones) do Art.ApplyExplored(id) end
     elseif key == "minimap" and ns.Map.IsShown() then
         Art.Update()

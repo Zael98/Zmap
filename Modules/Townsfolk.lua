@@ -16,7 +16,25 @@ local ICONS = {
     stable = "Interface\\Minimap\\Tracking\\StableMaster",
     spirit = "Interface\\RaidFrame\\Raid-Icon-Rez",
     mailbox = "Interface\\Minimap\\Tracking\\Mailbox",
+    stone = "Interface\\Icons\\INV_Misc_StoneTablet_05",
 }
+local ATLASES = { anvil = "worldquest-icon-blacksmithing", forge = "worldquest-icon-blacksmithing" }
+ICONS.anvil, ICONS.forge = "", ""   -- (drawn from ATLASES)
+
+-- the data's mailboxes, anvils, forges and meeting stones (Data/Objects.lua): { { kind, m, x, y }, ... }
+local utilities
+local function Utilities()
+    if utilities then return utilities end
+    utilities = {}
+    for id, o in pairs(ns.OBJECTS or {}) do
+        if ICONS[o[2]] then
+            for _, s in ipairs(ns.Npcs.ObjectSpawns(id)) do
+                utilities[#utilities + 1] = { kind = o[2], m = s[1], x = s[2], y = s[3] }
+            end
+        end
+    end
+    return utilities
+end
 local BINDER_ICON = 132052   -- the innkeeper's "make this inn your home" gossip option
 local MAX_PINS = 300
 
@@ -119,14 +137,18 @@ function P:Refresh()
         if not u or u < u0 or u > u1 or v < v0 or v > v1 or count >= MAX_PINS or not ICONS[kind] then return end
         count = count + 1
         local pin = self:Acquire()
-        pin.icon:SetTexture(ICONS[kind])
-        pin.m, pin.x, pin.y, pin.npc, pin.folk, pin.key = m, x, y, nil, nil, nil
+        if ATLASES[kind] then pin.icon:SetAtlas(ATLASES[kind]) else pin.icon:SetTexture(ICONS[kind]) end
+        pin.m, pin.x, pin.y, pin.npc, pin.folk, pin.key, pin.object = m, x, y, nil, nil, nil, nil
         self:Place(pin, u, v)
         return pin
     end
     for _, f in ipairs(ns.Npcs.Townsfolk()) do
         local pin = Pin(f.kind, f.m, f.x, f.y)
         if pin then pin.npc = f.id end
+    end
+    for _, o in ipairs(Utilities()) do
+        local pin = Pin(o.kind, o.m, o.x, o.y)
+        if pin then pin.object = o.kind end
     end
     for key, f in pairs(ns.db.folk) do
         local npc = tonumber(key:match(":(%d+)$"))
@@ -142,6 +164,12 @@ function P:Tooltip(pin, tip)
         ns.Npcs.Tooltip(pin, tip)
         return
     end
+    if pin.object then
+        tip:SetText(L["FOLK_" .. pin.object], 1, 1, 1)
+        tip:AddLine(("%s  %s"):format(Geo.Name(pin.m), ns.Coords(pin.x, pin.y)), 0.6, 0.6, 0.6)
+        tip:AddLine(L.CTRL_NAVIGATE, 0.6, 0.6, 0.6)
+        return
+    end
     local f = pin.folk
     tip:SetText(f.name or "?", 1, 1, 1)
     if f.sub then tip:AddLine(f.sub, 1, 0.82, 0) end
@@ -155,7 +183,7 @@ function P:OnClick(pin, button)
         ns.db.folk[pin.key] = nil
         P:Update()
     elseif button == "LeftButton" and IsControlKeyDown() then
-        local name = pin.npc and ns.Npcs.Name(pin.npc) or pin.folk.name
+        local name = pin.npc and ns.Npcs.Name(pin.npc) or pin.object and L["FOLK_" .. pin.object] or pin.folk.name
         ns.Waypoints.Add(pin.m, pin.x, pin.y, name, { navigate = true, temp = true })
     end
 end

@@ -98,3 +98,70 @@ ns.On("ZMAP_TICK", function(elapsed)
         P:Update()
     end
 end)
+
+--------------------------------------------------------------------------------------------------------------
+-- Guildmates without Zmap: the game only says which zone they are in (the guild roster), so they stand
+-- around the zone's name, hollow, and their tooltip says it is only the zone
+--------------------------------------------------------------------------------------------------------------
+
+local Z = ns.Pins.New("guildzone", { level = 69, size = 13, option = "guild", minZoom = 1.5 })
+local zoneByName   -- zone name in the client's language -> uiMapID
+
+local function ZoneOf(name)
+    if not zoneByName then
+        zoneByName = {}
+        for _, id in ipairs(Geo.Zones()) do zoneByName[Geo.Name(id)] = id end
+    end
+    return name and zoneByName[name]
+end
+
+function Z:OnCreate(pin)
+    pin.label = pin:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    pin.label:SetPoint("TOP", pin, "BOTTOM", 0, -1)
+    pin.label:SetShadowOffset(1, -1)
+end
+
+function Z:Refresh()
+    self:ReleaseAll()
+    if not IsInGuild() or not GetNumGuildMembers then return end
+    local me = UnitName("player")
+    local perZone = {}
+    for i = 1, GetNumGuildMembers() do
+        local full, _, _, level, _, zone, _, _, online, _, class = GetGuildRosterInfo(i)
+        local name = full and Ambiguate(full, "none")
+        local mapID = online and ZoneOf(zone)
+        if mapID and name ~= me and not members[full] and not members[name] and not UnitInParty(name) and not UnitInRaid(name) then
+            local n = (perZone[mapID] or 0) + 1
+            perZone[mapID] = n
+            -- around the zone's name, a little apart from each other
+            local spot = ns.LABELS[mapID] or { 0.5, 0.5 }
+            local angle, radius = n * 2.4, 0.035 * math.sqrt(n)
+            local u, v = Geo.ToWorld(mapID, spot[1] + math.cos(angle) * radius, spot[2] + 0.06 + math.sin(angle) * radius * 1.4)
+            local pin = self:Acquire()
+            local r, g, b = ns.ClassColor(class)
+            pin.icon:SetAtlas("WhiteDotCircle-RaidBlips")
+            pin.icon:SetVertexColor(r, g, b, 0.85)
+            pin.label:SetText(name)
+            pin.who = { name = name, level = level, class = class, zone = mapID }
+            self:Place(pin, u, v)
+        end
+    end
+end
+
+function Z:Tooltip(pin, tip)
+    local w = pin.who
+    local r, g, b = ns.ClassColor(w.class)
+    tip:SetText(w.name, r, g, b)
+    tip:AddLine(L.GUILDMATE_LEVEL:format(w.level or "?"), 1, 1, 1)
+    tip:AddLine(L.ONLY_ZONE:format(Geo.Name(w.zone)), 1, 0.6, 0.3, true)
+end
+
+ns.On("GUILD_ROSTER_UPDATE", function() Z:Update() end)
+local asked = 0
+ns.On("ZMAP_TICK", function()
+    -- the roster is asked for now and then while the map is open (the game answers with GUILD_ROSTER_UPDATE)
+    if GetTime() - asked > 30 and IsInGuild() then
+        asked = GetTime()
+        if C_GuildInfo and C_GuildInfo.GuildRoster then C_GuildInfo.GuildRoster() elseif GuildRoster then GuildRoster() end
+    end
+end)

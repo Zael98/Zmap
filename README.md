@@ -14,19 +14,27 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Grupo** en el mapa; **hermandad**: quien use Zmap ve dónde estás (desactivable).
 - **PNJ**: unos 8.400 PNJ de Forever con su posición (la base de datos de Forever de Questie, completada con Warcraft DB). Se buscan por nombre, título o servicio («tabernero»), el más cercano primero; al elegir uno, el mapa va hasta él y marca todos los sitios donde aparece (clic en la marca: la flecha te lleva). Los nombres llegan en inglés y Zmap aprende los del juego en tu idioma (al verlos y, poco a poco, preguntándoselos al juego). Los PNJ que faltan se aprenden al seleccionarlos de cerca y se comparten con la hermandad.
 - **Vendedores, instructores, taberneros, banqueros, subastadores, establos y ángeles** de tu facción en el mapa (de los datos y de los que conoces en el juego), y **raros**.
-- **Hierbas y minerales** que recoges: se recuerdan y se comparten con la hermandad.
+- **Misiones al estilo Questie**: signos de exclamación donde están las misiones que puedes coger (según tu nivel, raza, clase y las que ya hiciste; las de nivel bajo, opcionales), y para las misiones de tu registro sus objetivos (los bichos y objetos, un color por misión) y, cuando están completas, a quién entregarlas.
+- **Hierbas y minerales** de los datos (unos 25.000 puntos) según tu profesión, en gris los que aún no puedes recoger (o todos, con la opción); además de los que recoges tú, que se recuerdan y se comparten con la hermandad.
+- **Buzones, yunques, forjas y piedras de encuentro** en el mapa.
+- **Minimapa**: el destino (en el borde si está lejos), tus pines, misiones, objetivos y hierbas o minerales cercanos.
+- **Mapas de mazmorra**: dentro de una instancia el mapa abre el de la mazmorra, por plantas y con sus jefes; también con un clic en la entrada. Botón para volver al mundo.
+- **Hermandad sin Zmap**: quien no tiene Zmap aparece en su zona (un círculo hueco junto al nombre de la zona); el juego solo dice en qué zona está, no el punto exacto.
+- **Igualar colores** (opcional): suaviza el cambio de color entre zonas vecinas.
+- `/zmap diag`: un informe para copiar si algo falla.
 - **Buscador**: zonas, subzonas, puntos de vuelo, mazmorras, PNJ, pines y hierbas; sin importar tildes.
 
 ## Controles
 
 Rueda: zoom en el cursor · Arrastrar: moverse · Doble clic: acercar · Clic derecho: menú · Ctrl+clic: pin · Mayús+clic: enlazar el punto en el chat · Esc: cerrar.
 
-Comandos: `/zmap` (abrir/cerrar), `/zmap opciones`, `/zmap pines`, `/zmap buscar <texto>`, `/zmap borrarnodos`, `/zmap reset` (posición de la ventana).
+Comandos: `/zmap` (abrir/cerrar), `/zmap opciones`, `/zmap pines`, `/zmap buscar <texto>`, `/zmap borrarnodos`, `/zmap reset` (posición de la ventana), `/zmap diag`.
 
 ## Desarrollo
 
 - `python tools/build_data.py` regenera `Data/*.lua` (salvo `Npcs.lua`) y `Media/Masks/*.tga` a partir de las tablas del cliente (exportadas por wago.tools). Hay que volver a ejecutarlo cuando Forever cambie sus mapas.
-- `python tools/build_npcs.py` regenera `Data/Npcs.lua` uniendo la base de datos de Forever de Questie (de la última versión publicada en GitHub) y Warcraft DB (forever.warcraftdb.com; ~7.000 páginas). Todo queda en caché en `tools/cache`. Conviene repetirlo cuando salga una versión nueva de Questie.
+- `python tools/build_data.py` también genera `Data/DungeonMaps.lua` (las tablas de Forever no tienen mapas de mazmorra; los saca de las de Mists Classic y comprueba que las imágenes estén en Forever) y los tonos de `ns.TINTS`.
+- `python tools/build_npcs.py` regenera `Data/Npcs.lua`, `Data/Objects.lua` y `Data/Quests.lua` uniendo la base de datos de Forever de Questie (de la última versión publicada en GitHub) y Warcraft DB (forever.warcraftdb.com; ~7.000 páginas). Todo queda en caché en `tools/cache`. Conviene repetirlo cuando salga una versión nueva de Questie.
 - Licencia: los datos de PNJ de Questie son GPL-3.0. Para uso propio y de la hermandad no cambia nada; si algún día se publica Zmap, tendría que publicarse también bajo GPL-3.0 (o quitar esos datos).
 - `python tools/install.py` copia el addon a la carpeta AddOns de Forever.
 - `python tests/run.py` carga el addon en Lua 5.1 (lupa) con una imitación de la API del juego y ejecuta los escenarios de `tests/scenarios`.

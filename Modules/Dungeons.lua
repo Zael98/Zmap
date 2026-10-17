@@ -21,7 +21,7 @@ local function Collect()
         local u, v = Geo.FromYards(d[2], d[3], d[4])
         if u then
             local level = d[6] > 0 and d[6] or LevelOf(ns.Name(d[7]))
-            entrances[#entrances + 1] = { u = u, v = v, name = ns.Name(d[7]), level = level, raid = d[5] }
+            entrances[#entrances + 1] = { u = u, v = v, name = ns.Name(d[7]), level = level, raid = d[5], inst = d[1] }
         end
     end
     -- the game's own list (Forever's new dungeons may only be there)
@@ -65,6 +65,7 @@ function P:Tooltip(pin, tip)
     tip:AddLine(e.raid and L.RAID or L.DUNGEON, 0.7, 0.7, 0.7)
     if e.level then tip:AddLine(L.DUNGEON_LEVEL:format(ns.LevelText(e.level, e.level)), 1, 1, 1) end
     if e.description and e.description ~= "" then tip:AddLine(e.description, 1, 0.82, 0, true) end
+    if e.inst and ns.Dungeon.Has(e.inst) then tip:AddLine(L.DUNGEON_MAP_HINT, 0.6, 0.6, 0.6) end
     tip:AddLine(L.CTRL_NAVIGATE, 0.6, 0.6, 0.6)
 end
 
@@ -72,6 +73,8 @@ function P:OnClick(pin, button)
     if button == "LeftButton" and IsControlKeyDown() then
         local mapID, x, y = Geo.ZoneAt(pin.entry.u, pin.entry.v)
         if mapID then ns.Waypoints.Add(mapID, x, y, pin.entry.name, { navigate = true, temp = true }) end
+    elseif button == "LeftButton" and pin.entry.inst then
+        ns.Dungeon.Open(pin.entry.inst, pin.entry.name)
     end
 end
 

@@ -11,8 +11,11 @@ function P:OnCreate(pin)
     pin.num:SetTextColor(1, 1, 1)
 end
 
+ns.BlizzardQuestPins = {}   -- quests the game itself places (QuestMap.lua does not repeat their hand-in)
+
 function P:Refresh()
     self:ReleaseAll()
+    wipe(ns.BlizzardQuestPins)
     if not (C_QuestLog and C_QuestLog.GetQuestsOnMap) then return end
     local seen = {}
     for _, mapID in ipairs(Geo.Zones()) do
@@ -33,6 +36,7 @@ function P:Refresh()
                     pin.num:SetText(index or "")
                 end
                 pin.questID, pin.mapID, pin.x, pin.y = q.questID, mapID, q.x, q.y
+                ns.BlizzardQuestPins[q.questID] = true
                 self:Place(pin, u, v)
             end
         end

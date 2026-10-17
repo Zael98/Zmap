@@ -113,6 +113,31 @@ local function Dynamic()
         local u, v = Geo.ToWorld(p.m, p.x, p.y)
         Add(Entry("pin", p.name, L.MY_PIN, u, v, 10, nil, "Waypoint-MapPin-Untracked"))
     end
+    -- every kind of herb and ore (by the item's name in your language): the nearest one
+    for _, k in ipairs(ns.NodeKinds()) do
+        local spawns = ns.NodeSpawns(k.item, k.name)
+        if spawns[1] then
+            local u, v = Geo.ToWorld(spawns[1][1], spawns[1][2], spawns[1][3])
+            local e = Entry("node", ns.ItemName(k.item, k.name), k.kind == "herb" and L.HERB or L.ORE, u, v, 9,
+                k.kind == "herb" and "Interface\\Icons\\INV_Misc_Herb_01" or "Interface\\Icons\\INV_Ore_Copper_01")
+            e.spawns = spawns
+            Add(e)
+        end
+    end
+    -- the quests you carry: their nearest objective, or who takes them once done
+    local marks = ns.QuestMap.Objectives()
+    for _, id in ipairs(ns.QuestMap.InLog()) do
+        local spawns = {}
+        for _, m in ipairs(marks) do
+            if m.quest == id then spawns[#spawns + 1] = { m.m, m.x, m.y } end
+        end
+        if spawns[1] then
+            local u, v = Geo.ToWorld(spawns[1][1], spawns[1][2], spawns[1][3])
+            local e = Entry("quest", ns.QuestMap.Title(id), L.QUEST, u, v, 9, nil, "QuestNormal")
+            e.spawns = spawns
+            Add(e)
+        end
+    end
     local met = {}
     for id, s in pairs(ns.Npcs.SeenList()) do
         if Geo.Kind(s.m) then
@@ -152,7 +177,7 @@ local function Score(name, want)
 end
 
 -- zones and cities first, then subzones and your pins, dungeons, NPCs and flight masters, townsfolk and herbs
-local KIND = { zone = 0, subzone = 1, pin = 1, dungeon = 2, npc = 3, flight = 3, folk = 4, herb = 4 }
+local KIND = { zone = 0, subzone = 1, pin = 1, quest = 1, dungeon = 2, node = 2, npc = 3, flight = 3, folk = 4, herb = 4 }
 
 local function Match(c, want, found)
     local score = Score(c.key, want)
@@ -178,12 +203,15 @@ function Search.Find(text)
     -- the nearest first among equals: an NPC at the spawn nearest to you
     local pu, pv = Geo.UnitPosition("player")
     for _, c in ipairs(found) do
+        local m, x, y
         if c.npc and #found <= 300 then
-            local m, x, y = ns.Npcs.Nearest(c.npc)
-            if m then
-                c.u, c.v = Geo.ToWorld(m, x, y)
-                c.zone = Geo.Name(m)
-            end
+            m, x, y = ns.Npcs.Nearest(c.npc)
+        elseif c.spawns then
+            m, x, y = ns.Npcs.NearestOf(c.spawns)
+        end
+        if m then
+            c.u, c.v = Geo.ToWorld(m, x, y)
+            c.zone = Geo.Name(m)
         end
         c.dist = pu and ((c.u - pu) ^ 2 + (c.v - pv) ^ 2) or 0
     end

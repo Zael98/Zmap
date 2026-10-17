@@ -197,16 +197,10 @@ end)
 -- Where they stand
 --------------------------------------------------------------------------------------------------------------
 
--- { { mapID, x, y }, ... } (x, y: share of that map): the data's, or where it was seen in game
-function N.Spawns(id)
-    local d = NPCS[id]
-    local out = {}
-    if not d then
-        local seen = Seen(id)
-        if seen and Geo.Kind(seen.m) then out[1] = { seen.m, seen.x, seen.y } end
-        return out
-    end
-    for i = 7, #d - 1, 2 do
+-- a data row's spawns from its field `from` on (uiMapID, { coords per thousand }, ...): { { mapID, x, y }, ... }
+local function SpawnsOf(d, from, out)
+    out = out or {}
+    for i = from, #d - 1, 2 do
         local mapID, coords = d[i], d[i + 1]
         if Geo.Kind(mapID) then
             for j = 1, #coords - 1, 2 do out[#out + 1] = { mapID, coords[j] / 1000, coords[j + 1] / 1000 } end
@@ -215,9 +209,25 @@ function N.Spawns(id)
     return out
 end
 
--- the spawn nearest to you on your continent (else the first): mapID, x, y
-function N.Nearest(id)
-    local spawns = N.Spawns(id)
+-- { { mapID, x, y }, ... } (x, y: share of that map): the data's, or where it was seen in game
+function N.Spawns(id)
+    local d = NPCS[id]
+    if not d then
+        local out, seen = {}, Seen(id)
+        if seen and Geo.Kind(seen.m) then out[1] = { seen.m, seen.x, seen.y } end
+        return out
+    end
+    return SpawnsOf(d, 7)
+end
+
+-- an object's (Data/Objects.lua: herbs, ore, mailboxes, a quest's chest...) spawns, same form
+function N.ObjectSpawns(id)
+    local d = ns.OBJECTS and ns.OBJECTS[id]
+    return d and SpawnsOf(d, 5) or {}
+end
+
+-- the nearest to you on your continent of some spawns (else the first): mapID, x, y
+function N.NearestOf(spawns)
     local pu, pv, pm = Geo.UnitPosition("player")
     local best, bd
     for _, s in ipairs(spawns) do
@@ -230,6 +240,9 @@ function N.Nearest(id)
     best = best or spawns[1]
     if best then return best[1], best[2], best[3] end
 end
+
+-- the spawn nearest to you on your continent (else the first): mapID, x, y
+function N.Nearest(id) return N.NearestOf(N.Spawns(id)) end
 
 -- friendly to your faction (or to both)
 function N.Friendly(id)

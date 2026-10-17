@@ -12,9 +12,19 @@ function ns.Print(msg)
 end
 
 -- An error in one module is reported (BugSack, the error frame) without stopping the others.
+-- the last errors caught, for /zmap diag
+ns.errors = {}
+local function Note(err)
+    table.insert(ns.errors, tostring(err))
+    if #ns.errors > 10 then table.remove(ns.errors, 1) end
+end
+
 function ns.Safe(fn, ...)
     local ok, err = pcall(fn, ...)
-    if not ok then geterrorhandler()(err) end
+    if not ok then
+        Note(err)
+        geterrorhandler()(err)
+    end
     return ok, err
 end
 
@@ -25,6 +35,7 @@ function ns.Guard(fn)
         local ok, err = pcall(fn, ...)
         if not ok and not reported[err] then
             reported[err] = true
+            Note(err)
             geterrorhandler()(err)
         end
     end
@@ -85,6 +96,7 @@ ns.DEFAULTS = {
     -- layers
     labels = true, levels = true, flights = true, dungeons = true, transports = true,
     quests = true, group = true, guild = true, pins = true, herbs = true, ore = true, townsfolk = true, rares = true,
+    available = true, trivial = false, objectives = true, nodesAll = false, minimapPins = true, harmonize = false,
     -- sharing (only with Zmap users of your guild or group)
     shareGuild = true,        -- your position on their map
     shareFinds = true,        -- herbs, ore and townsfolk you find

@@ -52,12 +52,13 @@ def fetch(url, path):
             time.sleep(2 + attempt * 3)
 
 
-def table(name, locale="enUS"):
-    data = fetch(f"https://wago.tools/db2/{name}/csv?build={BUILD}&locale={locale}",
-                 CACHE / BUILD / f"{name}.{locale}.csv")
+def table(name, locale="enUS", build=None):
+    build = build or BUILD
+    data = fetch(f"https://wago.tools/db2/{name}/csv?build={build}&locale={locale}",
+                 CACHE / build / f"{name}.{locale}.csv")
     rows = list(csv.DictReader(io.StringIO(data.decode("utf-8"))))
     if not rows:
-        raise RuntimeError(f"{name}: empty table for build {BUILD}")
+        raise RuntimeError(f"{name}: empty table for build {build}")
     return rows
 
 
@@ -563,6 +564,107 @@ def write_places(transports, entrances, levels):
     (ROOT / "Data" / "Places.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
+# --------------------------------------------------------------------------------------------------------------
+# Dungeon maps: Forever's tables have none, but its install has the pictures. Mists Classic's tables say which
+# pictures make each instance's floors and where its bosses are. Left out: the dungeons Pandaria rebuilt
+# (their maps are not Forever's), and bosses that are not NPCs of Forever (Cataclysm's, in the Deadmines).
+# --------------------------------------------------------------------------------------------------------------
+
+MISTS = "5.5.4.70449"
+REBUILT = {311, 316, 246}   # journal instances: Scarlet Halls, Scarlet Monastery, Scholomance (Pandaria's)
+
+
+def build_dungeon_maps(forever_npc_names):
+    um = {r["ID"]: r for r in table("UiMap", build=MISTS)}
+    inst_of = {}
+    for r in table("UiMapAssignment", build=MISTS):
+        if um.get(r["UiMapID"], {}).get("Type") == "4":
+            inst_of.setdefault(r["UiMapID"], int(r["MapID"]))
+    art = {r["UiMapID"]: r["UiMapArtID"] for r in table("UiMapXMapArt", build=MISTS) if r["PhaseID"] == "0"}
+    tiles = {}
+    for r in table("UiMapArtTile", build=MISTS):
+        if r["LayerIndex"] == "0":
+            tiles.setdefault(r["UiMapArtID"], []).append(r)
+    floor_names = {loc: {r["UiMapID"]: r["Name_lang"] for r in table("UiMapGroupMember", loc, MISTS)} for loc in LOCALES}
+    order = {r["UiMapID"]: int(r["FloorIndex"]) for r in table("UiMapGroupMember", build=MISTS)}
+    journal = {r["ID"]: r for r in table("JournalInstance", build=MISTS)}
+    boss_names = {loc: {r["ID"]: r["Name_lang"] for r in table("JournalEncounter", loc, MISTS)} for loc in LOCALES}
+    out = {}
+    for m, inst in inst_of.items():
+        ts = sorted(tiles.get(art.get(m), []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
+        if len(ts) != 12:
+            continue   # (not the 4 x 3 classic picture)
+        out.setdefault(inst, []).append({"ui": int(m), "order": order.get(m, 0), "tiles": [int(t["FileDataID"]) for t in ts],
+                                         "names": {loc: floor_names[loc].get(m, "") for loc in LOCALES}, "bosses": []})
+    rebuilt = {int(j["MapID"]) for jid, j in journal.items() if int(jid) in REBUILT}
+    forever = {int(r["ID"]) for r in table("Map") if r["InstanceType"] in ("1", "2")}
+    for inst in list(out):
+        if inst in rebuilt or inst not in forever:
+            del out[inst]
+    by_ui = {f["ui"]: f for floors in out.values() for f in floors}
+    for r in table("JournalEncounter", build=MISTS):
+        f = by_ui.get(int(r["UiMapID"]))
+        if f and r["Name_lang"] in forever_npc_names:
+            f["bosses"].append({"names": {loc: boss_names[loc].get(r["ID"], r["Name_lang"]) for loc in LOCALES},
+                                "x": float(r["Map_0"]), "y": float(r["Map_1"])})
+    for floors in out.values():
+        floors.sort(key=lambda f: f["order"])
+    # make sure the pictures are in Forever's install (the first tile of each floor)
+    for inst in list(out):
+        out[inst] = [f for f in out[inst] if casc(f["tiles"][0])]
+        if not out[inst]:
+            del out[inst]
+    return out
+
+
+def write_dungeon_maps(dmaps):
+    L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
+         "-- [instance map] = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX },",
+         "--                      { { { boss names }, x, y }, ... } }, ... } (floors in order)",
+         "ns.DUNGEON_MAPS = {"]
+    for inst, floors in sorted(out_sorted(dmaps)):
+        L.append(f"    [{inst}] = {{")
+        for f in floors:
+            bosses = ", ".join(f"{{ {loc_names(b['names'])}, {b['x']:.3f}, {b['y']:.3f} }}" for b in f["bosses"])
+            L.append(f"        {{ {{ {', '.join(str(t) for t in f['tiles'])} }}, {loc_names(f['names'])}, {{ {bosses} }} }},")
+        L.append("    },")
+    L.append("}")
+    (ROOT / "Data" / "DungeonMaps.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+def out_sorted(d):
+    return sorted(d.items())
+
+
+# --------------------------------------------------------------------------------------------------------------
+# Colour: each zone is painted in its own palette, and their borders show it. A tint per zone (vertex colour:
+# it can only darken a channel) moves its land halfway towards the zones' common colour.
+# --------------------------------------------------------------------------------------------------------------
+
+def build_tints(maps):
+    means = {}
+    for m, zone in maps.items():
+        if zone["kind"] != "zone":
+            continue
+        img = Image.new("RGBA", (ART_W + TILE * 2, ART_H + TILE * 2))
+        for o in zone["overlays"]:
+            cols = math.ceil(o["w"] / TILE)
+            for i, fdid in enumerate(o["fdids"]):
+                row, col = divmod(i, cols)
+                img.alpha_composite(texture(fdid), (o["x"] + col * TILE, o["y"] + row * TILE))
+        a = np.array(img.crop((0, 0, ART_W, ART_H))).astype(float)
+        w = a[..., 3] / 255
+        if w.sum() > 0:
+            means[m] = np.array([(a[..., c] * w).sum() / w.sum() for c in range(3)])
+    target = np.median(np.array(list(means.values())), axis=0)
+    tints = {}
+    for m, mean in means.items():
+        f = np.clip(target / np.maximum(mean, 1), 0, 4)
+        f = f / f.max()
+        tints[m] = tuple(1 - 0.5 * (1 - f))
+    return tints
+
+
 def main():
     global BUILD
     ap = argparse.ArgumentParser()
@@ -586,6 +688,20 @@ def main():
     entrances, levels = build_dungeons()
     print(f"places: {len(transports)} transports, {len(entrances)} dungeon entrances, {len(levels)} dungeon levels")
     write_places(transports, entrances, levels)
+    import build_npcs   # (Forever's NPCs, to keep only bosses that exist there)
+    names = {row.get(1) for row in build_npcs.entities("Npc").values()}
+    dmaps = build_dungeon_maps(names)
+    print(f"dungeon maps: {len(dmaps)} instances, {sum(len(f) for f in dmaps.values())} floors, "
+          f"{sum(len(fl['bosses']) for f in dmaps.values() for fl in f)} bosses")
+    write_dungeon_maps(dmaps)
+    tints = build_tints(maps)
+    with open(ROOT / "Data" / "Maps.lua", "a", encoding="utf-8") as f:
+        f.write("\n-- each zone's tint towards the zones' common colour (its painting's own palette shows at its borders)\n")
+        f.write("ns.TINTS = {\n")
+        for m, (r, g, b) in sorted(tints.items()):
+            f.write(f"    [{m}] = {{ {r:.3f}, {g:.3f}, {b:.3f} }},\n")
+        f.write("}\n")
+    print(f"tints: {len(tints)} zones")
 
 
 if __name__ == "__main__":

@@ -68,7 +68,15 @@ CHECKS = {
                      r"^rares in data: [1-9]\d*$", r"^asked in background: true, learned: Nombre de prueba$",
                      r"^seen: remembered true, sent S\t999001$", r"^seen searchable: Vigía Torvo \| Explorador",
                      r"^far away not remembered: true$", r"^from guild: Guardia Kerr", r"^errors 0$"]),
-    "locales": (False, [r"^missing en: none$", r"^missing es: none$", r"^format mismatch: none$"]),
+    "extras": (False, [r"^givers: [1-9]\d*, dughan .*", r"^completed gone: true$", r"^above level offered: 0$",
+                       r"^objectives: wolves [1-9]\d*, turn-in true, tooltip .*Wolves Across the Border.*",
+                       r"^no profession: herbs 0$", r"^herbalism 50: herbs [1-9]\d*, above skill greyed true, ore 0$",
+                       r"^all nodes: ore true$",
+                       r"^utilities: mailbox true, anvil true, tooltip .+", r"^guild without zmap: 2, tooltip .*Sin Zmap.*",
+                       r"^apart: true$", r"^minimap pins: [1-9]\d*$", r"^inside deadmines: shown true$",
+                       r"^back to the world: true$", r"^outside: dungeon map shown false$", r"^tinted: true$",
+                       r"^diag: shown true, lines \d\d, quests line true$", r"^errors 0$"]),
+    "locales": (False,[r"^missing en: none$", r"^missing es: none$", r"^format mismatch: none$"]),
 }
 
 
