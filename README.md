@@ -39,6 +39,7 @@ Comandos: `/zmap` (abrir/cerrar), `/zmap opciones`, `/zmap pines`, `/zmap buscar
 - `python tools/build_npcs.py` regenera `Data/Npcs.lua`, `Data/Objects.lua` y `Data/Quests.lua` uniendo la base de datos de Forever de Questie (de la última versión publicada en GitHub) y Warcraft DB (forever.warcraftdb.com; ~7.000 páginas). Todo queda en caché en `tools/cache`. Conviene repetirlo cuando salga una versión nueva de Questie.
 - Licencia: GPL-3.0 (`LICENSE`), obligatoria porque los datos de PNJ, misiones y objetos vienen de Questie (GPL-3.0).
 - `python tools/install.py` copia el addon a la carpeta AddOns de Forever.
+- Publicar: GitHub Actions pasa las pruebas en cada push; al subir una etiqueta `v<versión>` (solo cuando se ordena publicar), las pasa y publica con BigWigs packager en CurseForge (secreto `CF_API_KEY`) y como versión de GitHub. Antes: subir `## Version` en el TOC y añadir su sección a `CHANGELOG.md`.
 - `python tools/package.py` prepara la versión para CurseForge: `Zmap-<versión>.zip` y su changelog (de `CHANGELOG.md`) en `Escritorio/Zmap_zips`. No sube nada.
 - `python tools/logo.py` dibuja `logo.png`, la imagen del proyecto.
 - `python tests/run.py` carga el addon en Lua 5.1 (lupa) con una imitación de la API del juego y ejecuta los escenarios de `tests/scenarios`.

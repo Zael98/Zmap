@@ -1,0 +1,38 @@
+# Every push: the tests. A v* tag (pushed only when a release is ordered): the tests, then the release
+# (GitHub release for WowUp and manual installs, and CurseForge with the CF_API_KEY secret).
+name: Zmap
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Probar el addon
+        run: |
+          pip install 'lupa>=2'
+          python tests/run.py
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Publicar versión
+        uses: BigWigsMods/packager@v2
+        env:
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}

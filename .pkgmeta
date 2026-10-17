@@ -1,0 +1,11 @@
+package-as: Zmap
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - tools
+  - tests
+  - README.md
+  - logo.png

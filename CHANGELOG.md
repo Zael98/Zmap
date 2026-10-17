@@ -1,5 +1,29 @@
 # Zmap
 
+## 1.1.0 — How to get there, rare warnings and ten languages
+
+### 🧭 How to get there
+- Right-click the map > **How to get here**: the quickest way from where you are, on foot, by the flights you know and by your faction's boats and zeppelins. Drawn leg by leg, listed with times, and the arrow leads you through each leg.
+- **At a flight master**: where to fly for your destination (or the nearest quest to turn in), with a button to take that flight — or "quicker by land".
+
+### ⚠️ Rares
+- A rare on a nameplate, under the mouse or targeted: an on-screen warning and a sound, a mark on the map for 15 minutes, and word to your guild's Zmap users.
+
+### ❗ Quests
+- Quests done by **reaching a place** (explore, escort) mark that place — and are offered again (they were hidden by mistake).
+- Items a quest asks for that are **bought**: their sellers are marked.
+- Holiday quests are left out outside their holiday.
+
+### 👥 Townsfolk
+- **Only my class and professions** (on by default): class trainers of your class only, profession trainers of your professions (all of them while you have fewer than two).
+
+### 🌍 Ten languages
+- English, Spanish, German, French, Portuguese, Italian, Russian, Korean and Chinese (simplified and traditional). Zone, dungeon, boss and flight names come from the game in each language.
+
+### ⚙️ And more
+- `/zmap check`: every feature tried in game, OK or FAIL each, ready to copy.
+- Uses about half the memory (herbs and ore are worked out per zone, only for your professions).
+
 ## 1.0.0 — First release
 
 ### 🗺️ One seamless world map
