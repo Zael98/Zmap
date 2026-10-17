@@ -13,7 +13,7 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Mazmorras y bandas** con su nivel en Forever, **barcos y zepelines** con su ruta, **misiones** (clic: abre la misión en el registro).
 - **Grupo** en el mapa; **hermandad**: quien use Zmap ve dónde estás (desactivable).
 - **PNJ**: unos 8.400 PNJ de Forever con su posición (la base de datos de Forever de Questie, completada con Warcraft DB). Se buscan por nombre, título o servicio («tabernero»), el más cercano primero; al elegir uno, el mapa va hasta él y marca todos los sitios donde aparece (clic en la marca: la flecha te lleva). Los nombres llegan en inglés y Zmap aprende los del juego en tu idioma (al verlos y, poco a poco, preguntándoselos al juego). Los PNJ que faltan se aprenden al seleccionarlos de cerca y se comparten con la hermandad.
-- **Vendedores, instructores, taberneros, banqueros, subastadores, establos y ángeles** de tu facción en el mapa (de los datos y de los que conoces en el juego), y **raros**.
+- **Vendedores, instructores, taberneros, banqueros, subastadores, establos y ángeles** de tu facción en el mapa, cada vendedor e instructor con el icono de lo que vende o enseña (encantamiento, cocina, armas, comida, su clase...) (de los datos y de los que conoces en el juego), y **raros**.
 - **Misiones al estilo Questie**: signos de exclamación donde están las misiones que puedes coger (según tu nivel, raza, clase y las que ya hiciste; las de nivel bajo, opcionales), y para las misiones de tu registro sus objetivos (los bichos y objetos, un color por misión) y, cuando están completas, a quién entregarlas.
 - **Hierbas y minerales** de los datos (unos 25.000 puntos) en gris los que aún no puedes recoger; además de los que recoges tú, que se recuerdan y se comparten con la hermandad. Solo con la profesión: sin Herboristería no salen hierbas ni su opción, y lo mismo con Minería.
 - **Buzones, yunques, forjas y piedras de encuentro** en el mapa.
@@ -27,6 +27,8 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 ## Controles
 
 Rueda: zoom en el cursor · Arrastrar: moverse · Doble clic: acercar · Clic derecho: menú · Ctrl+clic: pin · Mayús+clic: enlazar el punto en el chat · Esc: cerrar.
+
+Capas: el panel de la izquierda del mapa, agrupado (Mapa, Viajes, Misiones, Gente, Recolección, Minimapa); un clic enciende o apaga cada capa. Se pliega con la flecha y vuelve con la pestaña «Capas».
 
 Comandos: `/zmap` (abrir/cerrar), `/zmap opciones`, `/zmap pines`, `/zmap buscar <texto>`, `/zmap borrarnodos`, `/zmap reset` (posición de la ventana), `/zmap diag`.
 

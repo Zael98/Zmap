@@ -21,6 +21,103 @@ local ICONS = {
 local ATLASES = { anvil = "worldquest-icon-blacksmithing", forge = "worldquest-icon-blacksmithing" }
 ICONS.anvil, ICONS.forge = "", ""   -- (drawn from ATLASES)
 
+-- Vendors and trainers by what they sell or teach, from their title: the data's (English) or the one learned
+-- in game (the client's language, folded). The first match wins; no match keeps the service's icon.
+local I = "Interface\\Icons\\"
+local SPECIALTIES = {
+    { I .. "Spell_Holy_SealOfSacrifice", "first aid", "auxilios" },
+    { I .. "Trade_Alchemy", "alchem", "alquim" },
+    { I .. "Trade_BlackSmithing", "blacksmith", "herrer" },
+    { I .. "Trade_Engraving", "enchant", "encant" },
+    { I .. "Trade_Engineering", "engineer", "ingenier" },
+    { I .. "Trade_Herbalism", "herbalis", "herbor" },
+    { I .. "Trade_LeatherWorking", "leatherwork", "peleter" },
+    { I .. "Trade_Mining", "mining", "miner" },
+    { I .. "INV_Misc_Pelt_Wolf_01", "skinn", "desoll" },
+    { I .. "Trade_Tailoring", "tailor", "sastr" },
+    { I .. "Trade_Fishing", "fish", "pesca" },
+    { I .. "INV_Misc_Food_15", "cook", "chef", "cocin" },
+    { I .. "Ability_Hunter_BeastTaming", "pet trainer", "mascota" },
+    { I .. "Spell_Arcane_PortalIronForge", "portal" },
+    { I .. "Trade_BrewPoison", "poison", "veneno" },
+    { I .. "INV_Misc_Dust_02", "reagent", "componente", "reactivo" },
+    { I .. "INV_Weapon_Bow_05", "bowyer", "arquer", "arco" },
+    { I .. "INV_Weapon_Rifle_01", "gunsmith", "gun ", "arma de fuego" },
+    { I .. "INV_Ammo_Arrow_02", "ammo", "arrow", "munici", "flecha" },
+    { I .. "INV_Sword_04", "weapon", "blade", "staff", "sword", "axe", "mace", "armas", "espada", "hacha", "baston" },
+    { I .. "INV_Chest_Cloth_04", "cloth armor", "clothier", "robe", "tela", "tunica" },
+    { I .. "INV_Chest_Leather_01", "leather armor", "light armor", "cuero" },
+    { I .. "INV_Chest_Plate01", "armor", "shield", "armadura", "escudo" },
+    { I .. "INV_Drink_05", "food", "drink", "bartender", "baker", "butcher", "fruit", "meat", "bread", "wine", "brew",
+        "comida", "bebida", "panader", "carnicer", "fruta", "vino", "cervez", "camarer" },
+    { I .. "INV_Misc_Bag_07", "bag", "bolsa" },
+    { I .. "INV_Shirt_GuildTabard_01", "tabard", "tabardo" },
+    { I .. "INV_Crate_02", "trade goods", "trade supplies", "comercio" },
+    { I .. "INV_Misc_Bag_08", "general", "provision" },
+}
+local VENDOR_ICON = I .. "INV_Misc_Coin_01"   -- (a vendor whose title says nothing of what they sell)
+
+-- class trainers: the class's round icon
+local CLASS_WORDS = {
+    WARRIOR = { "warrior", "guerrer" }, HUNTER = { "hunter", "cazador" }, PRIEST = { "priest", "sacerdot" },
+    MAGE = { "mage", "mago" }, ROGUE = { "rogue", "picaro" }, WARLOCK = { "warlock", "brujo" },
+    DRUID = { "druid", "druida" }, SHAMAN = { "shaman", "chaman" }, PALADIN = { "paladin" },
+}
+local CLASS_COORDS = {
+    WARRIOR = { 0, 0.25, 0, 0.25 }, MAGE = { 0.25, 0.5, 0, 0.25 }, ROGUE = { 0.5, 0.75, 0, 0.25 },
+    DRUID = { 0.75, 1, 0, 0.25 }, HUNTER = { 0, 0.25, 0.25, 0.5 }, SHAMAN = { 0.25, 0.5, 0.25, 0.5 },
+    PRIEST = { 0.5, 0.75, 0.25, 0.5 }, WARLOCK = { 0.75, 1, 0.25, 0.5 }, PALADIN = { 0, 0.25, 0.5, 0.75 },
+}
+local CLASS_TEXTURE = "Interface\\TargetingFrame\\UI-Classes-Circles"
+
+local FULL, CROPPED = { 0, 1, 0, 1 }, { 0.08, 0.92, 0.08, 0.92 }   -- (item icons lose their frame)
+local looks = {}   -- [kind .. title] = { texture or atlas, coords, atlas? }, worked out once
+
+-- how to draw one of the townsfolk: kind (the service) and title
+local function Look(kind, title)
+    local key = kind .. "|" .. (title or "")
+    local look = looks[key]
+    if look then return look end
+    if ATLASES[kind] then
+        look = { ATLASES[kind], FULL, true }
+    elseif (kind == "trainer" or kind == "profession" or kind == "repair" or kind == "vendor") and title and title ~= "" then
+        local t = ns.Fold(title)
+        if kind == "trainer" then
+            for class, words in pairs(CLASS_WORDS) do
+                for _, w in ipairs(words) do
+                    if t:find(w, 1, true) then
+                        look = { CLASS_TEXTURE, (CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class]) or CLASS_COORDS[class] }
+                    end
+                end
+            end
+        end
+        for _, s in ipairs(SPECIALTIES) do
+            if look then break end
+            for i = 2, #s do
+                if t:find(s[i], 1, true) then
+                    look = { s[1], CROPPED }
+                    break
+                end
+            end
+        end
+    end
+    look = look or (kind == "vendor" and { VENDOR_ICON, CROPPED }) or { ICONS[kind], FULL }
+    looks[key] = look
+    return look
+end
+
+local function Draw(icon, kind, title)
+    local look = Look(kind, title)
+    if look[3] then icon:SetAtlas(look[1]) else icon:SetTexture(look[1]) end
+    local c = look[2]
+    icon:SetTexCoord(c[1], c[2], c[3], c[4])
+end
+-- for the search: the icon of an NPC of the data
+function ns.FolkLook(id)
+    local kind = ns.Npcs.Kind(id)
+    return kind and Look(kind, ns.NPCS[id][2])
+end
+
 -- the data's mailboxes, anvils, forges and meeting stones (Data/Objects.lua): { { kind, m, x, y }, ... }
 local utilities
 local function Utilities()
@@ -151,7 +248,7 @@ function P:Refresh()
     for _, e in ipairs(ns.Pins.Spread(things, MAX_PINS - #shown)) do shown[#shown + 1] = e end
     for _, e in ipairs(shown) do
         local pin = self:Acquire()
-        if ATLASES[e.kind] then pin.icon:SetAtlas(ATLASES[e.kind]) else pin.icon:SetTexture(ICONS[e.kind]) end
+        Draw(pin.icon, e.kind, e.npc and ns.NPCS[e.npc][2] or e.folk and e.folk.sub)
         pin.m, pin.x, pin.y, pin.npc, pin.folk, pin.key, pin.object = e.m, e.x, e.y, e.npc, e.folk, e.key, e.object
         self:Place(pin, e.u, e.v)
     end

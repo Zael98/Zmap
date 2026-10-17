@@ -53,7 +53,8 @@ CHECKS = {
                        r"^minas: Minas de la Muerte", r"^herb search: Flor de paz$", r"^go: glided to Goldshire true$",
                        r"^accents: true$", r"^errors 0$"]),
     "misc": (False, [r"^binding: M -> ZmapToggleButton$", r"^binding off: none$", r"^binding in combat: deferred, then M$",
-                     r"^options panel: checks \d+, replace checked true$", r"^layers menu: .*Maestros de vuelo.*$",
+                     r"^options panel: checks \d+, replace checked true$", r"^layers panel: open true, .*Maestros de vuelo.*$",
+                     r"^row off: alpha 0\.45$",
                      r"^layer off: flights hidden true$", r"^corpse: arrow to corpse true$", r"^alive: arrow cleared true$",
                      r"^quests: 2 pins, turn-in true$", r"^quest click: opened 101$",
                      r"^dungeons: \d+ entrances, forever one true, level text .*16.*$",
@@ -77,7 +78,8 @@ CHECKS = {
                        r"^utilities: mailbox true, anvil true, tooltip .+", r"^guild without zmap: 2, tooltip .*Sin Zmap.*",
                        r"^apart: true$", r"^minimap pins: [1-9]\d*$", r"^inside deadmines: shown true$",
                        r"^back to the world: true$", r"^outside: dungeon map shown false$", r"^tinted: true$",
-                       r"^diag: shown true, lines \d\d, quests line true$", r"^errors 0$"]),
+                       r"^diag: shown true, lines \d\d, quests line true$", r"^layers fold: folded true, open again true$",
+                       r"^specialties: enchanting Trade_Engraving, cooking INV_Misc_Food_15, warrior UI-Classes-Circles, weaponsmith INV_Sword_04, food INV_Drink_05, tailoring Trade_Tailoring, cook trainer INV_Misc_Food_15, enchanter Trade_Engraving$", r"^errors 0$"]),
     "locales": (False,[r"^missing en: none$", r"^missing es: none$", r"^format mismatch: none$"]),
 }
 

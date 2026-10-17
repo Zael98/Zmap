@@ -8,6 +8,7 @@ local Search = {}
 ns.Search = Search
 
 local MAX = 12
+local FULL = { 0, 1, 0, 1 }
 local NPC_ICON = "Interface\\GossipFrame\\GossipGossipIcon"
 local box, list, buttons = nil, nil, {}
 local results = {}
@@ -44,9 +45,9 @@ local function AddNpcs(budget)
         npcAt, budget = npcAt + 1, budget - 1
         local spawn = N.Spawns(id)[1]
         if spawn then
-            local kind = N.Kind(id)
-            local e = { kind = "npc", npc = id, zoom = 10, icon = kind and ns.FOLK_ICONS[kind] or NPC_ICON,
-                atlas = N.Rare(id) and "VignetteKill" or nil, zone = Geo.Name(spawn[1]) }
+            local look = ns.FolkLook(id)
+            local e = { kind = "npc", npc = id, zoom = 10, icon = look and look[1] or NPC_ICON, coords = look and look[2],
+                atlas = (N.Rare(id) and "VignetteKill") or (look and look[3] and look[1]) or nil, zone = Geo.Name(spawn[1]) }
             e.u, e.v = Geo.ToWorld(spawn[1], spawn[2], spawn[3])
             NpcText(e)
             npcEntries[id] = e
@@ -277,6 +278,8 @@ local function ShowResults()
         if c then
             b.text:SetText(c.text)
             b.sub:SetText(c.zone and ((c.sub or "") .. " · " .. c.zone) or c.sub or "")
+            local tc = c.coords or FULL
+            b.icon:SetTexCoord(tc[1], tc[2], tc[3], tc[4])
             if c.atlas then b.icon:SetAtlas(c.atlas) elseif c.icon then b.icon:SetTexture(c.icon) else b.icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01") end
             b.result = c
             b:Show()

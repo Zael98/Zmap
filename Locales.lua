@@ -8,7 +8,6 @@ local EN = {
     BLIZZARD_MAP_TIP = "Blizzard's own map, with its quest log.",
     CENTER_TIP = "Center the map on you and follow you as you move.",
     PINS_TIP = "Your pins: find them, go there, delete them.",
-    LAYERS_TIP = "What the map shows.",
     CURSOR = "Cursor: %s %s", PLAYER_AT = "%s  %s", NO_POSITION_SHORT = "No position (instance)",
     NO_POSITION = "the game does not give your position here (an instance?).",
     NO_ZONE_HERE = "there is no zone there.",
@@ -103,7 +102,9 @@ local EN = {
     -- guildmates without Zmap, the minimap, colours, dungeon maps, /zmap diag
     ONLY_ZONE = "Without Zmap: only their zone is known (%s)", OPT_MINIMAP_PINS = "Pins on the minimap",
     OPT_HARMONIZE = "Even out the zones' colours", BACK_TO_WORLD = "Back to the world",
-    DUNGEON_MAP_HINT = "Click: the dungeon's map", DIAG_TITLE = "Zmap diagnostics (Ctrl+A, Ctrl+C to copy)",
+    DUNGEON_MAP_HINT = "Click: the dungeon's map",
+    LAYER_GROUP_MAP = "Map", LAYER_GROUP_TRAVEL = "Travel", LAYER_GROUP_QUESTS = "Quests", LAYER_GROUP_PEOPLE = "People",
+    LAYER_GROUP_GATHER = "Gathering", LAYER_GROUP_MINIMAP = "Minimap", DIAG_TITLE = "Zmap diagnostics (Ctrl+A, Ctrl+C to copy)",
     -- first login
     WELCOME = "M now opens Zmap. Your guildmates with Zmap will see you on their map (/zmap options to turn it off).",
 }
@@ -114,7 +115,6 @@ local ES = {
     BLIZZARD_MAP_TIP = "El mapa del juego, con su registro de misiones.",
     CENTER_TIP = "Centra el mapa en ti y te sigue mientras te mueves.",
     PINS_TIP = "Tus pines: encuéntralos, ve hacia ellos, bórralos.",
-    LAYERS_TIP = "Qué muestra el mapa.",
     CURSOR = "Cursor: %s %s", PLAYER_AT = "%s  %s", NO_POSITION_SHORT = "Sin posición (instancia)",
     NO_POSITION = "el juego no da tu posición aquí (¿estás en una instancia?).",
     NO_ZONE_HERE = "ahí no hay ninguna zona.",
@@ -203,7 +203,9 @@ local ES = {
     FOLK_anvil = "Yunque", FOLK_forge = "Forja", FOLK_stone = "Piedra de encuentro",
     ONLY_ZONE = "Sin Zmap: solo se sabe su zona (%s)", OPT_MINIMAP_PINS = "Marcas en el minimapa",
     OPT_HARMONIZE = "Igualar los colores de las zonas", BACK_TO_WORLD = "Volver al mundo",
-    DUNGEON_MAP_HINT = "Clic: mapa de la mazmorra", DIAG_TITLE = "Diagnóstico de Zmap (Ctrl+A, Ctrl+C para copiar)",
+    DUNGEON_MAP_HINT = "Clic: mapa de la mazmorra",
+    LAYER_GROUP_MAP = "Mapa", LAYER_GROUP_TRAVEL = "Viajes", LAYER_GROUP_QUESTS = "Misiones", LAYER_GROUP_PEOPLE = "Gente",
+    LAYER_GROUP_GATHER = "Recolección", LAYER_GROUP_MINIMAP = "Minimapa", DIAG_TITLE = "Diagnóstico de Zmap (Ctrl+A, Ctrl+C para copiar)",
     WELCOME = "M abre ahora Zmap. Quien use Zmap en tu hermandad te verá en su mapa (/zmap opciones para desactivarlo).",
 }
 

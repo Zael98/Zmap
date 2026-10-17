@@ -73,9 +73,7 @@ local function DataHerbs()
 end
 -- and the layers menu offers herbs only with Herbalism, ore only with Mining
 local function Offered()
-    STATE.menus = {}
-    ZmapFrame.layersButton:Click()
-    local text = MENU_TEXTS()
+    local text = ZNS.LayerTexts()
     return ("herbs %s, ore %s"):format(tostring(text:find(ZNS.L.OPT_HERBS, 1, true) ~= nil), tostring(text:find(ZNS.L.OPT_ORE, 1, true) ~= nil))
 end
 ZNS.Map.SetView(gu * W, gv * H, 9)
@@ -154,3 +152,22 @@ for line in text:gmatch("[^\n]+") do
 end
 OUT("errors " .. #STATE.errors)
 if #STATE.errors > 0 then OUT("ADDON ERRORS: " .. table.concat(STATE.errors, " || ")) end
+
+-- the layers panel folds to a tab and opens again, remembered
+ZNS.Map.Close()
+OPEN()
+local side, tab = ZmapFrame.layersPanel, ZmapFrame.layersButton
+local foldButton
+for _, w in ipairs(ALL_WIDGETS) do if w.parent == side and w.kind == "Button" then foldButton = w end end
+foldButton.scripts.OnClick(foldButton)
+local folded = not side:IsShown() and tab:IsShown() and ZNS.db.window.layers == false
+tab.scripts.OnClick(tab)
+OUT(("layers fold: folded %s, open again %s"):format(tostring(folded), tostring(side:IsShown() and not tab:IsShown())))
+
+-- vendors and trainers by what they sell or teach
+local function IconOf(id)
+    local look = ZNS.FolkLook(id)
+    return look and tostring(look[1]):match("([%w_%-]+)$") or "none"
+end
+OUT(("specialties: enchanting %s, cooking %s, warrior %s, weaponsmith %s, food %s, tailoring %s, cook trainer %s, enchanter %s"):format(
+    IconOf(1318), IconOf(3085), IconOf(911), IconOf(54), IconOf(2303), IconOf(1347), IconOf(1355), IconOf(3606)))

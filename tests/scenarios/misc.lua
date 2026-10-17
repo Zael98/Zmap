@@ -24,10 +24,16 @@ OUT(("options panel: checks %d, replace checked %s"):format(checks, tostring(rep
 
 STATE.player.wx, STATE.player.wy = -9460, 62
 OPEN()
-ZmapFrame.layersButton:Click()
-OUT("layers menu: " .. MENU_TEXTS())
-PICK(ZNS.L.OPT_FLIGHTS)
+local side = ZmapFrame.layersPanel
+OUT(("layers panel: open %s, %s"):format(tostring(side:IsShown()), ZNS.LayerTexts()))
+ZmapFrame.layersButton.scripts.OnClick(ZmapFrame.layersButton)   -- (the tab is hidden while open: nothing)
+local function Row(text)
+    for _, b in ipairs(side.rows) do if b.text:GetText() == text then return b end end
+end
+local flightsRow = Row(ZNS.L.OPT_FLIGHTS)
+flightsRow.scripts.OnClick(flightsRow)
 FRAMES(2)
+OUT(("row off: alpha %.2f"):format(flightsRow.icon:GetAlpha()))
 OUT("layer off: flights hidden " .. tostring(not PROVIDER("flights").frame:IsVisible()))
 ZNS.SetOpt("flights", true)
 

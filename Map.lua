@@ -392,7 +392,7 @@ local function Create()
     Right(L.BLIZZARD_MAP, 96, function() Map.OpenBlizzard() end, L.BLIZZARD_MAP_TIP)
     Right(L.CENTER, 70, function() Map.CenterOnPlayer(false) end, L.CENTER_TIP)
     frame.pinsButton = Right(L.PINS, 70, function(self) ns.Waypoints.Menu(self) end, L.PINS_TIP)
-    frame.layersButton = Right(L.LAYERS, 70, function(self) ns.LayersMenu(self) end, L.LAYERS_TIP)
+    -- (the layers: a panel down the map's left side, Options.lua)
 
     -- the map itself
     viewport = CreateFrame("Frame", nil, frame)
