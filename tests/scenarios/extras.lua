@@ -279,3 +279,24 @@ EVENT("CHAT_MSG_ADDON", "Zmap", "R\t0\t1429\t0.3000\t0.4000\tGolpeador\t0", "GUI
 FRAMES(3)
 local marks = #PINS("rareseen")
 OUT(("rares: warned %d, sent %d, marks %d, last %s"):format(#STATE.printed - printedBefore, rareSent, marks, LAST_PRINT()))
+
+-- quests: one done by reaching a place is offered and marks the place; one asking for something bought marks
+-- its sellers
+STATE.player.level = 7
+STATE.completed = {}
+STATE.log = {}
+EVENT("PLAYER_LEVEL_UP")
+ADVANCE(2)
+local fargodeepOffered = false
+for _, mark in ipairs(ZNS.QuestMap.Givers()) do
+    for _, q in ipairs(mark.quests) do if q == 62 then fargodeepOffered = true end end
+end
+STATE.log, STATE.finished = { 62, 116 }, {}
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local reach, buy = 0, 0
+for _, mark in ipairs(ZNS.QuestMap.Objectives()) do
+    if mark.quest == 62 and mark.reach then reach = reach + 1 end
+    if mark.quest == 116 and mark.buy then buy = buy + 1 end
+end
+OUT(("quests to reach and buy: fargodeep offered %s, places %d, sellers %d"):format(tostring(fargodeepOffered), reach, buy))

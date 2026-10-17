@@ -41,6 +41,9 @@ CTX.check_hostname = False
 CTX.verify_mode = ssl.CERT_NONE
 MAX_SPAWNS = 24          # an NPC or object standing in many places keeps this many (herbs and ore keep all)
 MAX_DROPPERS = 12        # mobs (or objects) kept per item a quest asks for
+HOLIDAYS = {-22, -284, -364, -366, -369}   # quest sorts: seasonal, special (Children's Week...), Darkmoon Faire,
+                                            # Lunar Festival, Midsummer
+MAX_VENDORS = 8          # an item sold by more (water, thread...) is anyone's: its vendors are not marked
 
 # services, in the order of the flag bits Modules/Npcs.lua reads
 SERVICES = ["Innkeeper", "Vendor", "Repair", "Trainer", "Flight Master", "Banker", "Auctioneer", "Stable Master",
@@ -369,10 +372,17 @@ def build_quests(npcs):
         objectives = as_map(row.get(10))
         mobs = list(ids_of(objectives.get(1)))
         objs = list(ids_of(objectives.get(2)))
-        for iid in ids_of(objectives.get(3)):   # the items asked for: who drops them
+        vendors = []
+        for iid in ids_of(objectives.get(3)):   # the items asked for: who drops them, or who sells them
             item = items.get(iid, {})
             mobs += [n for n in as_list(item.get(2)) if n in npcs][:MAX_DROPPERS]
             objs += as_list(item.get(3))[:MAX_DROPPERS]
+            sellers = [n for n in as_list(item.get(14)) if isinstance(n, int)]
+            if len(sellers) <= MAX_VENDORS:
+                vendors += [n for n in sellers if n in npcs]
+        # places to reach (explore, escort...): {zoneID: [[x%, y%]]}
+        trigger = as_list(row.get(9))
+        explore = spawns_by_map(trigger[1]) if len(trigger) > 1 else {}
         for credit in as_list(objectives.get(5)):   # kill credit: {{npcIds}, baseNpc, text}
             credit = as_list(credit)
             if credit:
@@ -383,13 +393,16 @@ def build_quests(npcs):
         if row.get(18) or row.get(31) or row.get(30):
             flags |= 2   # needs a profession, a specialization or a spell: not offered on the map
         if (row.get(24) or 0) & 2:
-            flags |= 4   # an event's
+            flags |= 4   # done by something happening (reaching a place, an escort...): still offered
+        if row.get(17) in HOLIDAYS:
+            flags |= 8   # a holiday's: its givers are only there then
         quest = {
             "name": row.get(1) or "", "level": row.get(5) or 0, "req": row.get(4) or 0,
             "races": row.get(6) or 0, "classes": row.get(7) or 0,
             "starts": as_list(starts.get(1)), "startObjs": as_list(starts.get(2)),
             "ends": as_list(ends.get(1)), "endObjs": as_list(ends.get(2)),
             "mobs": sorted(set(mobs)), "objs": sorted(set(objs)),
+            "vendors": sorted(set(vendors) - set(mobs)), "explore": explore,
             "pre": as_list(row.get(13)), "preAll": as_list(row.get(12)), "excl": as_list(row.get(16)),
             "maxLevel": row.get(32) or 0, "flags": flags,
         }
@@ -457,7 +470,9 @@ def write_quests(quests):
              "--   { NPCs who give it }, { objects that give it }, { NPCs who take it }, { objects that take it },",
              "--   { mobs for its objectives }, { objects for its objectives }, { any of these done first },",
              "--   { all of these done first }, { not if one of these }, highest level it is offered at (0: none),",
-             "--   flags (1 repeatable, 2 needs a profession or spell, 4 an event's) }",
+             "--   flags (1 repeatable, 2 needs a profession or spell, 4 done by reaching a place or an event, 8 a holiday's),",
+             "--   { NPCs who sell what it asks for },",
+             "--   places to reach (uiMapID, { x, y per thousand }, ...) }",
              "ns.QUESTS = {"]
     for qid, q in sorted(quests.items()):
         if not q["name"]:
@@ -465,7 +480,8 @@ def write_quests(quests):
         lines.append(f'    [{qid}] = {{ {lua_str(q["name"])}, {q["level"]}, {q["req"]}, {q["races"]}, {q["classes"]}, '
                      f'{lua_list(q["starts"])}, {lua_list(q["startObjs"])}, {lua_list(q["ends"])}, {lua_list(q["endObjs"])}, '
                      f'{lua_list(q["mobs"])}, {lua_list(q["objs"])}, {lua_list(q["pre"])}, {lua_list(q["preAll"])}, '
-                     f'{lua_list(q["excl"])}, {q["maxLevel"]}, {q["flags"]} }},')
+                     f'{lua_list(q["excl"])}, {q["maxLevel"]}, {q["flags"]}, {lua_list(q["vendors"])}, '
+                     f'{{ {spawn_parts(q["explore"], 20)} }} }},')
     lines.append("}")
     (ROOT / "Data" / "Quests.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

@@ -55,7 +55,8 @@ end
 --   any-of prerequisites, all-of prerequisites, exclusive with, highest level, flags }
 function QM.Available(id, q, level, race, class)
     if completed[id] or inLog[id] then return false end
-    if q[16] >= 2 then return false end           -- needs a profession or spell, or an event's
+    if math.floor(q[16] / 2) % 2 == 1 then return false end   -- needs a profession or spell
+    if q[16] >= 8 then return false end                        -- a holiday's
     if level < q[3] or (q[15] > 0 and level > q[15]) then return false end
     if not Has(q[4], race) or not Has(q[5], class) then return false end
     if #q[12] > 0 then
@@ -149,6 +150,16 @@ local function Build()
                 for _, obj in ipairs(q[11]) do
                     Marks(N.ObjectSpawns(obj), { quest = id, object = obj, color = color }, MAX_PER_QUEST, objectiveMarks)
                 end
+                -- what it asks for that is bought, and where to get to
+                for _, npc in ipairs(q[17] or {}) do
+                    Marks(N.Spawns(npc), { quest = id, npc = npc, color = color, buy = true }, 4, objectiveMarks)
+                end
+                local places = {}
+                for k = 1, #(q[18] or {}) - 1, 2 do
+                    local coords = q[18][k + 1]
+                    for j = 1, #coords - 1, 2 do places[#places + 1] = { q[18][k], coords[j] / 1000, coords[j + 1] / 1000 } end
+                end
+                Marks(places, { quest = id, color = color, reach = true }, 6, objectiveMarks)
                 for k = #objectiveMarks, before + MAX_PER_QUEST + 1, -1 do objectiveMarks[k] = nil end
             end
         end
@@ -174,6 +185,7 @@ function QM.InLog() if dirty then Build() end return logList end
 local function InBox(m, u0, v0, u1, v1) return m.u > u0 and m.u < u1 and m.v > v0 and m.v < v1 end
 
 local function WhoName(mark)
+    if mark.reach then return QM.Title(mark.quest) end
     if mark.npc then return ns.Npcs.Name(mark.npc) end
     local o = ns.OBJECTS and ns.OBJECTS[mark.object]
     return o and o[1] or "?"
@@ -218,6 +230,7 @@ function givers:OnClick(pin, button)
     if button == "LeftButton" then Navigate(pin.mark) end
 end
 
+local BUY_ICON = "Interface\\Icons\\INV_Misc_Coin_01"
 local objectives = ns.Pins.New("objectives", { level = 47, size = 14, option = "objectives", minZoom = 3, cull = true })
 
 function objectives:Refresh()
@@ -230,6 +243,14 @@ function objectives:Refresh()
                 pin.icon:SetAtlas("QuestTurnin")
                 pin.icon:SetVertexColor(1, 1, 1)
                 self:Place(pin, mark.u, mark.v, 1.5)
+            elseif mark.buy then
+                pin.icon:SetTexture(BUY_ICON)
+                pin.icon:SetVertexColor(1, 1, 1)
+                self:Place(pin, mark.u, mark.v, 1.3)
+            elseif mark.reach then
+                pin.icon:SetAtlas("Waypoint-MapPin-Untracked")
+                pin.icon:SetVertexColor(mark.color[1], mark.color[2], mark.color[3])
+                self:Place(pin, mark.u, mark.v, 1.8)
             else
                 pin.icon:SetAtlas("WhiteCircle-RaidBlips")
                 pin.icon:SetVertexColor(mark.color[1], mark.color[2], mark.color[3])
@@ -246,7 +267,8 @@ function objectives:Tooltip(pin, tip)
     if mark.turnIn then
         tip:AddLine(L.TURN_IN:format(QM.Title(mark.quest)), 0.4, 1, 0.4, true)
     else
-        tip:AddLine(QuestLine(mark.quest))
+        if mark.buy then tip:AddLine(L.QUEST_BUY, 1, 0.82, 0) end
+        if mark.reach then tip:AddLine(L.QUEST_REACH, 1, 0.82, 0) else tip:AddLine(QuestLine(mark.quest)) end
         for _, o in ipairs(C_QuestLog.GetQuestObjectives(mark.quest) or {}) do
             if o.text and o.text ~= "" then
                 if o.finished then tip:AddLine(o.text, 0.5, 0.5, 0.5, true) else tip:AddLine(o.text, 1, 1, 1, true) end
