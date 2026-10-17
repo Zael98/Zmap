@@ -37,7 +37,9 @@ Comandos: `/zmap` (abrir/cerrar), `/zmap opciones`, `/zmap pines`, `/zmap buscar
 - `python tools/build_data.py` regenera `Data/*.lua` (salvo `Npcs.lua`) y `Media/Masks/*.tga` a partir de las tablas del cliente (exportadas por wago.tools). Hay que volver a ejecutarlo cuando Forever cambie sus mapas.
 - `python tools/build_data.py` también genera `Data/DungeonMaps.lua` (las tablas de Forever no tienen mapas de mazmorra; los saca de las de Mists Classic y comprueba que las imágenes estén en Forever) y los tonos de `ns.TINTS`.
 - `python tools/build_npcs.py` regenera `Data/Npcs.lua`, `Data/Objects.lua` y `Data/Quests.lua` uniendo la base de datos de Forever de Questie (de la última versión publicada en GitHub) y Warcraft DB (forever.warcraftdb.com; ~7.000 páginas). Todo queda en caché en `tools/cache`. Conviene repetirlo cuando salga una versión nueva de Questie.
-- Licencia: los datos de PNJ de Questie son GPL-3.0. Para uso propio y de la hermandad no cambia nada; si algún día se publica Zmap, tendría que publicarse también bajo GPL-3.0 (o quitar esos datos).
+- Licencia: GPL-3.0 (`LICENSE`), obligatoria porque los datos de PNJ, misiones y objetos vienen de Questie (GPL-3.0).
 - `python tools/install.py` copia el addon a la carpeta AddOns de Forever.
+- `python tools/package.py` prepara la versión para CurseForge: `Zmap-<versión>.zip` y su changelog (de `CHANGELOG.md`) en `Escritorio/Zmap_zips`. No sube nada.
+- `python tools/logo.py` dibuja `logo.png`, la imagen del proyecto.
 - `python tests/run.py` carga el addon en Lua 5.1 (lupa) con una imitación de la API del juego y ejecuta los escenarios de `tests/scenarios`.
 - `python tools/preview.py` dibuja en PNG lo que pinta el escenario `art` (tests/out), con las texturas y máscaras reales, para revisar el cosido sin entrar al juego.
