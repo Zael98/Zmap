@@ -1,6 +1,7 @@
--- Townsfolk: the vendors, trainers, innkeepers, bankers, auctioneers, stable masters, spirit healers and
--- mailboxes you use are remembered where you met them (and sent to your guild's Zmap users), so the map
--- learns each town. Like the herbs: only what someone has really found.
+-- Townsfolk: vendors, trainers, innkeepers, bankers, auctioneers, stable masters, spirit healers and
+-- mailboxes. The NPC data (Modules/Npcs.lua) brings those friendly to you; besides, the ones you use are
+-- remembered where you met them (and sent to your guild's Zmap users), so what the data lacks (Forever's
+-- changes, mailboxes) is learned too.
 local _, ns = ...
 local L, Geo, Comm = ns.L, ns.Geo, ns.Comm
 
@@ -113,19 +114,34 @@ function P:Refresh()
     self:ReleaseAll()
     local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
     local count = 0
+    local function Pin(kind, m, x, y)
+        local u, v = Geo.ToWorld(m, x, y)
+        if not u or u < u0 or u > u1 or v < v0 or v > v1 or count >= MAX_PINS or not ICONS[kind] then return end
+        count = count + 1
+        local pin = self:Acquire()
+        pin.icon:SetTexture(ICONS[kind])
+        pin.m, pin.x, pin.y, pin.npc, pin.folk, pin.key = m, x, y, nil, nil, nil
+        self:Place(pin, u, v)
+        return pin
+    end
+    for _, f in ipairs(ns.Npcs.Townsfolk()) do
+        local pin = Pin(f.kind, f.m, f.x, f.y)
+        if pin then pin.npc = f.id end
+    end
     for key, f in pairs(ns.db.folk) do
-        local u, v = Geo.ToWorld(f.m, f.x, f.y)
-        if u and u > u0 and u < u1 and v > v0 and v < v1 and count < MAX_PINS and ICONS[f.kind] then
-            count = count + 1
-            local pin = self:Acquire()
-            pin.icon:SetTexture(ICONS[f.kind])
-            pin.folk, pin.key = f, key
-            self:Place(pin, u, v)
+        local npc = tonumber(key:match(":(%d+)$"))
+        if not (npc and ns.NPCS and ns.NPCS[npc]) then   -- (the data shows it already)
+            local pin = Pin(f.kind, f.m, f.x, f.y)
+            if pin then pin.folk, pin.key = f, key end
         end
     end
 end
 
 function P:Tooltip(pin, tip)
+    if pin.npc then
+        ns.Npcs.Tooltip(pin, tip)
+        return
+    end
     local f = pin.folk
     tip:SetText(f.name or "?", 1, 1, 1)
     if f.sub then tip:AddLine(f.sub, 1, 0.82, 0) end
@@ -135,12 +151,12 @@ function P:Tooltip(pin, tip)
 end
 
 function P:OnClick(pin, button)
-    if button == "RightButton" and IsShiftKeyDown() then
+    if button == "RightButton" and IsShiftKeyDown() and pin.key then
         ns.db.folk[pin.key] = nil
         P:Update()
     elseif button == "LeftButton" and IsControlKeyDown() then
-        local f = pin.folk
-        ns.Waypoints.Add(f.m, f.x, f.y, f.name, { navigate = true, temp = true })
+        local name = pin.npc and ns.Npcs.Name(pin.npc) or pin.folk.name
+        ns.Waypoints.Add(pin.m, pin.x, pin.y, name, { navigate = true, temp = true })
     end
 end
 

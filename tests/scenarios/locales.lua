@@ -7,7 +7,10 @@ for _, prefix in ipairs({ "COLOR_1", "COLOR_2", "COLOR_3", "COLOR_4", "COLOR_5",
     "UNEXPLORED_dim", "UNEXPLORED_hide", "FOLK_vendor", "FOLK_repair", "FOLK_trainer", "FOLK_profession",
     "FOLK_innkeeper", "FOLK_banker", "FOLK_auctioneer", "FOLK_stable", "FOLK_spirit", "FOLK_mailbox",
     "OPT_LABELS", "OPT_LEVELS", "OPT_FLIGHTS", "OPT_DUNGEONS", "OPT_TRANSPORTS", "OPT_QUESTS", "OPT_GROUP",
-    "OPT_GUILD", "OPT_PINS", "OPT_HERBS", "OPT_ORE", "OPT_TOWNSFOLK", "OPT_MINIMAP" }) do used[prefix] = true end
+    "OPT_GUILD", "OPT_PINS", "OPT_HERBS", "OPT_ORE", "OPT_TOWNSFOLK", "OPT_MINIMAP", "OPT_RARES",
+    "SERVICE_innkeeper", "SERVICE_vendor", "SERVICE_repair", "SERVICE_trainer", "SERVICE_flight", "SERVICE_banker",
+    "SERVICE_auctioneer", "SERVICE_stable", "SERVICE_spirit", "SERVICE_battlemaster", "SERVICE_guildbank",
+    "SERVICE_mailbox" }) do used[prefix] = true end
 for _, t in ipairs(ZNS.TRANSPORTS) do used["ROUTE_" .. t[3]] = true end
 local EN, ES = ZNS.LOCALES.EN, ZNS.LOCALES.ES
 local missEN, missES, mismatch = {}, {}, {}

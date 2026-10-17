@@ -87,6 +87,13 @@ local EN = {
     OPT_ARROW = "Arrow on screen towards the destination",
     OPT_ARROW_TIP = "Drag it to move it; right-click it for its menu.",
     OPT_CORPSE = "When I die, the arrow points to my corpse", OPT_FLIGHT_TIMER = "Timer while flying",
+    -- NPCs
+    SERVICE_innkeeper = "Innkeeper", SERVICE_vendor = "Vendor", SERVICE_repair = "Repairs", SERVICE_trainer = "Trainer",
+    SERVICE_flight = "Flight master", SERVICE_banker = "Banker", SERVICE_auctioneer = "Auctioneer",
+    SERVICE_stable = "Stable master", SERVICE_spirit = "Spirit healer", SERVICE_battlemaster = "Battlemaster",
+    SERVICE_guildbank = "Guild banker", SERVICE_mailbox = "Mailbox",
+    NPC = "NPC", RARE = "Rare", RARE_ELITE = "Rare elite", ELITE = "Elite", OPT_RARES = "Rares",
+    FOUND_HINT = "Click: go there · Right-click: clear the marks",
     -- first login
     WELCOME = "M now opens Zmap. Your guildmates with Zmap will see you on their map (/zmap options to turn it off).",
 }
@@ -174,6 +181,12 @@ local ES = {
     OPT_ARROW = "Flecha en pantalla hacia el destino",
     OPT_ARROW_TIP = "Arrástrala para moverla; clic derecho para su menú.",
     OPT_CORPSE = "Al morir, la flecha apunta a mi cadáver", OPT_FLIGHT_TIMER = "Temporizador durante los vuelos",
+    SERVICE_innkeeper = "Tabernero", SERVICE_vendor = "Vendedor", SERVICE_repair = "Reparaciones", SERVICE_trainer = "Instructor",
+    SERVICE_flight = "Maestro de vuelo", SERVICE_banker = "Banquero", SERVICE_auctioneer = "Subastador",
+    SERVICE_stable = "Maestro de establos", SERVICE_spirit = "Ángel de resurrección", SERVICE_battlemaster = "Maestro de batalla",
+    SERVICE_guildbank = "Banco de hermandad", SERVICE_mailbox = "Buzón",
+    NPC = "PNJ", RARE = "Raro", RARE_ELITE = "Raro élite", ELITE = "Élite", OPT_RARES = "Raros",
+    FOUND_HINT = "Clic: ir hasta allí · Clic derecho: quitar las marcas",
     WELCOME = "M abre ahora Zmap. Quien use Zmap en tu hermandad te verá en su mapa (/zmap opciones para desactivarlo).",
 }
 
@@ -181,3 +194,29 @@ local locale = GetLocale()
 local T = (locale == "esES" or locale == "esMX") and ES or {}
 ns.L = setmetatable({}, { __index = function(_, k) return T[k] or EN[k] or k end })
 ns.LOCALES = { EN = EN, ES = ES }   -- (the tests check both have every text)
+
+-- NPC titles from the NPC data (English) in Spanish, the common ones; the game's own wording replaces them
+-- as Zmap learns it (Modules/Npcs.lua)
+local TITLES_ES = {
+    ["Innkeeper"] = "Tabernero", ["Banker"] = "Banquero", ["Auctioneer"] = "Subastador",
+    ["Stable Master"] = "Maestro de establos", ["Flight Master"] = "Maestro de vuelo",
+    ["Gryphon Master"] = "Maestro de grifos", ["Hippogryph Master"] = "Maestro de hipogrifos",
+    ["Wind Rider Master"] = "Maestro de jinetes del viento", ["General Goods"] = "Víveres",
+    ["Weapon Merchant"] = "Vendedor de armas", ["Armorer"] = "Armero", ["Trade Supplies"] = "Suministros comerciales",
+    ["Food & Drink"] = "Comida y bebida", ["Reagents"] = "Componentes", ["Guild Master"] = "Maestro de hermandad",
+    ["Tabard Vendor"] = "Vendedor de tabardos", ["Battlemaster"] = "Maestro de batalla",
+}
+local TRAINERS_ES = {
+    Warrior = "guerreros", Paladin = "paladines", Hunter = "cazadores", Rogue = "pícaros", Priest = "sacerdotes",
+    Shaman = "chamanes", Mage = "magos", Warlock = "brujos", Druid = "druidas", Alchemy = "alquimia",
+    Blacksmithing = "herrería", Enchanting = "encantamiento", Engineering = "ingeniería", Herbalism = "herboristería",
+    Leatherworking = "peletería", Mining = "minería", Skinning = "desuello", Tailoring = "sastrería", Cooking = "cocina",
+    ["First Aid"] = "primeros auxilios", Fishing = "pesca", ["Weapon Master"] = "maestros de armas",
+}
+function ns.TranslateTitle(title)
+    if T ~= ES then return title end
+    if TITLES_ES[title] then return TITLES_ES[title] end
+    local what = title:match("^(.-) Trainer$")
+    if what and TRAINERS_ES[what] then return "Instructor de " .. TRAINERS_ES[what] end
+    return title
+end

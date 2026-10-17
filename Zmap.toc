@@ -19,6 +19,8 @@ Data\Maps.lua
 Data\Minimap.lua
 Data\Flights.lua
 Data\Places.lua
+# from tools/build_npcs.py (Warcraft DB)
+Data\Npcs.lua
 
 Geo.lua
 Art.lua
@@ -38,6 +40,7 @@ Modules\Dungeons.lua
 Modules\Transports.lua
 Modules\Quests.lua
 Modules\Gather.lua
+Modules\Npcs.lua
 Modules\Townsfolk.lua
 Modules\Search.lua
 

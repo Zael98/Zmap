@@ -60,6 +60,14 @@ CHECKS = {
                      r"^transports: lines [1-9]\d*, docks [1-9]\d*$", r"^levels: Riverglades 25-32$",
                      r"^welcome once: true$", r"^errors 0$"]),
     "stress": (False, [r"^widgets after one tour \d+, after five \d+, grew false$", r"^errors 0$"]),
+    "npcs": (False, [r"^farley: Innkeeper Farley \| Tabernero \| Bosque de Elwynn$", r"^learned: Tabernera Farley$",
+                     r"^spanish name: Tabernera Farley", r"^english still: Tabernera Farley",
+                     r"^tabernero nearest: Tabernera Farley", r"^grosk searchable: Innkeeper Grosk",
+                     r"^go farley: marks [1-9]\d*, view near true$", r"^navigating to: Tabernera Farley$",
+                     r"^townsfolk from data: [1-9]\d*, farley tooltip: .*Tabernero.*$", r"^horde only shown: false$",
+                     r"^rares in data: [1-9]\d*$", r"^asked in background: true, learned: Nombre de prueba$",
+                     r"^seen: remembered true, sent S\t999001$", r"^seen searchable: Vigía Torvo \| Explorador",
+                     r"^far away not remembered: true$", r"^from guild: Guardia Kerr", r"^errors 0$"]),
     "locales": (False, [r"^missing en: none$", r"^missing es: none$", r"^format mismatch: none$"]),
 }
 

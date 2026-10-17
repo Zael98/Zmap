@@ -7,7 +7,7 @@ local LAYERS = {
     { "labels", "OPT_LABELS" }, { "levels", "OPT_LEVELS" }, { "flights", "OPT_FLIGHTS" }, { "dungeons", "OPT_DUNGEONS" },
     { "transports", "OPT_TRANSPORTS" }, { "quests", "OPT_QUESTS" }, { "group", "OPT_GROUP" }, { "guild", "OPT_GUILD" },
     { "pins", "OPT_PINS" }, { "herbs", "OPT_HERBS" }, { "ore", "OPT_ORE" }, { "townsfolk", "OPT_TOWNSFOLK" },
-    { "minimap", "OPT_MINIMAP" },
+    { "rares", "OPT_RARES" }, { "minimap", "OPT_MINIMAP" },
 }
 local UNEXPLORED = { "show", "dim", "hide" }
 

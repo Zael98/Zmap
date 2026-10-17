@@ -284,13 +284,20 @@ function IsPlayerMoving() return STATE.moving end
 function UnitOnTaxi() return STATE.onTaxi end
 function UnitIsGhost(u) return u == "player" and STATE.ghost end
 function UnitIsDeadOrGhost(u) local m = STATE.group[tonumber((u or ""):match("%d+") or 0)] return m and m.dead or false end
+-- other units the scenarios put around: STATE.units[token] = { id = npcID, name = "..." } (nameplates, mouseover)
+STATE.units = {}
 function UnitName(u)
     if u == "player" then return "Domi" end
     if u == "npc" then return STATE.npc and STATE.npc.name end
+    if STATE.units[u] then return STATE.units[u].name end
     local m = STATE.group[tonumber((u or ""):match("%d+") or 0)]
     return m and m.name
 end
-function UnitGUID(u) if u == "npc" and STATE.npc then return "Creature-0-1-0-1-" .. STATE.npc.id .. "-0000" end end
+function UnitGUID(u)
+    if u == "npc" and STATE.npc then return "Creature-0-1-0-1-" .. STATE.npc.id .. "-0000" end
+    if STATE.units[u] then return "Creature-0-1-0-1-" .. STATE.units[u].id .. "-0000" end
+end
+function UnitIsPlayer(u) return u == "player" end
 function UnitClass(u)
     if u == "player" then return "Guerrero", STATE.player.class end
     local m = STATE.group[tonumber((u or ""):match("%d+") or 0)]
@@ -298,7 +305,7 @@ function UnitClass(u)
 end
 function UnitLevel(u) return u == "player" and STATE.player.level or 20 end
 function UnitFactionGroup() return STATE.player.faction end
-function UnitExists(u) return u == "player" or STATE.group[tonumber((u or ""):match("%d+") or 0)] ~= nil end
+function UnitExists(u) return u == "player" or STATE.units[u] ~= nil or STATE.group[tonumber((u or ""):match("%d+") or 0)] ~= nil end
 function UnitIsUnit(a, b) return a == b end
 function UnitInParty(name) for _, m in ipairs(STATE.group) do if m.name == name then return true end end return false end
 function UnitInRaid() return nil end
@@ -319,7 +326,16 @@ function TakeTaxiNode(slot) STATE.tookSlot = slot end
 
 C_Timer = {}
 function C_Timer.After(d, fn) table.insert(STATE.timers, { at = STATE.time + d, fn = fn }) end
-function C_Timer.NewTicker(d, fn) local t = { at = STATE.time + d, fn = fn, every = d } table.insert(STATE.timers, t) return t end
+function C_Timer.NewTicker(d, fn)
+    local t = { at = STATE.time + d, fn = fn, every = d }
+    function t:Cancel()
+        for i, x in ipairs(STATE.timers) do if x == self then table.remove(STATE.timers, i) break end end
+        self.every = nil
+    end
+    table.insert(STATE.timers, t)
+    return t
+end
+function CheckInteractDistance(unit) return STATE.units[unit] ~= nil and STATE.units[unit].near == true end
 -- move the clock: due timers run (tickers again and again)
 function ADVANCE(seconds)
     local target = STATE.time + seconds
@@ -338,7 +354,20 @@ end
 C_AddOns = { GetAddOnMetadata = function() return "test" end, IsAddOnLoaded = function() return false end }
 C_ClassColor = { GetClassColor = function() return { r = 0.78, g = 0.61, b = 0.43 } end }
 C_Spell = { GetSpellName = function(id) return ({ [2366] = "Recolectar hierbas", [2575] = "Minería", [133] = "Bola de Fuego" })[id] end }
-C_TooltipInfo = { GetUnit = function() return { lines = { { leftText = "x" }, { leftText = STATE.npc and STATE.npc.sub or "Nivel 30" } } } end }
+C_TooltipInfo = {
+    GetUnit = function(unit)
+        local who = STATE.units[unit]
+        if who then return { lines = { { leftText = who.name }, { leftText = who.sub or "Nivel 30" } } } end
+        return { lines = { { leftText = "x" }, { leftText = STATE.npc and STATE.npc.sub or "Nivel 30" } } }
+    end,
+    -- an NPC asked by its link: the game knows the names in STATE.cached (else nothing yet)
+    GetHyperlink = function(link)
+        STATE.asked = (STATE.asked or 0) + 1
+        local id = tonumber(link:match("^unit:Creature%-0%-0%-0%-0%-(%d+)"))
+        local name = id and STATE.cached and STATE.cached[id]
+        return { lines = name and { { leftText = name } } or {} }
+    end,
+}
 C_GossipInfo = { GetOptions = function() return STATE.gossip or {} end }
 C_ChatInfo = {
     RegisterAddonMessagePrefix = function() return true end,

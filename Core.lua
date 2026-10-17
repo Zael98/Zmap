@@ -84,7 +84,7 @@ ns.DEFAULTS = {
     fadeAlpha = 0.55,
     -- layers
     labels = true, levels = true, flights = true, dungeons = true, transports = true,
-    quests = true, group = true, guild = true, pins = true, herbs = true, ore = true, townsfolk = true,
+    quests = true, group = true, guild = true, pins = true, herbs = true, ore = true, townsfolk = true, rares = true,
     -- sharing (only with Zmap users of your guild or group)
     shareGuild = true,        -- your position on their map
     shareFinds = true,        -- herbs, ore and townsfolk you find
