@@ -1,6 +1,6 @@
 # Zmap
 
-## Unreleased
+## 1.4.1 — The quest log on the map, new buttons, a smooth arrow, quests reviewed
 
 - **The quest log is part of the map**: a panel down its right side from the moment it opens, in the layers panel's style, folding away to a tab. Its zones' + / - fold their quests (they did nothing).
 - **New buttons**: Zmap's own, dark with a thin gold edge, brighter under the mouse (the top bar, the quest log, dungeon and cave floors).
