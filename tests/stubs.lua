@@ -613,16 +613,40 @@ C_QuestLog = {
     GetTitleForQuestID = function(id) return ({ [101] = "Lobos en la linde", [102] = "El collar de Fargodeep" })[id] end,
     GetQuestObjectives = function(id) return { { text = "Lobo matado: 3/8", finished = false } } end,
     IsComplete = function(id) return id == 102 or (STATE.finished or {})[id] == true end,
-    -- the log: STATE.log = { questID, ... } (default 101 and 102); STATE.completed = { questID, ... }
+    -- the log: STATE.log = { questID or { header = "Zone", collapsed }, ... } (default 101 and 102);
+    -- STATE.completed = { questID, ... }; STATE.watched[questID] = true
     GetNumQuestLogEntries = function() return #(STATE.log or { 101, 102 }) end,
     GetInfo = function(i)
-        local id = (STATE.log or { 101, 102 })[i]
-        return id and { questID = id, isHeader = false, title = "q" .. id }
+        local e = (STATE.log or { 101, 102 })[i]
+        if type(e) == "table" then return { isHeader = true, title = e.header, isCollapsed = e.collapsed == true } end
+        return e and { questID = e, isHeader = false, title = "q" .. e }
     end,
     GetAllCompletedQuestIDs = function() return STATE.completed or {} end,
     RequestLoadQuestByID = function() end,
-    GetLogIndexForQuestID = function(id) return id - 100 end,
+    GetLogIndexForQuestID = function(id)
+        for i, e in ipairs(STATE.log or { 101, 102 }) do if e == id then return i end end
+    end,
+    GetSelectedQuest = function() return STATE.selectedQuest or 0 end,
+    SetSelectedQuest = function(id) STATE.selectedQuest = id end,
+    GetQuestWatchType = function(id) return (STATE.watched or {})[id] and 0 or nil end,
+    AddQuestWatch = function(id) STATE.watched = STATE.watched or {}; STATE.watched[id] = true end,
+    RemoveQuestWatch = function(id) if STATE.watched then STATE.watched[id] = nil end end,
+    IsPushableQuest = function() return true end,
+    CanAbandonQuest = function() return true end,
+    SetAbandonQuest = function() STATE.abandoning = STATE.selectedQuest end,
 }
+function ExpandQuestHeader(i) (STATE.log or {})[i].collapsed = false end
+function CollapseQuestHeader(i) (STATE.log or {})[i].collapsed = true end
+-- the selected quest's text, and its rewards: STATE.rewards = { { name, texture, count } }, STATE.rewardMoney
+function GetQuestLogQuestText() return "Texto de la misión " .. tostring(STATE.selectedQuest), "Objetivo de la misión" end
+function GetNumQuestLogRewards() return #(STATE.rewards or {}) end
+function GetQuestLogRewardInfo(i) local r = STATE.rewards[i] return r[1], r[2], r[3] end
+function GetNumQuestLogChoices() return 0 end
+function GetQuestLogRewardMoney() return STATE.rewardMoney or 0 end
+function GetQuestLogRewardXP() return 0 end
+function GetMoneyString(m) return m .. " cobre" end
+function QuestLogPushQuest(i) STATE.shared = i end
+function StaticPopup_Show(name, text) STATE.popup = { name, text } end
 
 function GetQuestGreenRange() return 8 end
 -- professions: STATE.skills = { herb = 75, ore = 150 }

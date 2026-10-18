@@ -54,7 +54,7 @@ local turnin = false
 for _, p in ipairs(q) do if p.icon.atlas == "QuestTurnin" then turnin = true end end
 OUT(("quests: %d pins, turn-in %s"):format(#q, tostring(turnin)))
 for _, p in ipairs(q) do if p.questID == 101 then p.scripts.OnClick(p, "LeftButton") end end
-OUT("quest click: opened " .. tostring(STATE.openedQuest))
+OUT(("quest click: zmap %s, blizzard %s"):format(tostring(select(3, ZNS.QuestPanel.Lines())), tostring(STATE.openedQuest)))
 
 OPEN()
 ZNS.Map.SetView(501, 334, 2)

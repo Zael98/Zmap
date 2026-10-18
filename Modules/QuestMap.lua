@@ -478,11 +478,13 @@ function objectives:Tooltip(pin, tip)
             end
         end
     end
-    tip:AddLine(L.CLICK_NAVIGATE, 0.6, 0.6, 0.6)
+    tip:AddLine(L.QUEST_HINT, 0.6, 0.6, 0.6)
 end
 
+-- a quest of your log: its details in Zmap's quest log; with Ctrl, the arrow there
 function objectives:OnClick(pin, button)
-    if button == "LeftButton" then Navigate(pin.mark) end
+    if button ~= "LeftButton" then return end
+    if IsControlKeyDown() then Navigate(pin.mark) else ns.QuestPanel.Show(pin.mark.quest) end
 end
 
 local function Changed()

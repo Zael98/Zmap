@@ -1,5 +1,5 @@
 -- Your quests on the map: where their objectives are (numbered as in your quest log) and, once done,
--- where to hand them in. A click opens the quest in Blizzard's quest log.
+-- where to hand them in. A click opens the quest in Zmap's quest log (Modules/QuestPanel.lua).
 local _, ns = ...
 local L, Geo = ns.L, ns.Geo
 
@@ -62,12 +62,7 @@ function P:OnClick(pin, button)
     if button == "LeftButton" and IsControlKeyDown() then
         ns.Waypoints.Add(pin.mapID, pin.x, pin.y, C_QuestLog.GetTitleForQuestID(pin.questID), { navigate = true, temp = true })
     elseif button == "LeftButton" then
-        ns.Map.Close()
-        if QuestMapFrame_OpenToQuestDetails then
-            QuestMapFrame_OpenToQuestDetails(pin.questID)
-        elseif OpenQuestLog then
-            OpenQuestLog()
-        end
+        ns.QuestPanel.Show(pin.questID)
     end
 end
 

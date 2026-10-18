@@ -264,7 +264,6 @@ local function Panel()
     if not frame then return end
     if not panel then
         panel = CreateFrame("Frame", nil, frame.viewport, "BackdropTemplate")
-        panel:SetPoint("TOPRIGHT", -6, -6)
         panel:SetWidth(260)
         panel:SetFrameLevel(frame.viewport:GetFrameLevel() + 200)
         panel:EnableMouse(true)
@@ -286,6 +285,8 @@ local function Panel()
         panel:Hide()
         return
     end
+    panel:ClearAllPoints()   -- (left of the quest log, when it is open)
+    panel:SetPoint("TOPRIGHT", ns.QuestPanel.Shown() and -(ns.QuestPanel.WIDTH + 12) or -6, -6)
     panel.title:SetText(L.WAY_TITLE:format(route.dest.name or "?", ns.Duration(route.seconds)))
     for _, row in ipairs(panel.rows) do row:Hide() end
     local y = -30
@@ -376,6 +377,7 @@ R.Check = Check
 
 ns.On("PLAYER_LOGIN", function() C_Timer.NewTicker(1, function() ns.Safe(Check) end) end)
 ns.On("ZMAP_SHOW", function() if route then Draw(); Panel() end end)
+ns.On("ZMAP_PANELS", function() if route then Panel() end end)
 ns.On("ZMAP_MENU", function(root, u, v, mapID)
     if mapID then root:CreateButton(L.MENU_ROUTE_HERE, function() R.To(u, v) end) end
 end)
