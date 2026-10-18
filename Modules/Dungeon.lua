@@ -438,11 +438,8 @@ local function Create(viewport)
     end
     title = view:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 10, -8)
-    back = CreateFrame("Button", nil, view, "UIPanelButtonTemplate")
-    back:SetSize(130, 22)
+    back = ns.Button(view, L.BACK_TO_WORLD, 130, function() D.Close() end)
     back:SetPoint("TOPRIGHT", -6, -6)
-    back:SetText(L.BACK_TO_WORLD)
-    back:SetScript("OnClick", function() D.Close() end)
     local hint = view:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetPoint("BOTTOMRIGHT", -8, 8)
     hint:SetText(L.DUNGEON_BACK_HINT)
@@ -502,8 +499,7 @@ function D.Open(inst, name)
         for i, floor in ipairs(d.floors) do
             local b = floorButtons[i]
             if not b then
-                b = CreateFrame("Button", nil, view, "UIPanelButtonTemplate")
-                b:SetHeight(20)
+                b = ns.Button(view, "", 80)
                 floorButtons[i] = b
             end
             local label = ns.Name(floor[2])

@@ -338,28 +338,14 @@ function Map.SetFullscreen(on)
     if frame.fullButton then frame.fullButton:SetText(on and L.WINDOWED or L.FULLSCREEN) end
 end
 
-local function Button(parent, text, width, onClick, tooltip)
-    local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    b:SetSize(width, 22)
-    b:SetText(text)
-    b:SetScript("OnClick", onClick)
-    if tooltip then
-        b:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-            GameTooltip:SetText(tooltip, 1, 1, 1, 1, true)
-            GameTooltip:Show()
-        end)
-        b:SetScript("OnLeave", GameTooltip_Hide)
-    end
-    return b
-end
+local Button = ns.Button
 
 local function Create()
     frame = CreateFrame("Frame", "ZmapFrame", UIParent, "BackdropTemplate")
     frame:SetToplevel(true)
     frame:SetMovable(true)
     frame:SetResizable(true)
-    frame:SetResizeBounds(860, 420)   -- (narrower, the top bar's buttons would cover the search box)
+    frame:SetResizeBounds(780, 420)   -- (narrower, the top bar's buttons would cover the search box)
     frame:SetClampedToScreen(true)
     frame:EnableMouse(true)
     frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -404,7 +390,6 @@ local function Create()
     Right(L.BLIZZARD_MAP, 96, function() Map.OpenBlizzard() end, L.BLIZZARD_MAP_TIP)
     Right(L.CENTER, 70, function() Map.CenterOnPlayer(false) end, L.CENTER_TIP)
     frame.pinsButton = Right(L.PINS, 70, function(self) ns.Waypoints.Menu(self) end, L.PINS_TIP)
-    frame.questsButton = Right(L.OPT_QUESTS, 76, function() ns.QuestPanel.Toggle() end, L.QUEST_PANEL_TIP)
     -- (the layers: a panel down the map's left side, Options.lua)
 
     -- the map itself

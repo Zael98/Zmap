@@ -655,6 +655,13 @@ function GetQuestLogRewardXP() return 0 end
 function GetMoneyString(m) return m .. " cobre" end
 function QuestLogPushQuest(i) STATE.shared = i end
 function StaticPopup_Show(name, text) STATE.popup = { name, text } end
+-- talking to an NPC: STATE.offered = { questID, ... } (the quests it offers)
+C_GossipInfo = C_GossipInfo or {}
+C_GossipInfo.GetAvailableQuests = function()
+    local out = {}
+    for _, id in ipairs(STATE.offered or {}) do out[#out + 1] = { questID = id } end
+    return out
+end
 
 function GetQuestGreenRange() return 8 end
 -- professions: STATE.skills = { herb = 75, ore = 150 }

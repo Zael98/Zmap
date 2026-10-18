@@ -75,20 +75,25 @@ end
 -- The list
 --------------------------------------------------------------------------------------------------------------
 
+-- a zone's header, as the layers panel's: its name in gold, a line under it, the + / - that folds its quests
+-- (Zmap's own: Blizzard's log keeps listing a folded header's quests)
 local function HeaderRow()
     local b = CreateFrame("Button", nil, content)
-    b:SetHeight(22)
-    b.bg = b:CreateTexture(nil, "BACKGROUND")
-    b.bg:SetAllPoints()
-    b.bg:SetColorTexture(0.16, 0.16, 0.17, 0.95)
+    b:SetHeight(20)
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    b.text:SetPoint("LEFT", 8, 0)
-    b.text:SetTextColor(1, 1, 1)
-    b.fold = b:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    b.fold:SetPoint("RIGHT", -8, 0)
+    b.text:SetPoint("LEFT", 6, 1)
+    b.line = b:CreateTexture(nil, "ARTWORK")
+    b.line:SetPoint("BOTTOMLEFT", 4, 0)
+    b.line:SetPoint("BOTTOMRIGHT", -4, 0)
+    b.line:SetHeight(1)
+    b.line:SetColorTexture(0.62, 0.55, 0.38, 0.45)
+    b.fold = b:CreateTexture(nil, "OVERLAY")
+    b.fold:SetSize(14, 14)
+    b.fold:SetPoint("RIGHT", -6, 1)
     b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     b:SetScript("OnClick", function(self)
-        if self.collapsed then ExpandQuestHeader(self.index) else CollapseQuestHeader(self.index) end
+        ns.db.questFolded = ns.db.questFolded or {}
+        ns.db.questFolded[self.title] = not ns.db.questFolded[self.title] or nil
         QP.Refresh()
     end)
     return b
@@ -149,7 +154,8 @@ end
 
 local function ShowList()
     local y = 4
-    local count = 0
+    local count, folded = 0, false
+    local foldedSet = ns.db.questFolded or {}
     for i = 1, C_QuestLog.GetNumQuestLogEntries() do
         local info = C_QuestLog.GetInfo(i)
         if info and info.isHeader then
@@ -157,10 +163,14 @@ local function ShowList()
             h:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -y)
             h.y = y
             h:SetPoint("RIGHT", content, "RIGHT", -2, 0)
-            h.text:SetText(info.title or "")
-            h.fold:SetText(info.isCollapsed and "+" or "−")
-            h.index, h.collapsed = i, info.isCollapsed
+            h.title = info.title or ""
+            h.text:SetText(h.title)
+            folded = foldedSet[h.title] == true
+            h.folded = folded
+            h.fold:SetTexture(folded and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
             y = y + 24
+        elseif info and info.questID and info.questID > 0 and not info.isHidden and folded then
+            count = count + 1
         elseif info and info.questID and info.questID > 0 and not info.isHidden then
             local id = info.questID
             count = count + 1
@@ -307,13 +317,7 @@ local function Paint()
 end
 QP.Refresh = Paint
 
-local function Button(text, onClick)
-    local b = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    b:SetHeight(22)
-    b:SetText(text)
-    b:SetScript("OnClick", onClick)
-    return b
-end
+local function Button(text, onClick) return ns.Button(panel, text, 50, onClick) end
 
 local function Create()
     local frame = ns.Map.Frame()
@@ -330,14 +334,40 @@ local function Create()
     end)
     panel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
         edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-    panel:SetBackdropColor(0.05, 0.05, 0.06, 0.95)
+    panel:SetBackdropColor(0.05, 0.05, 0.06, 0.9)
     panel:SetBackdropBorderColor(0.62, 0.55, 0.38, 0.9)
     panel.title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     panel.title:SetPoint("TOPLEFT", 10, -9)
-    local close = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
-    close:SetSize(24, 24)
-    close:SetPoint("TOPRIGHT", -2, -2)
-    close:SetScript("OnClick", function() QP.Toggle(false) end)
+    -- folded away to a tab at the map's top right corner, as the layers panel to its top left
+    local fold = CreateFrame("Button", nil, panel)
+    fold:SetSize(22, 22)
+    fold:SetPoint("TOPRIGHT", -4, -4)
+    fold:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    fold:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Down")
+    fold:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    fold:SetScript("OnClick", function() QP.Toggle(false) end)
+    panel.foldButton = fold
+    local tab = CreateFrame("Button", nil, frame.viewport, "BackdropTemplate")
+    tab:SetSize(92, 24)
+    tab:SetPoint("TOPRIGHT", -6, -6)
+    tab:SetFrameLevel(frame.viewport:GetFrameLevel() + 200)
+    tab:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+    tab:SetBackdropColor(0.05, 0.05, 0.06, 0.9)
+    tab:SetBackdropBorderColor(0.62, 0.55, 0.38, 0.9)
+    tab.icon = tab:CreateTexture(nil, "ARTWORK")
+    tab.icon:SetSize(16, 16)
+    tab.icon:SetPoint("LEFT", 6, 0)
+    tab.icon:SetAtlas("QuestNormal")
+    tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    tab.text:SetPoint("LEFT", tab.icon, "RIGHT", 5, 0)
+    tab.text:SetText(L.OPT_QUESTS)
+    tab:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+    tab:SetScript("OnClick", function() QP.Toggle(true) end)
+    tab:Hide()
+    panel.tab = tab
+    frame.questsTab = tab
+    frame.questsPanel = panel
     view = CreateFrame("Frame", nil, panel)
     view:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -TOP)
     view:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 6)
@@ -368,6 +398,7 @@ function QP.Toggle(show)
     if show == nil then show = not panel:IsShown() end
     ns.db.questPanel = show
     panel:SetShown(show)
+    panel.tab:SetShown(not show)
     Paint()
     ns.Fire("ZMAP_PANELS")
 end
@@ -444,6 +475,5 @@ end
 
 ns.On("ZMAP_QUESTS", Paint)   -- (the quest log changed: QuestMap.lua has taken it in)
 ns.On("QUEST_WATCH_LIST_CHANGED", Paint)
-ns.On("ZMAP_SHOW", function()
-    if ns.db.questPanel then QP.Toggle(true) end
-end)
+-- on the map from its opening (folded only if you fold it)
+ns.On("ZMAP_SHOW", function() QP.Toggle(ns.db.questPanel ~= false) end)

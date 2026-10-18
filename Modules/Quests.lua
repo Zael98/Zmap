@@ -41,7 +41,7 @@ function P:Refresh()
                     pin.num:SetText(index or "")
                 end
                 pin.questID, pin.mapID, pin.x, pin.y = q.questID, mapID, q.x, q.y
-                ns.BlizzardQuestPins[q.questID] = true
+                ns.BlizzardQuestPins[q.questID] = ns.BlizzardQuestPins[q.questID] or done == true   -- (its hand-in)
                 self:Place(pin, u, v)
             end
         end

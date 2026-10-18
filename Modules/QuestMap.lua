@@ -55,6 +55,7 @@ end
 --   any-of prerequisites, all-of prerequisites, exclusive with, highest level, flags }
 function QM.Available(id, q, level, race, class)
     if completed[id] or inLog[id] then return false end
+    if ns.char.notOffered and ns.char.notOffered[id] then return false end   -- (its giver did not offer it)
     if math.floor(q[16] / 2) % 2 == 1 then return false end   -- needs a profession or spell
     if q[16] >= 8 then return false end                        -- a holiday's
     if level < q[3] or (q[15] > 0 and level > q[15]) then return false end
@@ -224,6 +225,30 @@ function QM.Next(id)
         if m.quest == id and (m.turnIn == true) == done then
             local d = u and (m.u - u) ^ 2 + (m.v - v) ^ 2 or 0
             if not bd or d < bd then best, bd = m, d end
+        end
+    end
+    if best then return best end
+    -- no mark of Zmap's: the game's own mark of it on some zone, else (done) who takes it in the data
+    local function Nearest(m, x, y, mark)
+        local mu, mv = Geo.ToWorld(m, x, y)
+        local d = mu and (u and (mu - u) ^ 2 + (mv - v) ^ 2 or 0)
+        if d and (not bd or d < bd) then
+            mark.u, mark.v, mark.m, mark.x, mark.y, mark.quest = mu, mv, m, x, y, id
+            best, bd = mark, d
+        end
+    end
+    if C_QuestLog.GetQuestsOnMap then
+        for _, mapID in ipairs(Geo.Zones()) do
+            local ok, list = pcall(C_QuestLog.GetQuestsOnMap, mapID)
+            for _, q in ipairs(ok and list or {}) do
+                if q.questID == id and q.x then Nearest(mapID, q.x, q.y, { reach = true }) end
+            end
+        end
+    end
+    local q = QUESTS[id]
+    if not best and q then
+        for _, npc in ipairs(done and q[8] or q[10]) do
+            for _, s in ipairs(ns.Npcs.Spawns(npc)) do Nearest(s[1], s[2], s[3], { npc = npc, turnIn = done or nil }) end
         end
     end
     return best
@@ -493,6 +518,50 @@ local function Changed()
     objectives:Update()
     ns.Fire("ZMAP_QUESTS")   -- (the quests panel)
 end
+-- What a giver really offers, told by the game as you talk to it: the quests of the data it gives that it does not
+-- offer are left off the map (the data cannot know all that holds a quest back), until your level or the quests
+-- you have done change
+local function Offered(questIDs)
+    local guid = UnitGUID("npc")
+    if not guid or (issecretvalue and issecretvalue(guid)) then return end
+    local kind, _, _, _, _, npc = strsplit("-", guid)
+    npc = tonumber(npc)
+    if kind ~= "Creature" or not npc then return end
+    local offered = {}
+    for _, id in ipairs(questIDs) do offered[id] = true end
+    local level, race, class = UnitLevel("player") or 1, RaceBit(), ClassBit()
+    local changed = false
+    for id, q in pairs(QUESTS) do
+        for _, giver in ipairs(q[6]) do
+            if giver == npc and not offered[id] and QM.Available(id, q, level, race, class) then
+                ns.char.notOffered = ns.char.notOffered or {}
+                ns.char.notOffered[id] = true
+                changed = true
+            end
+        end
+    end
+    if changed then
+        dirty = true
+        givers:Update()
+    end
+end
+ns.On("GOSSIP_SHOW", function()
+    if not (C_GossipInfo and C_GossipInfo.GetAvailableQuests) then return end
+    local ids = {}
+    for _, info in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do ids[#ids + 1] = info.questID end
+    Offered(ids)
+end)
+ns.On("QUEST_GREETING", function()
+    local ids = {}
+    for i = 1, (GetNumAvailableQuests and GetNumAvailableQuests() or 0) do
+        ids[#ids + 1] = select(5, GetAvailableQuestInfo(i))
+    end
+    Offered(ids)
+end)
+local function Unlearn() if ns.char.notOffered then wipe(ns.char.notOffered) end end
+ns.On("PLAYER_LEVEL_UP", Unlearn)
+ns.On("QUEST_TURNED_IN", Unlearn)
+
 local later = ns.Debounce(0.5, Changed)
 ns.On("QUEST_LOG_UPDATE", later)
 ns.On("QUEST_TURNED_IN", later)

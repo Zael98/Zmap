@@ -173,6 +173,43 @@ function ns.Coords(x, y)
     return ("%.1f, %.1f"):format(x * 100, y * 100)
 end
 
+-- Zmap's buttons: dark, a thin gold edge, gold text; brighter under the mouse, dimmed when off. tooltip: shown
+-- under the mouse
+local EDGE, EDGE_HOVER = { 0.62, 0.55, 0.38 }, { 1, 0.82, 0.25 }
+local function Hover(b, on)
+    local c = on and b:IsEnabled() and EDGE_HOVER or EDGE
+    b:SetBackdropBorderColor(c[1], c[2], c[3], on and 1 or 0.75)
+    b:SetBackdropColor(on and 0.17 or 0.09, on and 0.14 or 0.08, on and 0.09 or 0.07, 0.95)
+end
+function ns.Button(parent, text, width, onClick, tooltip)
+    local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    b:SetSize(width, 22)
+    b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+    local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    fs:SetPoint("CENTER")
+    b:SetFontString(fs)
+    b:SetNormalFontObject("GameFontNormalSmall")
+    b:SetHighlightFontObject("GameFontHighlightSmall")
+    b:SetDisabledFontObject("GameFontDisableSmall")
+    b:SetPushedTextOffset(1, -1)
+    b:SetText(text)
+    if onClick then b:SetScript("OnClick", onClick) end
+    b:SetScript("OnEnter", function(self)
+        Hover(self, true)
+        if tooltip then
+            GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+            GameTooltip:SetText(tooltip, 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end
+    end)
+    b:SetScript("OnLeave", function(self)
+        Hover(self, false)
+        if tooltip then GameTooltip:Hide() end
+    end)
+    Hover(b, false)
+    return b
+end
+
 function ns.Duration(seconds)
     seconds = math.floor(seconds + 0.5)
     local floor = math.floor

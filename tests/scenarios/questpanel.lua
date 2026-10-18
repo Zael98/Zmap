@@ -8,8 +8,7 @@ STATE.log = { { header = "Bosque de Elwynn" }, 33, { header = "Guerrero" }, 102 
 STATE.completed = {}
 STATE.rewards, STATE.rewardMoney = { { "Espada vieja", 135274, 1 } }, 150
 EVENT("QUEST_LOG_UPDATE")
-OPEN()
-ZmapFrame.questsButton:Click()
+OPEN()   -- (the log is there from the map's opening)
 local lines, shown = ZNS.QuestPanel.Lines()
 OUT(("list: shown %s; %s"):format(tostring(shown), table.concat(lines, " | ")))
 
@@ -28,11 +27,13 @@ end
 Row(33).check:Click()
 local _, _, header
 for _, w in ipairs(ALL_WIDGETS) do
-    if w.kind == "Button" and w.fold and w.text and w.text:GetText() == "Guerrero" and w:IsVisible() then header = w end
+    if w.kind == "Button" and w.fold and w.title == "Guerrero" and w:IsVisible() then header = w end
 end
 header:Click()
+local folded = ZNS.QuestPanel.Lines()
 OUT(("tracked %s, mark %s; folded: %s"):format(tostring(STATE.watched and STATE.watched[33]), tostring(Row(33).check.mark:IsShown()),
-    header.fold:GetText()))
+    table.concat(folded, " | ")))
+header:Click()
 
 -- its details: the map goes there
 local l, t = ZNS.Map.ViewRect()
@@ -65,7 +66,31 @@ OUT(("map click: details %s, blizzard %s"):format(tostring(fromMap), tostring(ST
 ZNS.Map.Close()
 OPEN()
 local _, again = ZNS.QuestPanel.Lines()
-ZmapFrame.questsButton:Click()
+ZmapFrame.questsPanel.foldButton:Click()
 local _, gone = ZNS.QuestPanel.Lines()
-OUT(("reopened: shown %s; toggled: shown %s"):format(tostring(again), tostring(gone)))
+local tab = ZmapFrame.questsTab:IsShown()
+ZNS.Map.Close()
+OPEN()
+local _, stillFolded = ZNS.QuestPanel.Lines()
+ZmapFrame.questsTab:Click()
+local _, back = ZNS.QuestPanel.Lines()
+OUT(("reopened: shown %s; folded: shown %s, tab %s, after reopening %s; tab click: shown %s"):format(tostring(again),
+    tostring(gone), tostring(tab), tostring(stillFolded), tostring(back)))
+-- a giver that does not offer a quest the data says it gives: that quest is no longer marked
+local mark = ZNS.QuestMap.Givers()[1]
+local npc, quest = mark.npc, mark.quests[1]
+STATE.npc, STATE.offered = { id = npc, name = "Dador" }, {}
+EVENT("GOSSIP_SHOW")
+local still = false
+for _, m in ipairs(ZNS.QuestMap.Givers()) do
+    for _, q in ipairs(m.quests) do if q == quest then still = true end end
+end
+EVENT("PLAYER_LEVEL_UP")
+ADVANCE(1)
+local again = false
+for _, m in ipairs(ZNS.QuestMap.Givers()) do
+    for _, q in ipairs(m.quests) do if q == quest then again = true end end
+end
+OUT(("not offered: still marked %s; after a level up %s"):format(tostring(still), tostring(again)))
+STATE.npc, STATE.offered = nil, nil
 OUT("errors " .. #STATE.errors)

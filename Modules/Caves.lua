@@ -38,8 +38,7 @@ local function Show(first)
     for i, id in ipairs(floors) do
         local b = buttons[i]
         if not b then
-            b = CreateFrame("Button", nil, bar, "UIPanelButtonTemplate")
-            b:SetHeight(22)
+            b = ns.Button(bar, "", 80)
             buttons[i] = b
         end
         b.id = id
