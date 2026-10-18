@@ -110,12 +110,16 @@ end
 function Provider:Refresh() end
 
 -- one provider again (its data changed)
+local refreshing   -- the provider refreshing (Pins.ViewBox notes the box it covers)
 function Provider:Update()
     if not self.frame or not ns.Map.IsShown() then return end
     local shown = self:Shown()
     self.frame:SetShown(shown)
     if shown then
+        self.box = nil
+        refreshing = self
         ns.Safe(self.Refresh, self)
+        refreshing = nil
     elseif self.cleared ~= true then
         self:ReleaseAll()
         if self.OnHidden then self:OnHidden() end
@@ -136,13 +140,22 @@ function Pins.Layout()
     Pins.LayoutLines()
 end
 
+-- a provider that keeps only what is in view, still right: the view inside the box its last refresh covered,
+-- and the zoom near enough for its thinning to hold
+local function Covers(p, z)
+    local box = p.box
+    if not box or z > box.z * 1.25 or z < box.z * 0.8 then return false end
+    local left, top, right, bottom = ns.Map.ViewRect()
+    return left / W >= box[1] and top / H >= box[2] and right / W <= box[3] and bottom / H <= box[4]
+end
+
 -- the view moved: providers that come and go with the zoom, or keep only what is in view, refresh
 local lastZoom
 local function OnView()
     local z = ns.Map.Zoom()
     for _, p in ipairs(providers) do
         local shown = p:Shown()
-        if shown ~= p.frame:IsShown() or (shown and p.cull) or (shown and p.zoomRefresh and z ~= lastZoom) then
+        if shown ~= p.frame:IsShown() or (shown and p.cull and not Covers(p, z)) or (shown and p.zoomRefresh and z ~= lastZoom) then
             p:Update()
         end
     end
@@ -173,11 +186,14 @@ function Pins.Spread(list, max)
     return out
 end
 
--- the part of the map in view (with a margin), for providers that only place what can be seen: u, v box
+-- the part of the map in view (with a margin), for providers that only place what can be seen: u, v box. The
+-- provider refreshing is not refreshed again while the view stays inside it (OnView)
 function Pins.ViewBox(margin)
     local left, top, right, bottom = ns.Map.ViewRect()
-    local mx, my = (right - left) * (margin or 0.1), (bottom - top) * (margin or 0.1)
-    return (left - mx) / W, (top - my) / H, (right + mx) / W, (bottom + my) / H
+    local mx, my = (right - left) * (margin or 0.25), (bottom - top) * (margin or 0.25)
+    local u0, v0, u1, v1 = (left - mx) / W, (top - my) / H, (right + mx) / W, (bottom + my) / H
+    if refreshing then refreshing.box = { u0, v0, u1, v1, z = ns.Map.Zoom() } end
+    return u0, v0, u1, v1
 end
 
 --------------------------------------------------------------------------------------------------------------

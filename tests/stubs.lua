@@ -222,6 +222,18 @@ end
 local TEMPLATES = {
     UICheckButtonTemplate = function(w) w.Text = w:CreateFontString(); w.text = nil end,
     SearchBoxTemplate = function(w) w.Instructions = w:CreateFontString() end,
+    -- the game's group frame on a map (Blizzard's mixin over a native frame): what it was told, and its updates
+    UnitPositionFrameTemplate = function(w)
+        w.pinSizes, w.pinTextures, w.updates = {}, {}, 0
+        function w:SetUiMapID(id) self.uiMapID = id end
+        function w:GetUiMapID() return self.uiMapID end
+        function w:SetNeedsFullUpdate() self.full = true end
+        function w:UpdatePlayerPins() self.updates = self.updates + 1; self.full = false end
+        function w:UpdateTooltips() end
+        function w:SetPinSize(unit, size) self.pinSizes[unit] = size end
+        function w:SetPinTexture(unit, texture) self.pinTextures[unit] = texture end
+        function w:SetMouseOverUnitExcluded() end
+    end,
 }
 
 function CreateFrame(kind, name, parent, template)
@@ -278,7 +290,7 @@ SlashCmdList = SlashCmdList or {}
 issecretvalue = nil
 
 function InCombatLockdown() return STATE.combat end
-function IsInInstance() return STATE.instance end
+function IsInInstance() return STATE.instance, STATE.instance and (STATE.instanceType or "party") or "none" end
 function IsInGuild() return STATE.guild end
 function IsInGroup() return #STATE.group > 0 end
 function IsInRaid() return false end
@@ -608,8 +620,34 @@ end
 C_GuildInfo = { GuildRoster = function() STATE.rosterAsked = (STATE.rosterAsked or 0) + 1 end }
 function GetInstanceInfo()
     if not STATE.instance then return "Azeroth", "none", 0, "", 5, 0, false, 0 end
-    return STATE.instanceName or "Las Minas de la Muerte", "party", 1, "Normal", 5, 0, false, STATE.instanceID or 36
+    return STATE.instanceName or "Las Minas de la Muerte", STATE.instanceType or "party", 1, "Normal", 5, 0, false, STATE.instanceID or 36
 end
+-- a battleground's objectives: STATE.pois[uiMapID] = { { id, name, x, y, atlasName | textureIndex }, ... }
+C_AreaPoiInfo = {
+    GetAreaPOIForMap = function(map)
+        local ids = {}
+        for _, p in ipairs((STATE.pois or {})[map] or {}) do ids[#ids + 1] = p.id end
+        return ids
+    end,
+    GetAreaPOIInfo = function(map, id)
+        for _, p in ipairs((STATE.pois or {})[map] or {}) do
+            if p.id == id then
+                return { areaPoiID = id, name = p.name, description = p.desc, atlasName = p.atlasName, textureIndex = p.textureIndex,
+                    position = { GetXY = function() return p.x, p.y end } }
+            end
+        end
+    end,
+}
+C_Minimap = { GetPOITextureCoords = function(i) return 0, 0.125, 0, 0.125 end }
+-- the flags: STATE.flags = { { x, y, texture } (x nil: not on the map), ... } on STATE.flagMap
+function GetNumBattlefieldFlagPositions() return #(STATE.flags or {}) end
+C_PvP = {
+    GetBattlefieldFlagPosition = function(i, map)
+        local f = STATE.flags[i]
+        if map ~= STATE.flagMap or not f.x then return nil end
+        return f.x, f.y, f.texture
+    end,
+}
 function GetCVar(k) return STATE.cvars and STATE.cvars[k] end
 function IsIndoors() return STATE.indoors end
 function GetFramerate() return 60 end

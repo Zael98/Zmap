@@ -206,7 +206,7 @@ local givers = ns.Pins.New("givers", { level = 48, size = 20, option = "availabl
 function givers:Refresh()
     self:ReleaseAll()
     local showTrivial = ns.Opt("trivial")
-    local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
+    local u0, v0, u1, v1 = ns.Pins.ViewBox()
     for _, mark in ipairs(QM.Givers()) do
         if (showTrivial or not mark.trivial) and InBox(mark, u0, v0, u1, v1) then
             local pin = self:Acquire()
@@ -235,7 +235,7 @@ local objectives = ns.Pins.New("objectives", { level = 47, size = 14, option = "
 
 function objectives:Refresh()
     self:ReleaseAll()
-    local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
+    local u0, v0, u1, v1 = ns.Pins.ViewBox()
     for _, mark in ipairs(QM.Objectives()) do
         if InBox(mark, u0, v0, u1, v1) then
             local pin = self:Acquire()

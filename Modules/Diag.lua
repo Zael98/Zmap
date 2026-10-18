@@ -242,6 +242,13 @@ local function Check()
         local here = IsInInstance() and (ns.Dungeon.Has(inst) and "this one has a map" or "no map for this one") or "outside"
         return n > 0, n .. " instances; " .. here
     end)
+    Try("battleground map", function()
+        local _, kind = IsInInstance()
+        if kind ~= "pvp" then return true, "(not in a battleground)" end
+        local live = ns.Dungeon.Live()
+        if not live then return false, "not shown (open the map here)" end
+        return live.units, ("group frame %s, objectives %d, flags %d"):format(tostring(live.units), live.pois, live.flags)
+    end)
     Try("minimap pins", function()
         return ZmapMinimapPins ~= nil and Minimap:GetWidth() > 0, ("minimap %d px, %s, rotating %s"):format(Minimap:GetWidth(),
             GetMinimapShape and GetMinimapShape() or "ROUND", tostring(GetCVar("rotateMinimap") == "1"))
@@ -256,10 +263,14 @@ local function Check()
         return learned > 0 or GetLocale() == "enUS", ("%d of %d"):format(learned, total)
     end)
     Try("taxi API", function() return C_TaxiMap.GetAllTaxiNodes ~= nil, "flight advice at flight masters" end)
+    -- what Zmap holds, and what of it is garbage the game has not collected yet (a full collection, once)
     Try("memory", function()
         UpdateAddOnMemoryUsage()
         local mb = GetAddOnMemoryUsage("Zmap") / 1024
-        return mb < 80, ("%.1f MB"):format(mb)
+        pcall(collectgarbage, "collect")
+        UpdateAddOnMemoryUsage()
+        local used = GetAddOnMemoryUsage("Zmap") / 1024
+        return used < 40, ("%.1f MB, %.1f MB in use after a collection"):format(mb, used)
     end)
     table.insert(out, 1, ("Zmap check: %d failed of %d"):format(failed, #out))
     return table.concat(out, "\n"), failed

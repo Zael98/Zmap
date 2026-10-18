@@ -175,7 +175,7 @@ local DATA_MIN_ZOOM = 5   -- the data's nodes: there are thousands, so only from
 
 function P:Refresh()
     self:ReleaseAll()
-    local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
+    local u0, v0, u1, v1 = ns.Pins.ViewBox()
     local count = 0
     if ns.Map.Zoom() >= DATA_MIN_ZOOM then
         local found = {}

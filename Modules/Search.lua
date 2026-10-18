@@ -18,23 +18,39 @@ local function Entry(kind, text, sub, u, v, zoom, icon, atlas, mapID)
         key = ns.Fold(text), subKey = sub and ns.Fold(sub) }
 end
 
--- an NPC's entry: its name as Zmap knows it in your language, its English name too, its title or services
-local npcEntries = {}
-local function NpcText(e)
-    local N, id = ns.Npcs, e.npc
-    local name, title = N.Name(id), N.Title(id)
-    local sub = title ~= "" and title or N.ServiceText(id)
-    e.text, e.sub = name, sub ~= "" and sub or L.NPC
-    e.key, e.subKey = ns.Fold(name), ns.Fold(e.sub)
+-- the NPCs, matched without an entry each (they are thousands): by NPC, its name as Zmap knows it in your
+-- language, its English name (when that differs) and its title and services, folded; an entry is made for those
+-- that match
+local npcName, npcAlt, npcSub = {}, {}, {}
+
+local function IndexNpc(id)
+    local N = ns.Npcs
+    local name, title, services = N.Name(id), N.Title(id), N.ServiceText(id)
+    local sub = title ~= "" and title or services
+    npcName[id] = ns.Fold(name)
     local english = ns.NPCS[id][1]
-    e.alt = name ~= english and ns.Fold(english) or nil
-    local services = N.ServiceText(id)
-    if services ~= "" and services ~= sub then e.subKey = e.subKey .. " " .. ns.Fold(services) end
+    npcAlt[id] = name ~= english and ns.Fold(english) or nil
+    local subKey = ns.Fold(sub ~= "" and sub or L.NPC)
+    if services ~= "" and services ~= sub then subKey = subKey .. " " .. ns.Fold(services) end
+    npcSub[id] = subKey
 end
 
--- what does not change while you play: built once (each NPC's entry is kept up to date as Zmap learns its name).
--- The thousands of NPCs are added a few hundred at a time after logging in, so the first search does not
--- stall the game; a search before that finishes them at once.
+local function NpcEntry(id)
+    local N = ns.Npcs
+    local spawn = N.Spawns(id)[1]
+    local look = ns.FolkLook(id)
+    local title = N.Title(id)
+    local sub = title ~= "" and title or N.ServiceText(id)
+    local e = { kind = "npc", npc = id, zoom = 10, text = N.Name(id), sub = sub ~= "" and sub or L.NPC,
+        icon = look and look[1] or NPC_ICON, coords = look and look[2],
+        atlas = (N.Rare(id) and "VignetteKill") or (look and look[3] and look[1]) or nil, zone = Geo.Name(spawn[1]) }
+    e.u, e.v = Geo.ToWorld(spawn[1], spawn[2], spawn[3])
+    return e
+end
+
+-- what does not change while you play: built once (each NPC kept up to date as Zmap learns its name). The NPCs
+-- are indexed a few hundred at a time once the search box is first used, so neither logging in nor the first
+-- search stalls the game (and no index is kept by those who never search); a search before that finishes them.
 local static, npcIds, npcAt
 local function Add(e) if e.text and e.u then static[#static + 1] = e end end
 
@@ -43,16 +59,7 @@ local function AddNpcs(budget)
     while npcAt <= #npcIds and budget > 0 do
         local id = npcIds[npcAt]
         npcAt, budget = npcAt + 1, budget - 1
-        local spawn = N.Spawns(id)[1]
-        if spawn then
-            local look = ns.FolkLook(id)
-            local e = { kind = "npc", npc = id, zoom = 10, icon = look and look[1] or NPC_ICON, coords = look and look[2],
-                atlas = (N.Rare(id) and "VignetteKill") or (look and look[3] and look[1]) or nil, zone = Geo.Name(spawn[1]) }
-            e.u, e.v = Geo.ToWorld(spawn[1], spawn[2], spawn[3])
-            NpcText(e)
-            npcEntries[id] = e
-            Add(e)
-        end
+        if N.Spawns(id)[1] then IndexNpc(id) end
     end
     return npcAt > #npcIds
 end
@@ -91,19 +98,19 @@ local function Static()
     return static
 end
 
-ns.On("PLAYER_LOGIN", function()
-    C_Timer.After(8, function()
-        Base()
-        local ticker
-        ticker = C_Timer.NewTicker(0.1, function()
-            if AddNpcs(300) and ticker then ticker:Cancel() end
-        end)
+local indexing
+local function StartIndex()
+    if indexing then return end
+    indexing = true
+    Base()
+    local ticker
+    ticker = C_Timer.NewTicker(0.05, function()
+        if AddNpcs(400) and ticker then ticker:Cancel() end
     end)
-end)
+end
 
 ns.Npcs.OnLearn = function(id)
-    local e = npcEntries[id]
-    if e then NpcText(e) end
+    if npcName[id] then IndexNpc(id) end
 end
 
 -- what changes as you play: your pins, the NPCs and townsfolk met that the NPC data lacks, herbs and ore found
@@ -180,16 +187,19 @@ end
 -- zones and cities first, then subzones and your pins, dungeons, NPCs and flight masters, townsfolk and herbs
 local KIND = { zone = 0, subzone = 1, pin = 1, quest = 1, dungeon = 2, node = 2, npc = 3, flight = 3, folk = 4, herb = 4 }
 
+-- a match's rank (lower first), or nil
+local function Rank(kind, key, alt, subKey, want)
+    local score = Score(key, want)
+    local a = Score(alt, want)
+    if a and (not score or a < score) then score = a end
+    if not score and Score(subKey, want) then score = 3 end
+    return score and (KIND[kind] or 4) * 4 + score
+end
+
 local function Match(c, want, found)
-    local score = Score(c.key, want)
-    local alt = Score(c.alt, want)
-    if alt and (not score or alt < score) then score = alt end
-    if not score then
-        local s = Score(c.subKey, want)
-        score = s and 3
-    end
-    if score then
-        c.rank = (KIND[c.kind] or 4) * 4 + score
+    local rank = Rank(c.kind, c.key, c.alt, c.subKey, want)
+    if rank then
+        c.rank = rank
         found[#found + 1] = c
     end
 end
@@ -200,6 +210,14 @@ function Search.Find(text)
     if #want < 2 then return results end
     local found = {}
     for _, c in ipairs(Static()) do Match(c, want, found) end
+    for id, key in pairs(npcName) do
+        local rank = Rank("npc", key, npcAlt[id], npcSub[id], want)
+        if rank then
+            local e = NpcEntry(id)
+            e.rank = rank
+            found[#found + 1] = e
+        end
+    end
     for _, c in ipairs(Dynamic()) do Match(c, want, found) end
     -- the nearest first among equals: an NPC at the spawn nearest to you
     local pu, pv = Geo.UnitPosition("player")
@@ -324,7 +342,10 @@ ns.On("ZMAP_CREATED", function(frame)
         buttons[i] = b
     end
     box:HookScript("OnTextChanged", ShowResults)
-    box:HookScript("OnEditFocusGained", ShowResults)
+    box:HookScript("OnEditFocusGained", function()
+        StartIndex()
+        ShowResults()
+    end)
     box:HookScript("OnEditFocusLost", function() C_Timer.After(0.2, function() list:Hide() end) end)
     box:SetScript("OnEnterPressed", function() Search.Go(results[1]) end)
     box:HookScript("OnEscapePressed", function() box:ClearFocus() list:Hide() end)

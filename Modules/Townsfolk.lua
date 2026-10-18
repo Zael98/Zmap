@@ -311,28 +311,48 @@ Comm.On("T", function(sender, channel, kind, m, x, y, name, sub, npc)
     Record(kind, m, x, y, name ~= "" and name or L["FOLK_" .. kind], sub ~= "" and sub or nil, tonumber(npc), Ambiguate(sender, "short"))
 end)
 
+-- where a spot of the data is on the map, worked out once (f.u false: nowhere)
+local function At(f)
+    if f.u == nil then
+        local u, v = Geo.ToWorld(f.m, f.x, f.y)
+        f.u, f.v = u or false, v
+    end
+    return f.u, f.v
+end
+
 function P:Refresh()
     self:ReleaseAll()
-    local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
-    -- what is in view: { kind, m, x, y, u, v, and npc, object or folk + key }; people before mailboxes and anvils
+    local u0, v0, u1, v1 = ns.Pins.ViewBox()
+    -- what is in view: { kind, m, x, y, u, v, look, and npc, object or folk + key }; people before mailboxes and
+    -- anvils. (Only what is in view makes an entry: the world's townsfolk are thousands.)
     local people, things = {}, {}
     local hidden = Hidden()
-    local function Add(list, kind, m, x, y, e, title)
-        local u, v = Geo.ToWorld(m, x, y)
+    local function Add(list, kind, m, x, y, u, v, title)
         if not u or u < u0 or u > u1 or v < v0 or v > v1 or not ICONS[kind] then return end
         local look = Look(kind, title)
         if hidden[look.cat] or NotMine(look) then return end
-        e.kind, e.m, e.x, e.y, e.u, e.v, e.look = kind, m, x, y, u, v, look
+        local e = { kind = kind, m = m, x = x, y = y, u = u, v = v, look = look }
         list[#list + 1] = e
+        return e
     end
-    for _, f in ipairs(ns.Npcs.Townsfolk()) do Add(people, f.kind, f.m, f.x, f.y, { npc = f.id }, ns.NPCS[f.id][2]) end
+    for _, f in ipairs(ns.Npcs.Townsfolk()) do
+        local u, v = At(f)
+        local e = Add(people, f.kind, f.m, f.x, f.y, u, v, ns.NPCS[f.id][2])
+        if e then e.npc = f.id end
+    end
     for key, f in pairs(ns.db.folk) do
         local npc = tonumber(key:match(":(%d+)$"))
         if not (npc and ns.NPCS and ns.NPCS[npc]) then   -- (the data shows it already)
-            Add(people, f.kind, f.m, f.x, f.y, { folk = f, key = key }, f.sub)
+            local u, v = Geo.ToWorld(f.m, f.x, f.y)
+            local e = Add(people, f.kind, f.m, f.x, f.y, u, v, f.sub)
+            if e then e.folk, e.key = f, key end
         end
     end
-    for _, o in ipairs(Utilities()) do Add(things, o.kind, o.m, o.x, o.y, { object = o.kind }) end
+    for _, o in ipairs(Utilities()) do
+        local u, v = At(o)
+        local e = Add(things, o.kind, o.m, o.x, o.y, u, v)
+        if e then e.object = o.kind end
+    end
     local shown = ns.Pins.Spread(people, MAX_PINS)
     for _, e in ipairs(ns.Pins.Spread(things, MAX_PINS - #shown)) do shown[#shown + 1] = e end
     for _, e in ipairs(shown) do

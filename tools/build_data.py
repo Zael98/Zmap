@@ -116,6 +116,38 @@ def loc_names(entry):
 # Maps
 # --------------------------------------------------------------------------------------------------------------
 
+_map_art = None
+
+
+def map_art():
+    """uiMap -> (its picture's tile file IDs, row by row; its overlays: [{w, h, x, y, areas, fdids}]), as Forever's
+    tables draw it (phase 0)."""
+    global _map_art
+    if _map_art is None:
+        xart = {r["UiMapID"]: r["UiMapArtID"] for r in table("UiMapXMapArt") if r["PhaseID"] == "0"}
+        tiles, overlays, otiles = {}, {}, {}
+        for r in table("UiMapArtTile"):
+            if r["LayerIndex"] == "0":
+                tiles.setdefault(r["UiMapArtID"], []).append(r)
+        for r in table("WorldMapOverlay"):
+            overlays.setdefault(r["UiMapArtID"], []).append(r)
+        for r in table("WorldMapOverlayTile"):
+            if r["LayerIndex"] == "0":
+                otiles.setdefault(r["WorldMapOverlayID"], []).append(r)
+        _map_art = {}
+        for m, art in xart.items():
+            rows = sorted(tiles.get(art, []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
+            ovs = []
+            for o in sorted(overlays.get(art, []), key=lambda o: int(o["ID"])):
+                ts = sorted(otiles.get(o["ID"], []), key=lambda t: (int(t["RowIndex"]), int(t["ColIndex"])))
+                if ts:
+                    ovs.append({"w": int(o["TextureWidth"]), "h": int(o["TextureHeight"]), "x": int(o["OffsetX"]),
+                                "y": int(o["OffsetY"]), "areas": [int(o[f"AreaID_{i}"]) for i in range(4) if o[f"AreaID_{i}"] != "0"],
+                                "fdids": [int(t["FileDataID"]) for t in ts]})
+            _map_art[m] = ([int(r["FileDataID"]) for r in rows], ovs)
+    return _map_art
+
+
 def build_maps():
     uimap = {r["ID"]: r for r in table("UiMap")}
     names = names_by_locale("UiMap")
@@ -126,18 +158,6 @@ def build_maps():
             world_assign[int(r["MapID"])] = r
         else:
             assign.setdefault(r["UiMapID"], r)
-    xart = {r["UiMapID"]: r["UiMapArtID"] for r in table("UiMapXMapArt") if r["PhaseID"] == "0"}
-    tiles = {}
-    for r in table("UiMapArtTile"):
-        if r["LayerIndex"] == "0":
-            tiles.setdefault(r["UiMapArtID"], []).append(r)
-    overlays = {}
-    for r in table("WorldMapOverlay"):
-        overlays.setdefault(r["UiMapArtID"], []).append(r)
-    otiles = {}
-    for r in table("WorldMapOverlayTile"):
-        if r["LayerIndex"] == "0":
-            otiles.setdefault(r["WorldMapOverlayID"], []).append(r)
 
     # instance map -> 947 placement: u = a + b * worldY, v = c + d * worldX (the continents' affine maps)
     transforms = {}
@@ -163,8 +183,7 @@ def build_maps():
         return ta + tb * max_y, ta + tb * min_y, tc + td * max_x, tc + td * min_x   # l, r, t, b
 
     def art_tiles(m):
-        rows = sorted(tiles.get(xart.get(m), []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
-        return [int(r["FileDataID"]) for r in rows]
+        return map_art().get(m, ([], []))[0]
 
     maps = {}
     world_rows = art_tiles(str(WORLD))
@@ -178,16 +197,9 @@ def build_maps():
         inst = int(assign[m]["MapID"])
         if inst not in CONTINENT_MAPS and not (inst in ISLES and r["ParentUiMapID"] == str(WORLD)):
             continue   # another instance of its own (or an isle's copy the world map does not show)
-        art = xart.get(m)
-        ovs = []
-        for o in sorted(overlays.get(art, []), key=lambda o: int(o["ID"])):
-            ts = sorted(otiles.get(o["ID"], []), key=lambda t: (int(t["RowIndex"]), int(t["ColIndex"])))
-            if not ts:
-                continue
-            areas = [int(o[f"AreaID_{i}"]) for i in range(4) if o[f"AreaID_{i}"] != "0"]
-            area_ids.update(areas)
-            ovs.append({"w": int(o["TextureWidth"]), "h": int(o["TextureHeight"]), "x": int(o["OffsetX"]),
-                        "y": int(o["OffsetY"]), "areas": areas, "fdids": [int(t["FileDataID"]) for t in ts]})
+        ovs = map_art().get(m, ([], []))[1]
+        for o in ovs:
+            area_ids.update(o["areas"])
         a = assign[m]
         maps[int(m)] = {
             "kind": "zone" if ovs else "city",
@@ -648,6 +660,24 @@ def build_dungeon_maps():
 
 
 # --------------------------------------------------------------------------------------------------------------
+# Battleground maps: Forever's own (the uiMap of each battleground's instance), drawn whole with their overlays (a
+# battleground's map is not explored). What moves on them (your group, the objectives, the flags), the game says.
+# --------------------------------------------------------------------------------------------------------------
+
+def build_battleground_maps():
+    pvp = {r["ID"] for r in table("Map") if r["InstanceType"] in ("3", "4")}
+    names = names_by_locale("UiMap")
+    out = {}
+    for r in sorted(table("UiMapAssignment"), key=lambda r: int(r["OrderIndex"])):
+        m, inst = r["UiMapID"], r["MapID"]
+        tiles, ovs = map_art().get(m, ([], []))
+        if inst not in pvp or int(inst) in out or len(tiles) != 12:
+            continue
+        out[int(inst)] = {"map": int(m), "floors": [{"tiles": tiles, "names": names[m], "overlays": ovs}], "bosses": []}
+    return out
+
+
+# --------------------------------------------------------------------------------------------------------------
 # Caves and the ways into some dungeons: Blizzard's micro maps (Mists Classic's tables; their pictures are in
 # Forever's install), placed at their world box. A cave with several floors (one map group) shows its first
 # by itself and the others on demand; Blackrock Mountain's first is its Spire.
@@ -712,13 +742,19 @@ def write_caves(caves):
 
 def write_dungeon_maps(dmaps):
     L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
-         "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW } }, ... },",
+         "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW },",
+         "--   overlays (drawn whole) = { { w, h, x, y, fileIDs... }, ... } or nil }, ... },",
          "--   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)",
+         "--   map: a battleground's uiMap (where the game places your group, its objectives and flags)",
          "ns.DUNGEON_MAPS = {"]
     for inst, d in sorted(out_sorted(dmaps)):
-        L.append(f"    [{inst}] = {{ floors = {{")
+        L.append(f"    [{inst}] = {{ {'map = %d, ' % d['map'] if d.get('map') else ''}floors = {{")
         for f in d["floors"]:
-            L.append(f"        {{ {{ {', '.join(str(t) for t in f['tiles'])} }}, {loc_names(f['names'])} }},")
+            ovs = ""
+            if f.get("overlays"):
+                ovs = ", { " + ", ".join(f"{{ {o['w']}, {o['h']}, {o['x']}, {o['y']}, {', '.join(str(x) for x in o['fdids'])} }}"
+                                         for o in f["overlays"]) + " }"
+            L.append(f"        {{ {{ {', '.join(str(t) for t in f['tiles'])} }}, {loc_names(f['names'])}{ovs} }},")
         L.append("    }, bosses = {")
         for b in d["bosses"]:
             L.append(f"        {{ {loc_names(b['names'])}, {b['floor']}, {b['x']:.3f}, {b['y']:.3f} }},")
@@ -787,7 +823,9 @@ def main():
     print(f"dungeon maps: {len(dmaps)} instances, {sum(len(d['floors']) for d in dmaps.values())} floors, "
           f"{sum(len(d['bosses']) for d in dmaps.values())} bosses, "
           f"{sum(1 for d in dmaps.values() for b in d['bosses'] if b['floor'])} placed")
-    write_dungeon_maps(dmaps)
+    bgs = build_battleground_maps()
+    print(f"battleground maps: {len(bgs)} ({', '.join(f['names']['enUS'] for d in bgs.values() for f in d['floors'])})")
+    write_dungeon_maps({**dmaps, **bgs})
     caves = build_caves()
     print(f"caves: {len(caves)}")
     write_caves(caves)

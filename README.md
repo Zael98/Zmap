@@ -20,6 +20,7 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Minimapa**: el destino (en el borde si está lejos), tus pines, misiones, objetivos y hierbas o minerales cercanos.
 - **Zephras Isle**: la zona de inicio de los Windshaper Skyborne (un mapa aparte en el juego) está en el mar del norte, entre los continentes, como cualquier otra zona; con las aeronaves que llevan a ella desde Dalaran y Mulgore.
 - **Cuevas y minas**: las cuevas, minas y entradas de mazmorra del cliente en su sitio real; al acercarte emerge su mapa entero (sin el marco) y la superficie se oscurece. Las de varias plantas tienen un botón por planta abajo.
+- **Mapas de campo de batalla**: Valle de Alterac, Garganta Grito de Guerra, Cuenca de Arathi y las Islas Lanza Negra de Forever. Dentro de uno, el mapa lo abre con tu grupo (dibujado por el propio marco del juego), los objetivos (bases, torres, cementerios, con el color de quien los tiene) y las banderas.
 - **Mapas de mazmorra**: dentro de una instancia el mapa abre el de la mazmorra, por plantas y con sus jefes; también con un clic en la entrada. Botón para volver al mundo.
 - **Hermandad sin Zmap**: quien no tiene Zmap aparece en su zona (un círculo hueco junto al nombre de la zona); el juego solo dice en qué zona está, no el punto exacto.
 - **Igualar colores** (opcional): suaviza el cambio de color entre zonas vecinas.

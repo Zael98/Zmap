@@ -332,7 +332,7 @@ function rares:Refresh()
             end
         end
     end
-    local u0, v0, u1, v1 = ns.Pins.ViewBox(0.1)
+    local u0, v0, u1, v1 = ns.Pins.ViewBox()
     for _, r in ipairs(rareList) do
         local u, v = Geo.ToWorld(r.m, r.x, r.y)
         if u > u0 and u < u1 and v > v0 and v < v1 then

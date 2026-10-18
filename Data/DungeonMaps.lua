@@ -3,9 +3,15 @@
 
 local _, ns = ...
 
--- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW } }, ... },
+-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW },
+--   overlays (drawn whole) = { { w, h, x, y, fileIDs... }, ... } or nil }, ... },
 --   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)
+--   map: a battleground's uiMap (where the game places your group, its objectives and flags)
 ns.DUNGEON_MAPS = {
+    [30] = { map = 1459, floors = {
+        { { 8097518, 8097522, 8097523, 8097524, 8097525, 8097526, 8097527, 8097528, 8097529, 8097519, 8097520, 8097521 }, { "Alterac Valley", "Valle de Alterac", "Valle de Alterac", "Alteractal", "Vallée d'Alterac", "Vale Alterac", nil, "Альтеракская долина", "알터랙 계곡", "奥特兰克山谷", "奧特蘭克山谷" }, { { 288, 256, 348, 13, 8097530, 8097531 }, { 256, 293, 399, 375, 8097532, 8097533 }, { 320, 320, 335, 172, 8097534, 8097535, 8097536, 8097537 } } },
+    }, bosses = {
+    } },
     [33] = { floors = {
         { { 448226, 448230, 448231, 448232, 448233, 448234, 448235, 448236, 448237, 448227, 448228, 448229 }, { "The Courtyard", "El Patio", "El Patio", "Der Hof", "La cour", "Pátio", nil, "Внутренний двор", "안마당", "庭院", "庭院" } },
         { { 448238, 448242, 448243, 448244, 448245, 448246, 448247, 448248, 448249, 448239, 448240, 448241 }, { "Dining Hall", "Comedor", "Comedor", "Speisesaal", "Salle à manger", "Refeitório", nil, "Обеденный зал", "연회장", "饭厅", "餐廳" } },
@@ -328,6 +334,14 @@ ns.DUNGEON_MAPS = {
         { { "Chromaggus", nil, nil, nil, nil, "Cromaggus", nil, "Хроммагус", "크로마구스", "克洛玛古斯", "克洛瑪古斯" }, 0, 0.000, 0.000 },
         { { "Nefarian", nil, nil, nil, nil, nil, nil, "Нефариан", "네파리안", "奈法利安", "奈法利安" }, 0, 0.000, 0.000 },
     } },
+    [489] = { map = 1460, floors = {
+        { { 8097602, 8097606, 8097607, 8097608, 8097609, 8097610, 8097611, 8097612, 8097613, 8097603, 8097604, 8097605 }, { "Warsong Gulch", "Garganta Grito de Guerra", "Garganta Grito de Guerra", "Warsongschlucht", "Goulet des Warsong", "Ravina Brado Guerreiro", nil, "Ущелье Песни Войны", "전쟁노래 협곡", "战歌峡谷", "戰歌峽谷" } },
+    }, bosses = {
+    } },
+    [529] = { map = 1461, floors = {
+        { { 8097579, 8097583, 8097584, 8097585, 8097586, 8097587, 8097588, 8097589, 8097590, 8097580, 8097581, 8097582 }, { "Arathi Basin", "Cuenca de Arathi", "Cuenca de Arathi", "Arathibecken", "Bassin d'Arathi", "Bacia Arathi", nil, "Низина Арати", "아라시 분지", "阿拉希盆地", "阿拉希盆地" } },
+    }, bosses = {
+    } },
     [531] = { floors = {
         { { 450110, 450114, 450115, 450116, 450117, 450118, 450119, 450120, 450121, 450111, 450112, 450113 }, { "The Hive Undergrounds", "El Subterráneo de la Colmena", "El Subterráneo de la Colmena", "Untergrund des Schwarmbaus", "Les souterrains de la ruche", "A Colmeia Subterrânea", nil, "Подземелье улья", "지하 부화장", "地下虫巢", "蟲巢地穴" } },
         { { 450122, 450126, 450127, 450128, 450129, 450130, 450131, 450132, 450133, 450123, 450124, 450125 }, { "The Temple Gates", "Las Puertas del Templo", "Las Puertas del Templo", "Die Tempeltore", "Portes du Temple", "Portões do Templo", nil, "Ворота храма", "사원 관문", "神殿大门", "神廟大門" } },
@@ -366,5 +380,9 @@ ns.DUNGEON_MAPS = {
         { { "Thaddius", nil, nil, nil, nil, nil, nil, "Таддиус", "타디우스", "塔迪乌斯", "泰迪斯" }, 0, 0.000, 0.000 },
         { { "Sapphiron", "Safirón", nil, "Saphiron", "Saphiron", nil, nil, "Сапфирон", "사피론", "萨菲隆", "薩菲隆" }, 0, 0.000, 0.000 },
         { { "Kel'Thuzad", nil, nil, nil, nil, nil, nil, "Кел'Тузад", "켈투자드", "克尔苏加德", "科爾蘇加德" }, 0, 0.000, 0.000 },
+    } },
+    [2997] = { map = 2524, floors = {
+        { { 7745821, 7745825, 7745826, 7745827, 7745828, 7745829, 7745830, 7745831, 7745832, 7745822, 7745823, 7745824 }, { "Darkspear Islands", "Islas Lanza Negra", "Islas Lanza Negra", "Darkspear-Inseln", "Îles des Sombrelances", "Ilhas Lançanegra", nil, "Острова Черного Копья", "검은창 군도", "暗矛群岛", "暗矛島嶼" } },
+    }, bosses = {
     } },
 }

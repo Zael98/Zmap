@@ -1,5 +1,9 @@
 # Zmap
 
+## Unreleased
+
+- **Battleground maps**: Alterac Valley, Warsong Gulch, Arathi Basin and Forever's new Darkspear Islands. Open the map inside one and it shows it (Forever's own pictures, Alterac Valley's drawn whole), with **your group** (drawn by the game's own frame, as Blizzard's map does: class colours, your arrow), **the objectives** (bases, towers, graveyards, mines, in their owner's colours, with their names on hover) and **the flags** where they are or who carries them. Right-click to go back to the world.
+
 ## 1.3.0 — Zephras Isle
 
 - **Zephras Isle**, the Windshaper Skyborne's starting zone (an instance of its own, in no map of Azeroth), is on the map in the northern sea between the continents: your position on it, its quests, NPCs, gathering and exploration, like any zone. It shows from the world's zoom on.

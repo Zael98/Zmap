@@ -1,7 +1,10 @@
--- A dungeon's own map, over the world map: inside an instance when you open the map, or with a click on its
--- entrance. The game's pictures of it a floor at a time (Data/DungeonMaps.lua: Forever's tables have none, its
--- install has the pictures), its bosses in order beside it (numbered on the map where their place is known),
--- and back to the world map (the button, or a right-click).
+-- A dungeon's or a battleground's own map, over the world map: inside an instance when you open the map, or with
+-- a click on a dungeon's entrance. The game's pictures of it a floor at a time (Data/DungeonMaps.lua: Forever's
+-- tables have none of the dungeons', its install has the pictures), a dungeon's bosses in order beside it
+-- (numbered on the map where their place is known), and back to the world map (the button, or a right-click).
+-- On a battleground, what the game says moves on it: your group (drawn by the game's own frame, which knows where
+-- they are even where Lua is not told), its objectives (bases, towers, graveyards, in their owner's colours) and
+-- the flags.
 local _, ns = ...
 local L = ns.L
 local D = {}
@@ -9,20 +12,37 @@ ns.Dungeon = D
 
 local ART_W, ART_H, TILE = 1002, 668, 256
 local LIST_W = 190
+local IsSecret = issecretvalue or function() return false end
 local view, art, title, back, list
-local tiles, floorButtons, bossPins, bossRows = {}, {}, {}, {}
+local tiles, overlayTex, floorButtons, bossPins, bossRows = {}, {}, {}, {}, {}
 local current   -- { inst, floor, name }
+local units     -- the game's group frame (false: this client has none)
+local poiPins, flagPins = {}, {}
 
 local function Data(inst) return ns.DUNGEON_MAPS and ns.DUNGEON_MAPS[inst] end
 
 function D.Has(inst) return Data(inst) ~= nil end
 function D.IsShown() return view ~= nil and view:IsShown() end
 
+-- the battleground's uiMap, while one is shown
+local function LiveMap()
+    return view and view:IsShown() and current and Data(current.inst).map
+end
+
+-- a pin at its place on the picture (x, y: 0..1 of it)
+local function Place(pin)
+    pin:ClearAllPoints()
+    pin:SetPoint("CENTER", art, "TOPLEFT", pin.x * art:GetWidth(), -pin.y * art:GetHeight())
+end
+
 local function Layout()
     if not (view and current) then return end
+    local listW = #Data(current.inst).bosses > 0 and LIST_W or 0
     local vw, vh = view:GetSize()
-    local s = math.min((vw - LIST_W - 16) / ART_W, (vh - 34) / ART_H)
+    local s = math.min((vw - listW - 16) / ART_W, (vh - 34) / ART_H)
     if not (s > 0) then return end
+    art:ClearAllPoints()
+    art:SetPoint("CENTER", -listW / 2, -14)
     art:SetSize(ART_W * s, ART_H * s)
     for i, tex in ipairs(tiles) do
         local row, col = math.floor((i - 1) / 4), (i - 1) % 4
@@ -32,15 +52,53 @@ local function Layout()
         tex:ClearAllPoints()
         tex:SetPoint("TOPLEFT", art, "TOPLEFT", col * TILE * s, -row * TILE * s)
     end
-    for _, pin in ipairs(bossPins) do
-        if pin:IsShown() then
-            pin:ClearAllPoints()
-            pin:SetPoint("CENTER", art, "TOPLEFT", pin.x * ART_W * s, -pin.y * ART_H * s)
+    for _, tex in ipairs(overlayTex) do
+        if tex:IsShown() then
+            tex:SetSize(tex.w * s, tex.h * s)
+            tex:ClearAllPoints()
+            tex:SetPoint("TOPLEFT", art, "TOPLEFT", tex.x * s, -tex.y * s)
+        end
+    end
+    for _, pins in ipairs({ bossPins, poiPins, flagPins }) do
+        for _, pin in ipairs(pins) do
+            if pin:IsShown() then Place(pin) end
         end
     end
 end
 
 local function BackOnRightClick(_, button) if button == "RightButton" then D.Close() end end
+
+local function FileSize(px)
+    local s = 16
+    while s < px do s = s * 2 end
+    return s
+end
+
+-- a floor's overlays (a battleground's map is drawn whole), tiled as Blizzard's map tiles them
+local function ShowOverlays(overlays)
+    for _, tex in ipairs(overlayTex) do tex:Hide() end
+    local n = 0
+    for _, o in ipairs(overlays or {}) do
+        local ow, oh, x, y = o[1], o[2], o[3], o[4]
+        local cols, rows = math.ceil(ow / TILE), math.ceil(oh / TILE)
+        for j = 1, rows do
+            local ph = j < rows and TILE or (oh - TILE * (rows - 1))
+            for k = 1, cols do
+                local pw = k < cols and TILE or (ow - TILE * (cols - 1))
+                local fileID = o[4 + (j - 1) * cols + k]
+                if fileID then
+                    n = n + 1
+                    local tex = overlayTex[n] or art:CreateTexture(nil, "ARTWORK", nil, 1)
+                    overlayTex[n] = tex
+                    tex:SetTexture(fileID, nil, nil, "TRILINEAR")
+                    tex:SetTexCoord(0, pw / (k < cols and TILE or FileSize(pw)), 0, ph / (j < rows and TILE or FileSize(ph)))
+                    tex.x, tex.y, tex.w, tex.h = x + TILE * (k - 1), y + TILE * (j - 1), pw, ph
+                    tex:Show()
+                end
+            end
+        end
+    end
+end
 
 -- the bosses beside the map: on this floor in gold, elsewhere in white (a click goes to their floor), and those
 -- whose place is not known in grey
@@ -67,6 +125,7 @@ local function ShowFloor(index)
         tiles[i]:SetTexture(fileID, nil, nil, "TRILINEAR")
         tiles[i]:Show()
     end
+    ShowOverlays(floor[3])
     for _, pin in ipairs(bossPins) do pin:Hide() end
     local n = 0
     for i, boss in ipairs(d.bosses) do
@@ -100,6 +159,143 @@ local function ShowFloor(index)
     PaintList()
     Layout()
 end
+
+--------------------------------------------------------------------------------------------------------------
+-- A battleground's live layer
+--------------------------------------------------------------------------------------------------------------
+
+local function PinTooltip(pin)
+    if not pin.name then return end
+    GameTooltip:SetOwner(pin, "ANCHOR_RIGHT")
+    GameTooltip:SetText(pin.name, 1, 1, 1)
+    if pin.desc and pin.desc ~= "" then GameTooltip:AddLine(pin.desc, nil, nil, nil, true) end
+    GameTooltip:Show()
+end
+
+local function NewPin(size, level)
+    local pin = CreateFrame("Button", nil, art)
+    pin:SetSize(size, size)
+    pin:SetFrameLevel(art:GetFrameLevel() + level)
+    pin.icon = pin:CreateTexture(nil, "ARTWORK")
+    pin.icon:SetAllPoints()
+    pin:SetScript("OnEnter", PinTooltip)
+    pin:SetScript("OnLeave", GameTooltip_Hide)
+    pin:SetScript("OnMouseUp", BackOnRightClick)
+    return pin
+end
+
+-- the objectives: the game's points of interest on the map, their icon showing who holds them
+local function UpdatePOIs()
+    for _, pin in ipairs(poiPins) do pin:Hide() end
+    local map = LiveMap()
+    if not (map and C_AreaPoiInfo and C_AreaPoiInfo.GetAreaPOIForMap) then return end
+    local n = 0
+    for _, id in ipairs(C_AreaPoiInfo.GetAreaPOIForMap(map) or {}) do
+        local info = C_AreaPoiInfo.GetAreaPOIInfo(map, id)
+        local x, y
+        if info and info.position then x, y = info.position:GetXY() end
+        if x and not IsSecret(x) and not IsSecret(y) then
+            n = n + 1
+            local pin = poiPins[n] or NewPin(20, 2)
+            poiPins[n] = pin
+            if info.atlasName then
+                local atlas = info.atlasName
+                if info.textureKit then atlas = (ATLAS_WITH_TEXTURE_KIT_PREFIX or "%s-%s"):format(info.textureKit, atlas) end
+                pin.icon:SetAtlas(atlas)
+            else
+                pin.icon:SetTexture("Interface\\Minimap\\POIIcons")
+                local coords = C_Minimap and C_Minimap.GetPOITextureCoords or GetPOITextureCoords
+                pin.icon:SetTexCoord(coords(info.textureIndex or 0))
+            end
+            pin.name, pin.desc = info.name, info.description
+            pin.x, pin.y = x, y
+            Place(pin)
+            pin:Show()
+        end
+    end
+end
+
+-- the flags (or what is carried like one), where they are or who carries them
+local function UpdateFlags()
+    local map = LiveMap()
+    local count = map and GetNumBattlefieldFlagPositions and GetNumBattlefieldFlagPositions() or 0
+    for i = 1, math.max(count, #flagPins) do
+        local x, y, texture
+        if i <= count then x, y, texture = C_PvP.GetBattlefieldFlagPosition(i, map) end
+        local pin = flagPins[i]
+        if x and texture and not IsSecret(x) and not IsSecret(y) then
+            pin = pin or NewPin(26, 4)
+            flagPins[i] = pin
+            pin.icon:SetTexture(texture)
+            pin.x, pin.y = x, y
+            Place(pin)
+            pin:Show()
+        elseif pin then
+            pin:Hide()
+        end
+    end
+end
+
+-- your group: the game's own frame (Blizzard's map draws it with it), over the picture
+local function Units()
+    if units == nil then
+        local ok, f = pcall(CreateFrame, "UnitPositionFrame", nil, art, "UnitPositionFrameTemplate")
+        units = ok and f or false
+        if units then
+            units:SetAllPoints(art)
+            units:SetFrameLevel(art:GetFrameLevel() + 6)
+            units:SetPinSize("player", 26)
+            units:SetPinSize("party", 12)
+            units:SetPinSize("raid", 9)
+            units:SetPinTexture("player", "UI-WorldMapArrow")
+            units:SetMouseOverUnitExcluded("player", true)
+        end
+    end
+    return units or nil
+end
+
+local flagWait = 0
+local function LiveUpdate(_, elapsed)
+    if units and units:IsShown() then
+        units:UpdatePlayerPins()
+        units:UpdateTooltips(GameTooltip)
+    end
+    flagWait = flagWait - elapsed
+    if flagWait <= 0 then
+        flagWait = 0.1
+        UpdateFlags()
+    end
+end
+
+local function StartLive()
+    local map = LiveMap()
+    local f = map and Units()
+    if f then
+        local hidden = C_Map.GetMapDisplayInfo and C_Map.GetMapDisplayInfo(map)
+        f:SetUiMapID(map)
+        f:SetNeedsFullUpdate()
+        f:SetShown(not hidden)
+    elseif units then
+        units:Hide()
+    end
+    UpdatePOIs()
+    flagWait = 0
+    UpdateFlags()
+    view:SetScript("OnUpdate", map and ns.Guard(LiveUpdate) or nil)
+end
+
+ns.On("AREA_POIS_UPDATED", function() if LiveMap() then UpdatePOIs() end end)
+
+-- for /zmap check: what the live layer shows (nil: no battleground's map shown)
+function D.Live()
+    if not LiveMap() then return end
+    local pois, flags = 0, 0
+    for _, pin in ipairs(poiPins) do if pin:IsShown() then pois = pois + 1 end end
+    for _, pin in ipairs(flagPins) do if pin:IsShown() then flags = flags + 1 end end
+    return { units = units and units:IsShown() or false, pois = pois, flags = flags }
+end
+
+--------------------------------------------------------------------------------------------------------------
 
 local function Create(viewport)
     view = CreateFrame("Frame", nil, viewport)
@@ -201,6 +397,7 @@ function D.Open(inst, name)
     view:Show()
     FillList()
     ShowFloor(1)
+    StartLive()
     return true
 end
 
