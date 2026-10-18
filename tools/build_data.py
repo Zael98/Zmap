@@ -638,11 +638,12 @@ def build_dungeon_maps():
 
 # --------------------------------------------------------------------------------------------------------------
 # Caves and the ways into some dungeons: Blizzard's micro maps (Mists Classic's tables; their pictures are in
-# Forever's install), placed at their world box. Where several floors share a place, the first; Blackrock
-# Mountain's deeper ones never by themselves.
+# Forever's install), placed at their world box. A cave with several floors (one map group) shows its first
+# by itself and the others on demand; Blackrock Mountain's first is its Spire.
 # --------------------------------------------------------------------------------------------------------------
 
-CAVE_SKIP = {34, 35}   # Blackrock Mountain's lower floors (under its main one)
+
+CAVE_SKIP = {34}   # Blackrock Caverns: Cataclysm's dungeon, not in Forever
 
 
 def build_caves():
@@ -658,17 +659,27 @@ def build_caves():
     for r in table("UiMapArtTile", build=MISTS):
         if r["LayerIndex"] == "0":
             tiles.setdefault(r["UiMapArtID"], []).append(r)
-    out, first = {}, {}
+    # floors: the map groups, in floor order, with each floor's name in each language
+    group, order = {}, {}
+    for r in table("UiMapGroupMember", build=MISTS):
+        group[r["UiMapID"]], order[r["UiMapID"]] = r["UiMapGroupID"], int(r["FloorIndex"])
+    floor_names = {loc: {r["UiMapID"]: r["Name_lang"] for r in table("UiMapGroupMember", loc, MISTS)} for loc in LOCALES}
+    out = {}
     for m, box in sorted(boxes.items(), key=lambda kv: int(kv[0])):
         ts = sorted(tiles.get(art.get(m), []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
+        if int(m) in CAVE_SKIP or len(ts) != 12 or not casc(int(ts[0]["FileDataID"])):
+            continue
         name = names["enUS"].get(m, "")
-        if int(m) in CAVE_SKIP or len(ts) != 12 or name in first:
-            continue
-        if not casc(int(ts[0]["FileDataID"])):
-            continue
-        first[name] = m
         out[int(m)] = {"names": {loc: names[loc].get(m, name) for loc in LOCALES}, "box": box,
-                       "tiles": [int(t["FileDataID"]) for t in ts]}
+                       "tiles": [int(t["FileDataID"]) for t in ts], "group": group.get(m), "order": order.get(m, 0),
+                       "floor": {loc: floor_names[loc].get(m, "") for loc in LOCALES} if m in group else None}
+    # each cave's first floor stands for the place; the others hang from it
+    firsts = {}
+    for m, c in sorted(out.items(), key=lambda kv: kv[1]["order"]):
+        if c["group"]:
+            firsts.setdefault(c["group"], m)
+    for m, c in out.items():
+        c["first"] = firsts.get(c["group"], m) if c["group"] else m
     return out
 
 
@@ -676,12 +687,14 @@ def write_caves(caves):
     L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
          "-- caves and the ways into some dungeons: [micro map] = { { names enUS, esES, esMX, deDE, frFR, ptBR, itIT,",
          "--   ruRU, koKR, zhCN, zhTW }, instance, minX, minY, maxX, maxY (its picture's world box, yards),",
-         "--   { 12 tile file IDs, row by row } }",
+         "--   { 12 tile file IDs, row by row }, its place's first floor (itself, if it is one), floor order,",
+         "--   { floor names } (nil: a single floor) }",
          "ns.CAVES = {"]
     for m, c in sorted(caves.items()):
         inst, x0, y0, x1, y1 = c["box"]
+        floor = loc_names(c["floor"]) if c["floor"] else "nil"
         L.append(f"    [{m}] = {{ {loc_names(c['names'])}, {inst}, {num(x0)}, {num(y0)}, {num(x1)}, {num(y1)}, "
-                 f"{{ {', '.join(str(t) for t in c['tiles'])} }} }},")
+                 f"{{ {', '.join(str(t) for t in c['tiles'])} }}, {c['first']}, {c['order']}, {floor} }},")
     L.append("}")
     (ROOT / "Data" / "Caves.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
 

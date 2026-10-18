@@ -207,6 +207,8 @@ end
 local CAVE_FULL, CAVE_START = 2.2, 3.5     -- the view's width / the cave's where it has surfaced / starts to
 local caveRoot, caveDim
 local caves = {}   -- [id] = its frame
+local floorOf = {} -- [a cave's first floor] = the floor shown (another one, chosen)
+local focused      -- the cave looked at (its first floor), for its floors' buttons
 
 -- a cave's rectangle on 947: l, r, t, b (its picture's top left is the box's north-west: max X, max Y)
 function Art.CaveRect(id)
@@ -218,11 +220,35 @@ function Art.CaveRect(id)
     return math.min(u0, u1), math.max(u0, u1), math.min(v0, v1), math.max(v0, v1)
 end
 
--- the cave a map point (u, v) lies in, and its rectangle
+-- a cave's floors (its first one's ID): { IDs in floor order }, one for a single floor
+local floorLists = {}
+function Art.CaveFloors(first)
+    local list = floorLists[first]
+    if list then return list end
+    list = {}
+    for id, c in pairs(ns.CAVES or {}) do
+        if c[8] == first then list[#list + 1] = id end
+    end
+    table.sort(list, function(a, b) return ns.CAVES[a][9] < ns.CAVES[b][9] end)
+    floorLists[first] = list
+    return list
+end
+
+-- the floor shown of a cave (its first floor's ID), and choosing another
+function Art.CaveFloor(first) return floorOf[first] or first end
+function Art.SetCaveFloor(first, id)
+    floorOf[first] = id
+    Art.Update()
+end
+function Art.FocusedCave() return focused end
+
+-- the cave a map point (u, v) lies in (its first floor), and its rectangle
 function Art.CaveAt(u, v)
-    for id in pairs(ns.CAVES or {}) do
-        local l, r, t, b = Art.CaveRect(id)
-        if l and u >= l and u <= r and v >= t and v <= b then return id, l, r, t, b end
+    for id, c in pairs(ns.CAVES or {}) do
+        if c[8] == id then
+            local l, r, t, b = Art.CaveRect(Art.CaveFloor(id))
+            if l and u >= l and u <= r and v >= t and v <= b then return id, l, r, t, b end
+        end
     end
 end
 
@@ -234,16 +260,18 @@ local function BuildCave(id)
     return f
 end
 
--- each cave in view as far as it has surfaced; the land dimmed for the one you look at
+-- each cave in view (the floor chosen of it) as far as it has surfaced; the land dimmed for the one you
+-- look at
 local function UpdateCaves(vl, vt, vr, vb, left, top, right, bottom)
     local on = ns.Opt("caves")
     local vw, vh = vr - vl, vb - vt
     local cx, cy = (vl + vr) / 2, (vt + vb) / 2
-    local focus = 0
-    for id in pairs(ns.CAVES or {}) do
+    local focus, best = 0, 0
+    focused = nil
+    for id, c in pairs(ns.CAVES or {}) do
         local l, r, t, b = Art.CaveRect(id)
         local a = 0
-        if on and l and l * W < right and r * W > left and t * H < bottom and b * H > top then
+        if on and l and Art.CaveFloor(c[8]) == id and l * W < right and r * W > left and t * H < bottom and b * H > top then
             a = 1 - Smooth(CAVE_FULL, CAVE_START, vw / ((r - l) * W))
         end
         local f = caves[id]
@@ -254,9 +282,12 @@ local function UpdateCaves(vl, vt, vr, vb, left, top, right, bottom)
         end
         if a > 0.01 then
             local off = math.max(math.abs((l + r) / 2 * W - cx) / (vw / 2), math.abs((t + b) / 2 * H - cy) / (vh / 2))
-            focus = math.max(focus, a * (1 - Smooth(0.35, 0.8, off)))
+            local here = a * (1 - Smooth(0.35, 0.8, off))
+            focus = math.max(focus, here)
+            if here > 0.5 and here > best then best, focused = here, c[8] end
         end
     end
+    ns.Fire("ZMAP_CAVE", focused)
     caveDim:SetSize(vw * 3, vh * 3)
     caveDim:ClearAllPoints()
     caveDim:SetPoint("CENTER", caveRoot, "TOPLEFT", cx, -cy)

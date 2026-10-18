@@ -3,6 +3,7 @@
 ## 1.2.0 — Caves and mines
 
 - **Caves, mines and ways into dungeons** (Fargodeep Mine, Skull Rock, Blackrock Mountain, Wailing Caverns, Maraudon...) on the map at their real place: zoom right in on one and its own map surfaces, the land above dimmed; zoom back out and it sinks. Open the map inside one and it shows it. A layer to turn them off.
+- **Floors**: caves with more than one (Fargodeep Mine's lower mines, Blackrock Mountain's Spire and Depths, Maraudon, the Caverns of Time, Tiragarde Keep, Ban'ethil Barrow Den) get a button for each floor at the bottom of the map.
 - Zoom goes twice as far in (a small cave can fill the window).
 
 ## 1.1.0 — How to get there, rare warnings and ten languages

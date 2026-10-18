@@ -132,6 +132,20 @@ end
 local caveTex = CaveShown()
 OUT(("cave: inside %s, zoom %.0f, tiles %d"):format(tostring(cave), ZNS.Map.Zoom(), caveTex))
 OUT("ART fargodeep", DUMP_ART())
+-- its lower mines: a button each, the other floor shown on a click
+local floorButtons = ZNS.CaveButtons()
+local labels = {}
+for _, b in ipairs(floorButtons) do labels[#labels + 1] = b:GetText() end
+floorButtons[2].scripts.OnClick(floorButtons[2])
+FRAMES(3)
+local lower = {}
+for _, f in ipairs(ZNS.CAVES[39][7]) do lower[f] = true end
+local lowerShown, upperShown = 0, CaveShown()
+for _, w in ipairs(ALL_WIDGETS) do
+    if w.kind == "Texture" and lower[w.file] and w.shown and w.parent.shown and w.parent.alpha > 0.01 then lowerShown = lowerShown + 1 end
+end
+OUT(("cave floors: %s; lower shown %d, first hidden %s"):format(table.concat(labels, ", "), lowerShown, tostring(upperShown == 0)))
+ZNS.Art.SetCaveFloor(38, 38)
 local cu, cv = ZNS.Geo.FromYards(0, -9780, 160)
 ZNS.Map.SetView(cu * W, cv * H, 6)
 FRAMES(5)

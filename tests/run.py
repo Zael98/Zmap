@@ -26,7 +26,7 @@ CHECKS = {
     "art": (False, [r"^world: world shown true, zones shown 0$", r"^continent: zones built [1-9]\d*, all of them in view true$",
                     r"^zone: halo masks \d+ core masks \d+, every tile masked true$", r"^tiles inside rects: true$",
                     r"^close: terrain tiles [1-9]\d*, alpha 1\.00$", r"^city: stormwind alpha [0-9.]+ shown true$",
-                    r"^unexplored hide: hidden [1-9]\d*$", r"^cave: inside 38, zoom \d+, tiles 12$", r"^cave zoomed out: shown false$", r"^unexplored show: dimmed 0$", r"^errors 0$"]),
+                    r"^unexplored hide: hidden [1-9]\d*$", r"^cave: inside 38, zoom \d+, tiles 12$", r"^cave zoomed out: shown false$", r"^cave floors: Mina Abisal, Minas Inferiores; lower shown 12, first hidden true$", r"^unexplored show: dimmed 0$", r"^errors 0$"]),
     "pins": (True, [r"^ctrl click: pins 1, prompt true$", r"^named: Mi herbolario$",
                     r"^navigate: target true, blizzard waypoint 1429, supertracked true$",
                     r"^arrow north: rotation -?0\.00, distance 100 (yd|m)$", r"^arrow behind: rotation 3\.14$",
