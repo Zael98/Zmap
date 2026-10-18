@@ -95,7 +95,7 @@ ns.LOCALES.FR = {
     FLIGHT_ADVICE_LAND = "%s est plus rapide par voie terrestre d'ici",
     QUEST_BUY = "Vend ce que la quête demande", QUEST_REACH = "Atteindre ce lieu",
     MENU_ROUTE_HERE = "Comment y aller", DOCK = "Quai (%s)", WAY_WALK = "Allez à %s", WAY_FLY = "Volez de %s à %s",
-    WAY_SAIL = "Prenez : %s", WAY_TITLE = "Vers %s : ~%s", WAY_HERE = "ici",
+    WAY_SAIL = "Prenez : %s", WAY_HEARTH = "Utilisez votre pierre de foyer : %s", WAY_HEARTH_WAIT = "Utilisez votre pierre de foyer dans %s : %s", WAY_TELEPORT = "Lancez %s", WAY_TITLE = "Vers %s : ~%s", WAY_HERE = "ici",
     WAY_NO_POSITION = "Votre position est inconnue ici (une instance ?).", WAY_NONE = "Aucun chemin d'ici.",
     OPT_CAVES = "Grottes et mines",
     FOLK_ALL = "Tous", FOLK_MINE = "Seulement ma classe et mes métiers", FOLK_TYPE_innkeeper = "Aubergistes", FOLK_TYPE_banker = "Banquiers",

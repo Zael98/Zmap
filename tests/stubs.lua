@@ -372,7 +372,26 @@ end
 
 C_AddOns = { GetAddOnMetadata = function() return "test" end, IsAddOnLoaded = function() return false end }
 C_ClassColor = { GetClassColor = function() return { r = 0.78, g = 0.61, b = 0.43 } end }
-C_Spell = { GetSpellName = function(id) return ({ [2366] = "Recolectar hierbas", [2575] = "Minería", [133] = "Bola de Fuego" })[id] end }
+-- spells: STATE.spells[id] = true (known), STATE.cooldowns[id] = { start, duration }
+C_Spell = {
+    GetSpellName = function(id)
+        return ({ [2366] = "Recolectar hierbas", [2575] = "Minería", [133] = "Bola de Fuego", [3561] = "Teletransporte: Ventormenta",
+            [3562] = "Teletransporte: Forjaz", [556] = "Llamada astral" })[id]
+    end,
+    IsSpellUsable = function(id) return (STATE.spells or {})[id] == true end,
+    GetSpellCooldown = function(id)
+        local c = (STATE.cooldowns or {})[id]
+        return { startTime = c and c[1] or 0, duration = c and c[2] or 0, isEnabled = true }
+    end,
+}
+function IsSpellKnown(id) return (STATE.spells or {})[id] == true end
+-- your hearthstone: STATE.bind (where it takes you), STATE.items[id] = count, STATE.cooldowns[item]
+function GetBindLocation() return STATE.bind end
+C_Container = { GetItemCooldown = function(id)
+    local c = (STATE.cooldowns or {})[id]
+    if c then return c[1], c[2], 1 end
+    return 0, 0, 1
+end }
 C_TooltipInfo = {
     GetUnit = function(unit)
         local who = STATE.units[unit]
@@ -607,6 +626,7 @@ function GetProfessionInfo(i)
     if i == 2 then return "Minería", 136248, sk.ore, 300, 0, 0, 186 end
 end
 C_Item = {
+    GetItemCount = function(id) return (STATE.items or {})[id] or 0 end,
     GetItemNameByID = function(id) return "item" .. id end,
     GetItemIconByID = function(id) return 134000 + id % 100 end,
     RequestLoadItemDataByID = function() end,

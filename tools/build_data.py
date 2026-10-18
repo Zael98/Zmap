@@ -415,6 +415,27 @@ TRANSPORTS = {   # path: kind, faction, name (the key), the areas at its ends (t
 }
 
 
+TRAM = (2173, 2175)   # the Deeprun Tram's doors (AreaTrigger): in Stormwind, in Ironforge
+TRAM_AREA = 2257      # (its name)
+# where the teleports land is the server's (spell_target_position), not in the client's tables: as classic servers
+# have it (a leg of the way ends near enough to it). spell -> instance, x, y
+TELEPORTS = {
+    3561: (0, -9003.5, 870.0),     # Teleport: Stormwind
+    3562: (0, -4613.6, -915.4),    # Teleport: Ironforge
+    3563: (0, 1773.5, 61.1),       # Teleport: Undercity
+    3565: (1, 9660.8, 2513.6),     # Teleport: Darnassus
+    3566: (1, -965.0, 283.4),      # Teleport: Thunder Bluff
+    3567: (1, 1469.9, -4221.5),    # Teleport: Orgrimmar
+    18960: (1, 7991.9, -2679.8),   # Teleport: Moonglade
+}
+
+
+def build_tram():
+    triggers = {int(r["ID"]): r for r in table("AreaTrigger")}
+    ends = [(int(triggers[t]["ContinentID"]), float(triggers[t]["Pos_0"]), float(triggers[t]["Pos_1"])) for t in TRAM]
+    return {"ends": ends, "names": names_by_locale("AreaTable", "AreaName_lang")[str(TRAM_AREA)]}
+
+
 def build_transports():
     points = {}
     for r in table("TaxiPathNode"):
@@ -562,7 +583,7 @@ def write_flights(nodes, paths):
     (ROOT / "Data" / "Flights.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
-def write_places(transports, entrances, levels):
+def write_places(transports, entrances, levels, tram):
     L = [HEADER.format(build=BUILD), "local _, ns = ...", "",
          "-- boats and zeppelins: { kind, faction (A, H or N), route (its key), { { instance, { x1, y1, x2, y2, ... } },",
          "--   ... } (the way it sails, per continent, world yards), { { instance, x, y } at each end } (its docks),",
@@ -573,6 +594,16 @@ def write_places(transports, entrances, levels):
                            for inst, pts in t["pieces"])
         docks = ", ".join(f"{{ {inst}, {num(round(x))}, {num(round(y))} }}" for inst, x, y in t["docks"])
         L.append(f'    {{ "{t["kind"]}", "{t["fac"]}", {lua_str(t["name"])}, {{ {pieces} }}, {{ {docks} }}, {loc_names(t["names"])} }},')
+    L.append("}")
+    L.append("")
+    L.append("-- the Deeprun Tram: its doors in Stormwind and in Ironforge ({ instance, x, y }), and its name")
+    ends = ", ".join(f"{{ {inst}, {num(round(x))}, {num(round(y))} }}" for inst, x, y in tram["ends"])
+    L.append(f"ns.TRAM = {{ {ends}, names = {loc_names(tram['names'])} }}")
+    L.append("")
+    L.append("-- where the teleports land: spell -> { instance, x, y } (the server's, as classic servers have it)")
+    L.append("ns.TELEPORTS = {")
+    for spell, (inst, x, y) in sorted(TELEPORTS.items()):
+        L.append(f"    [{spell}] = {{ {inst}, {num(round(x))}, {num(round(y))} }},")
     L.append("}")
     L.append("")
     L.append("-- dungeon and raid entrances: { instance map, continent, worldX, worldY, raid, level, { names } }")
@@ -818,7 +849,7 @@ def main():
     transports = build_transports()
     entrances, levels = build_dungeons()
     print(f"places: {len(transports)} transports, {len(entrances)} dungeon entrances, {len(levels)} dungeon levels")
-    write_places(transports, entrances, levels)
+    write_places(transports, entrances, levels, build_tram())
     dmaps = build_dungeon_maps()
     print(f"dungeon maps: {len(dmaps)} instances, {sum(len(d['floors']) for d in dmaps.values())} floors, "
           f"{sum(len(d['bosses']) for d in dmaps.values())} bosses, "

@@ -95,7 +95,7 @@ ns.LOCALES.RU = {
     FLIGHT_ADVICE_LAND = "Отсюда до %s быстрее по земле",
     QUEST_BUY = "Продаёт то, что нужно для задания", QUEST_REACH = "Доберитесь сюда",
     MENU_ROUTE_HERE = "Как сюда добраться", DOCK = "Причал (%s)", WAY_WALK = "Идите в %s", WAY_FLY = "Летите из %s в %s",
-    WAY_SAIL = "Садитесь: %s", WAY_TITLE = "До %s: ~%s", WAY_HERE = "здесь",
+    WAY_SAIL = "Садитесь: %s", WAY_HEARTH = "Используйте камень возвращения: %s", WAY_HEARTH_WAIT = "Используйте камень возвращения через %s: %s", WAY_TELEPORT = "Примените «%s»", WAY_TITLE = "До %s: ~%s", WAY_HERE = "здесь",
     WAY_NO_POSITION = "Здесь ваша позиция неизвестна (подземелье?).", WAY_NONE = "Отсюда туда не добраться.",
     OPT_CAVES = "Пещеры и шахты",
     FOLK_ALL = "Все", FOLK_MINE = "Только мой класс и профессии", FOLK_TYPE_innkeeper = "Хозяева таверн", FOLK_TYPE_banker = "Банкиры",

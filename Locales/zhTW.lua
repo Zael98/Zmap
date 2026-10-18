@@ -95,7 +95,7 @@ ns.LOCALES.TW = {
     FLIGHT_ADVICE_LAND = "從這裡去 %s 走陸路更快",
     QUEST_BUY = "出售任務所需物品", QUEST_REACH = "抵達這裡",
     MENU_ROUTE_HERE = "如何抵達這裡", DOCK = "碼頭（%s）", WAY_WALK = "前往 %s", WAY_FLY = "從 %s 飛往 %s",
-    WAY_SAIL = "搭乘：%s", WAY_TITLE = "前往 %s：約 %s", WAY_HERE = "這裡",
+    WAY_SAIL = "搭乘：%s", WAY_HEARTH = "使用爐石：%s", WAY_HEARTH_WAIT = "%s後使用爐石：%s", WAY_TELEPORT = "施放%s", WAY_TITLE = "前往 %s：約 %s", WAY_HERE = "這裡",
     WAY_NO_POSITION = "這裡無法得知你的位置（副本？）。", WAY_NONE = "從這裡無法抵達那裡。",
     OPT_CAVES = "洞穴和礦坑",
     FOLK_ALL = "全部", FOLK_MINE = "只顯示我的職業和專業", FOLK_TYPE_innkeeper = "旅店老闆", FOLK_TYPE_banker = "銀行員",

@@ -19,6 +19,20 @@ ns.TRANSPORTS = {
     { "airship", "N", "Mulgore - Valanaar Skydocks", { { 1, { -1724, -804, -1114, -856, -778, -528, -705, 98, -802, 367, -1034, 518, -1786, -70 } }, { 2991, { 1123, 536, 1332, 593, 1757, 823, 1903, 943, 1982, 1132, 2086, 1189, 2185, 1142, 2226, 986, 2126, 852, 1780, 718, 1143, 392, 1117, -147 } } }, { { 1, -802, 367 }, { 2991, 1953, 1019 } }, { "Mulgore - Valanaar Skydocks", "Mulgore - Muelles Aéreos de Valanaar", "Mulgore - Muelles Celestiales de Valanaar", "Mulgore - Himmelsdocks von Valanaar", "Mulgore - Quais aériens de Valanaar", "Mulgore - Aerodocas de Valanaar", nil, "Мулгор - Валанаарские небесные доки", "멀고어 - 발라나르 하늘부두", "莫高雷 - 瓦拉纳尔天港", "莫高雷 - 瓦拉納爾空港" } },
 }
 
+-- the Deeprun Tram: its doors in Stormwind and in Ironforge ({ instance, x, y }), and its name
+ns.TRAM = { { 0, -8346, 514 }, { 0, -4840, -1330 }, names = { "Deeprun Tram", "Tranvía Subterráneo", "Tranvía Subterráneo", "Die Tiefenbahn", "Tram des profondeurs", "Metrô Correfundo", nil, "Подземный поезд", "깊은굴 지하철", "矿道地铁", "礦道地鐵" } }
+
+-- where the teleports land: spell -> { instance, x, y } (the server's, as classic servers have it)
+ns.TELEPORTS = {
+    [3561] = { 0, -9004, 870 },
+    [3562] = { 0, -4614, -915 },
+    [3563] = { 0, 1774, 61 },
+    [3565] = { 1, 9661, 2514 },
+    [3566] = { 1, -965, 283 },
+    [3567] = { 1, 1470, -4222 },
+    [18960] = { 1, 7992, -2680 },
+}
+
 -- dungeon and raid entrances: { instance map, continent, worldX, worldY, raid, level, { names } }
 ns.DUNGEONS = {
     { 33, 0, -231, 1571.6, false, 18, { "Shadowfang Keep", "Castillo de Colmillo Oscuro", "Castillo de Colmillo Oscuro", "Burg Shadowfang", "Donjon d'Ombrecroc", "Bastilha da Presa Negra", nil, "Крепость Темного Клыка", "그림자송곳니 성채", "影牙城堡", "影牙城堡" } },

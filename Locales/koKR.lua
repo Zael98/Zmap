@@ -95,7 +95,7 @@ ns.LOCALES.KO = {
     FLIGHT_ADVICE_LAND = "여기서 %s까지는 육로가 더 빠릅니다",
     QUEST_BUY = "퀘스트에 필요한 물품 판매", QUEST_REACH = "이곳에 도착하기",
     MENU_ROUTE_HERE = "여기로 가는 길", DOCK = "부두 (%s)", WAY_WALK = "%s(으)로 이동", WAY_FLY = "%s에서 %s(으)로 비행",
-    WAY_SAIL = "탑승: %s", WAY_TITLE = "%s까지: ~%s", WAY_HERE = "여기",
+    WAY_SAIL = "탑승: %s", WAY_HEARTH = "귀환석 사용: %s", WAY_HEARTH_WAIT = "%s 후 귀환석 사용: %s", WAY_TELEPORT = "%s 시전", WAY_TITLE = "%s까지: ~%s", WAY_HERE = "여기",
     WAY_NO_POSITION = "이곳에서는 위치를 알 수 없습니다 (인스턴스?).", WAY_NONE = "여기서 그곳으로 가는 길이 없습니다.",
     OPT_CAVES = "동굴과 광산",
     FOLK_ALL = "모두", FOLK_MINE = "내 직업과 전문 기술만", FOLK_TYPE_innkeeper = "여관주인", FOLK_TYPE_banker = "은행원",

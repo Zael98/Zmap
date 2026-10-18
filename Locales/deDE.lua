@@ -95,7 +95,7 @@ ns.LOCALES.DE = {
     FLIGHT_ADVICE_LAND = "%s ist von hier über Land schneller",
     QUEST_BUY = "Verkauft, was die Quest verlangt", QUEST_REACH = "Hierhin gelangen",
     MENU_ROUTE_HERE = "Wie komme ich hierhin", DOCK = "Anleger (%s)", WAY_WALK = "Geh nach %s", WAY_FLY = "Flieg von %s nach %s",
-    WAY_SAIL = "Nimm: %s", WAY_TITLE = "Nach %s: ~%s", WAY_HERE = "hier",
+    WAY_SAIL = "Nimm: %s", WAY_HEARTH = "Benutze deinen Ruhestein: %s", WAY_HEARTH_WAIT = "Benutze deinen Ruhestein in %s: %s", WAY_TELEPORT = "Wirke %s", WAY_TITLE = "Nach %s: ~%s", WAY_HERE = "hier",
     WAY_NO_POSITION = "Deine Position ist hier unbekannt (eine Instanz?).", WAY_NONE = "Von hier aus gibt es keinen Weg dorthin.",
     OPT_CAVES = "Höhlen und Minen",
     FOLK_ALL = "Alle", FOLK_MINE = "Nur meine Klasse und Berufe", FOLK_TYPE_innkeeper = "Gastwirte", FOLK_TYPE_banker = "Bankiers",

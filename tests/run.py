@@ -95,9 +95,12 @@ CHECKS = {
     "isle": (False, [r"^position: zone 2521, on the isle true$", r"^zone at the player: 2521$", r"^opened on the isle: true$",
                      r"^quest givers on the isle: [1-9]\d*$", r"^airships: 2, docks on the isle 2$",
                      r"^route to orgrimmar: walk,airship,.*walk$", r"^corpse on the isle: true$", r"^errors 0$"]),
-    "route": (False, [r"^goldshire: walk$", r"^ironforge: fly(,walk)?, arrow Vuela de .+",
+    "route": (False, [r"^goldshire: walk$", r"^ironforge: walk,tram,walk, arrow Ve a Tranvía Subterráneo$",
                       r"^darnassus: .*boat.*, \d+:\d\d$", r"^step after reaching the first: 2, panel rows \d+$",
-                      r"^cleared: true$", r"^no flights known: walk$", r"^errors 0$"]),
+                      r"^cleared: true$", r"^no flights known: (walk,)?tram,walk$",
+                      r"^home: (1437|1455)$", r"^hearthstone: hearth(,walk)?; Usa la piedra de hogar: Forjaz$",
+                      r"^hearthstone on cooldown: walk,tram,walk$", r"^teleport: teleport(,walk)?; Lanza Teletransporte: Forjaz$",
+                      r"^after the teleport: step 2$", r"^errors 0$"]),
     "locales": (False, [r"^languages: DE EN ES FR IT KO PT RU TW ZH$", r"^DE: missing none; format mismatch none$", r"^EN: missing none; format mismatch none$", r"^ES: missing none; format mismatch none$", r"^FR: missing none; format mismatch none$", r"^IT: missing none; format mismatch none$", r"^KO: missing none; format mismatch none$", r"^PT: missing none; format mismatch none$", r"^RU: missing none; format mismatch none$", r"^TW: missing none; format mismatch none$", r"^ZH: missing none; format mismatch none$"]),
 }
 

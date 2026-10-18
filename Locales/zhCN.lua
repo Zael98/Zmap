@@ -95,7 +95,7 @@ ns.LOCALES.ZH = {
     FLIGHT_ADVICE_LAND = "从这里去 %s 走陆路更快",
     QUEST_BUY = "出售任务所需物品", QUEST_REACH = "到达这里",
     MENU_ROUTE_HERE = "如何到达这里", DOCK = "码头（%s）", WAY_WALK = "前往 %s", WAY_FLY = "从 %s 飞往 %s",
-    WAY_SAIL = "乘坐：%s", WAY_TITLE = "前往 %s：约 %s", WAY_HERE = "这里",
+    WAY_SAIL = "乘坐：%s", WAY_HEARTH = "使用炉石：%s", WAY_HEARTH_WAIT = "%s后使用炉石：%s", WAY_TELEPORT = "施放%s", WAY_TITLE = "前往 %s：约 %s", WAY_HERE = "这里",
     WAY_NO_POSITION = "这里无法得知你的位置（副本？）。", WAY_NONE = "从这里无法到达那里。",
     OPT_CAVES = "洞穴和矿洞",
     FOLK_ALL = "全部", FOLK_MINE = "只显示我的职业和专业", FOLK_TYPE_innkeeper = "旅店老板", FOLK_TYPE_banker = "银行职员",

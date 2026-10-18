@@ -36,4 +36,24 @@ ZNS.char.flights = nil
 ZNS.Route.To(iu, iv, "Forjaz")
 OUT("no flights known: " .. Modes())
 ZNS.Route.Clear()
+-- your hearthstone, home in Ironforge: from Goldshire, home is the way; on its cooldown, the Deeprun Tram
+STATE.player.wx, STATE.player.wy = -9460, 60
+STATE.bind, STATE.items = "Forjaz", { [6948] = 1 }
+local home = ZNS.Route.Home()
+OUT("home: " .. tostring(home and ZNS.Geo.ZoneAt(ZNS.Geo.FromYards(home.instance, home.x, home.y))))
+ZNS.Route.To(iu, iv, "Forjaz")
+OUT("hearthstone: " .. Modes() .. "; " .. ZNS.Arrow.Target().name)
+STATE.cooldowns = { [6948] = { GetTime() - 600, 3600 } }
+ZNS.Route.To(iu, iv, "Forjaz")
+OUT("hearthstone on cooldown: " .. Modes())
+-- a mage with Teleport: Ironforge (home elsewhere)
+STATE.bind, STATE.spells = "Villadorada", { [3562] = true }
+ZNS.Route.To(iu, iv, "Forjaz")
+OUT("teleport: " .. Modes() .. "; " .. ZNS.Arrow.Target().name)
+-- landed: the next leg
+STATE.player.wx, STATE.player.wy = -4600, -900
+ZNS.Route.Check()
+OUT("after the teleport: step " .. ZNS.Route.Current().step)
+ZNS.Route.Clear()
+STATE.bind, STATE.items, STATE.spells, STATE.cooldowns = nil, nil, nil, nil
 OUT("errors " .. #STATE.errors)

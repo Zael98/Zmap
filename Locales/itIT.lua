@@ -95,7 +95,7 @@ ns.LOCALES.IT = {
     FLIGHT_ADVICE_LAND = "Da qui, %s si raggiunge prima via terra",
     QUEST_BUY = "Vende ciò che chiede la missione", QUEST_REACH = "Raggiungi questo punto",
     MENU_ROUTE_HERE = "Come arrivare qui", DOCK = "Molo (%s)", WAY_WALK = "Vai a %s", WAY_FLY = "Vola da %s a %s",
-    WAY_SAIL = "Prendi: %s", WAY_TITLE = "Fino a %s: ~%s", WAY_HERE = "qui",
+    WAY_SAIL = "Prendi: %s", WAY_HEARTH = "Usa la tua Pietra del Ritorno: %s", WAY_HEARTH_WAIT = "Usa la tua Pietra del Ritorno tra %s: %s", WAY_TELEPORT = "Lancia %s", WAY_TITLE = "Fino a %s: ~%s", WAY_HERE = "qui",
     WAY_NO_POSITION = "Qui la tua posizione non è nota (un'istanza?).", WAY_NONE = "Da qui non c'è modo di arrivarci.",
     OPT_CAVES = "Grotte e miniere",
     FOLK_ALL = "Tutti", FOLK_MINE = "Solo la mia classe e professioni", FOLK_TYPE_innkeeper = "Locandieri", FOLK_TYPE_banker = "Banchieri",
