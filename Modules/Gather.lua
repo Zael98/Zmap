@@ -158,6 +158,62 @@ local function Wanted(kind)
     return ns.Opt(option) and Skill(kind) ~= nil
 end
 
+-- The kinds of herb and ore (by the item they give, its name if none), the lowest skill each needs, and which of
+-- them the map shows: by default those you can gather now; each one turned on or off by itself
+-- (ns.db.nodeShown[key]). The layers panel lists them.
+local types, typeOf = {}, {}   -- [kind] = { { key, item, name, kind, skill }, ... } by skill; [key] = that type
+local typesVersion = 0         -- (what the map shows changed)
+
+local function TypeKey(o) return o[3] and o[3] > 0 and o[3] or o[1] end
+
+local function Types(kind)
+    if types[kind] then return types[kind] end
+    local list = {}
+    for _, o in pairs(ns.OBJECTS or {}) do
+        if o[2] == kind then
+            local key = TypeKey(o)
+            local t = typeOf[key]
+            if not t then
+                t = { key = key, item = o[3], name = o[1], kind = kind, skill = o[4] }
+                typeOf[key] = t
+                list[#list + 1] = t
+            elseif o[4] < t.skill then
+                t.skill = o[4]
+            end
+        end
+    end
+    table.sort(list, function(a, b) return a.skill < b.skill or (a.skill == b.skill and a.name < b.name) end)
+    types[kind] = list
+    return list
+end
+ns.GatherTypes = Types
+
+function ns.GatherTypeShown(t)
+    local shown = ns.db.nodeShown and ns.db.nodeShown[t.key]
+    if shown == nil then return (Skill(t.kind) or -1) >= t.skill end
+    return shown
+end
+
+-- every type of a kind on or off at once (nil: back to those you can gather), or one type
+function ns.SetGatherTypeShown(t, shown)
+    ns.db.nodeShown = ns.db.nodeShown or {}
+    if t.key then
+        ns.db.nodeShown[t.key] = shown
+    else
+        for _, each in ipairs(Types(t.kind)) do ns.db.nodeShown[each.key] = shown end
+    end
+    typesVersion = typesVersion + 1
+    ns.Fire("ZMAP_OPTION", OPTION[t.kind])
+end
+
+-- a node of the data the map shows: its profession's layer on, its type shown
+local function Shown(o)
+    if not Wanted(o[2]) then return false end
+    Types(o[2])
+    local t = typeOf[TypeKey(o)]
+    return t ~= nil and ns.GatherTypeShown(t)
+end
+
 -- the item a node gives, by its name in your language when the game has it
 local function ItemName(item, fallback)
     local name = item and item > 0 and C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(item)
@@ -170,6 +226,7 @@ local function ItemIcon(item, kind)
     local icon = item and item > 0 and C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(item)
     return icon or ICONS[kind]
 end
+ns.ItemIcon = ItemIcon
 
 local DATA_MIN_ZOOM = 5   -- the data's nodes: there are thousands, so only from a zone's view in
 
@@ -179,15 +236,14 @@ function P:Refresh()
     local count = 0
     if ns.Map.Zoom() >= DATA_MIN_ZOOM then
         local found = {}
-        local wanted = { herb = Wanted("herb"), ore = Wanted("ore") }
-        if wanted.herb or wanted.ore then
+        if Wanted("herb") or Wanted("ore") then
             for mapID in pairs(NodeZones()) do
                 local l, r, t, b = Geo.Rect(mapID)
                 if l and l < u1 and r > u0 and t < v1 and b > v0 then
                     local p = Nodes(mapID)
                     for i = 1, #p, 5 do
                         local u, v = p[i], p[i + 1]
-                        if u > u0 and u < u1 and v > v0 and v < v1 and wanted[ns.OBJECTS[p[i + 4]][2]] then
+                        if u > u0 and u < u1 and v > v0 and v < v1 and Shown(ns.OBJECTS[p[i + 4]]) then
                             found[#found + 1] = Node(mapID, p, i)
                         end
                     end
@@ -261,22 +317,44 @@ function P:OnClick(pin, button)
     end
 end
 
--- the data's herbs and ore of a zone that you can gather now (for the minimap): { { u, v, icon }, ... }
+-- the data's herbs and ore of a zone that the map shows and you can gather now (for the minimap): { { u, v, icon } }
 local near, nearKey = {}, nil
 function ns.GatherNear(mapID)
-    local key = ("%s:%s:%s:%s:%s"):format(mapID, tostring(Skill("herb")), tostring(Skill("ore")),
-        tostring(ns.Opt("herbs")), tostring(ns.Opt("ore")))
+    local key = ("%s:%s:%s:%s:%s:%d"):format(mapID, tostring(Skill("herb")), tostring(Skill("ore")),
+        tostring(ns.Opt("herbs")), tostring(ns.Opt("ore")), typesVersion)
     if key == nearKey then return near end
     nearKey, near = key, {}
     if not (Wanted("herb") or Wanted("ore")) then return near end
     local p = Nodes(mapID)
     for i = 1, #p, 5 do
         local o = ns.OBJECTS[p[i + 4]]
-        if Wanted(o[2]) and Skill(o[2]) >= o[4] then
+        if Shown(o) and Skill(o[2]) >= o[4] then
             near[#near + 1] = { u = p[i], v = p[i + 1], icon = ItemIcon(o[3], o[2]) }
         end
     end
     return near
+end
+
+-- the types of a zone you can gather now, the most there first (for the gathering route): { { type, count } }
+function ns.GatherZoneTypes(mapID)
+    local counts, out = {}, {}
+    local p = Nodes(mapID)
+    for i = 1, #p, 5 do
+        local o = ns.OBJECTS[p[i + 4]]
+        local mine = Skill(o[2])
+        if mine and mine >= o[4] then
+            Types(o[2])
+            local t = typeOf[TypeKey(o)]
+            if not counts[t] then
+                counts[t] = 0
+                out[#out + 1] = t
+            end
+            counts[t] = counts[t] + 1
+        end
+    end
+    table.sort(out, function(a, b) return counts[a] > counts[b] end)
+    for i, t in ipairs(out) do out[i] = { t, counts[t] } end
+    return out
 end
 
 -- the herbs and ore of the data, one entry per kind (for the search): { object, kind, item, name }
@@ -302,13 +380,19 @@ function ns.NodeSpawns(item, name)
     return out
 end
 
--- for a gathering route: the nodes of a zone you can gather now, the data's and those found ({ u, v } each)
-function ns.GatherSpots(mapID)
+-- for a gathering route: the nodes of a zone you can gather now ({ u, v } each), of some types ([key] = true) or
+-- of every type (the data's and, then, those found too)
+function ns.GatherSpots(mapID, keys)
     local out = {}
-    for _, n in ipairs(ns.GatherNear(mapID)) do out[#out + 1] = { n.u, n.v } end
-    for _, n in ipairs(ns.db.nodes[mapID] or {}) do
+    local p = Nodes(mapID)
+    for i = 1, #p, 5 do
+        local o = ns.OBJECTS[p[i + 4]]
+        local mine = Skill(o[2])
+        if mine and mine >= o[4] and (not keys or keys[TypeKey(o)]) then out[#out + 1] = { p[i], p[i + 1] } end
+    end
+    for _, n in ipairs(not keys and ns.db.nodes[mapID] or {}) do
         local u, v = Geo.ToWorld(mapID, n.x, n.y)
-        if u and Wanted(n.kind) then out[#out + 1] = { u, v } end
+        if u and Skill(n.kind) then out[#out + 1] = { u, v } end
     end
     return out
 end
@@ -325,7 +409,11 @@ end
 ns.On("ZMAP_OPTION", function(key)
     if key == "herbs" or key == "ore" then P:Update() end
 end)
-ns.On("SKILL_LINES_CHANGED", function() skillsAt = 0; P:Update() end)
+ns.On("SKILL_LINES_CHANGED", function()
+    skillsAt = 0
+    typesVersion = typesVersion + 1   -- (types you could not gather may be shown now)
+    P:Update()
+end)
 
 ns.commands.borrarnodos = function()
     ns.Confirm(L.CLEAR_NODES_CONFIRM, function()

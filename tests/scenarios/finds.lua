@@ -21,6 +21,8 @@ for _, n in ipairs(ZNS.db.nodes[1429]) do if n.by then by = n.by end end
 OUT(("received ore: nodes %d, by %s"):format(Nodes(), tostring(by)))
 
 OPEN()
+ZNS.SetOpt("herbs", true)   -- (herbs and ore are off until you turn them on)
+ZNS.SetOpt("ore", true)
 local u, v = ZNS.Geo.ToWorld(1429, 0.4, 0.6)
 ZNS.Map.SetView(u * ZNS.Geo.W, v * ZNS.Geo.H, 6)
 FRAMES(3)

@@ -4,7 +4,7 @@ local _, ns = ...
 local L = ns.L
 
 -- what the map shows, by group: { option, its text, icon (texture, or atlas = true), needs = a profession,
---   types = unfolds into the townsfolk's types }
+--   types = unfolds into the townsfolk's types, nodes = unfolds into that profession's kinds of herb or ore }
 local I = "Interface\\Icons\\"
 local LAYERS = {
     { "labels", "OPT_LABELS", I .. "INV_Misc_Note_01", group = "LAYER_GROUP_MAP" },
@@ -26,8 +26,8 @@ local LAYERS = {
     { "rareAlert", "OPT_RARE_ALERT", "VignetteKillElite", atlas = true, group = "LAYER_GROUP_PEOPLE" },
     { "group", "OPT_GROUP", I .. "INV_Misc_GroupNeedMore", group = "LAYER_GROUP_PEOPLE" },
     { "guild", "OPT_GUILD", I .. "INV_Misc_Tournaments_Banner_Human", group = "LAYER_GROUP_PEOPLE" },
-    { "herbs", "OPT_HERBS", I .. "INV_Misc_Herb_01", needs = "herb", group = "LAYER_GROUP_GATHER" },
-    { "ore", "OPT_ORE", I .. "INV_Ore_Copper_01", needs = "ore", group = "LAYER_GROUP_GATHER" },
+    { "herbs", "OPT_HERBS", I .. "INV_Misc_Herb_01", needs = "herb", nodes = "herb", group = "LAYER_GROUP_GATHER" },
+    { "ore", "OPT_ORE", I .. "INV_Ore_Copper_01", needs = "ore", nodes = "ore", group = "LAYER_GROUP_GATHER" },
     { "minimapPins", "OPT_MINIMAP_PINS", I .. "INV_Letter_15", group = "LAYER_GROUP_MINIMAP" },
 }
 local UNEXPLORED = { "show", "dim", "hide" }
@@ -57,6 +57,16 @@ local function Row(parent)
     return b
 end
 
+local NODE_OPTION = { herb = "herbs", ore = "ore" }
+
+-- every kind of a profession you can gather shown
+local function AllNodesShown(kind)
+    for _, t in ipairs(ns.GatherTypes(kind)) do
+        if (ns.GatherSkill(kind) or -1) >= t.skill and not ns.GatherTypeShown(t) then return false end
+    end
+    return true
+end
+
 local function Look(b, on, color)
     b.icon:SetDesaturated(not on)
     b.icon:SetAlpha(on and 1 or 0.45)
@@ -74,12 +84,67 @@ local function Paint(b)
         Look(b, ns.Opt("townsfolk") and ns.AllFolkTypesShown())
     elseif b.cat then
         Look(b, ns.Opt("townsfolk") and ns.FolkTypeShown(b.cat))
+    elseif b.nodeAll then
+        Look(b, ns.Opt(NODE_OPTION[b.nodeAll]) and AllNodesShown(b.nodeAll))
+    elseif b.nodeType then
+        Look(b, ns.Opt(NODE_OPTION[b.nodeType.kind]) and ns.GatherTypeShown(b.nodeType))
     end
 end
 
 -- rows in place (herbs and ore come and go with the professions; the townsfolk's types unfold under them) and
 -- as their options stand
-local function Layout()
+-- a profession's kinds of herb or ore, unfolded under its layer: "all" (those you can gather, or the layer off),
+-- then one row each (its item, the skill it needs); made as the kinds come
+local Layout
+local function NodeRows(kind)
+    local rows = side.nodeSubs[kind]
+    if not rows then
+        rows = {}
+        side.nodeSubs[kind] = rows
+        local all = Row(side.list)
+        all.nodeAll = kind
+        all.icon:SetTexture(kind == "herb" and I .. "INV_Misc_Herb_01" or I .. "INV_Ore_Copper_01")
+        all.text:SetText(L.FOLK_ALL)
+        all:SetScript("OnClick", function()
+            local option = NODE_OPTION[kind]
+            if ns.Opt(option) and AllNodesShown(kind) then
+                ns.SetOpt(option, false)
+            else
+                ns.SetGatherTypeShown({ kind = kind }, nil)   -- (back to those you can gather)
+                ns.SetOpt(option, true)
+            end
+            Layout()
+        end)
+        rows[1] = all
+    end
+    local list = ns.GatherTypes(kind)
+    local out = { rows[1] }
+    for i, t in ipairs(list) do
+        local b = rows[i + 1]
+        if not b then
+            b = Row(side.list)
+            b:SetScript("OnClick", function(self)
+                local option = NODE_OPTION[kind]
+                if not ns.Opt(option) then   -- (with the layer off, every kind looks off: this one alone)
+                    ns.SetGatherTypeShown({ kind = kind }, false)
+                    ns.SetGatherTypeShown(self.nodeType, true)
+                    ns.SetOpt(option, true)
+                else
+                    ns.SetGatherTypeShown(self.nodeType, not ns.GatherTypeShown(self.nodeType))
+                end
+                Layout()
+            end)
+            rows[i + 1] = b
+        end
+        b.nodeType = t
+        b.icon:SetTexture(ns.ItemIcon(t.item, kind))
+        b.text:SetText(("%s |cff999999(%d)|r"):format(ns.ItemName(t.item, t.name), t.skill))
+        out[#out + 1] = b
+    end
+    return out
+end
+
+function Layout()
     if not side then return end
     local y = -4
     local function Put(b, indent)
@@ -93,6 +158,9 @@ local function Layout()
     local lastGroup
     for _, h in pairs(side.heads) do h:Hide() end
     for _, b in ipairs(side.subs) do b:Hide() end
+    for _, rows in pairs(side.nodeSubs) do
+        for _, b in ipairs(rows) do b:Hide() end
+    end
     for _, b in ipairs(side.rows) do
         local shown = Offered(b.layer)
         b:SetShown(shown)
@@ -113,6 +181,12 @@ local function Layout()
                 b.fold:SetTexture(open and "Interface\\Buttons\\UI-MinusButton-Up" or "Interface\\Buttons\\UI-PlusButton-Up")
                 if open then
                     for _, sub in ipairs(side.subs) do Put(sub, INDENT) end
+                end
+            elseif b.layer.nodes then
+                local open = ns.db.window.nodesOpen and ns.db.window.nodesOpen[b.layer.nodes]
+                b.fold:SetTexture(open and "Interface\\Buttons\\UI-MinusButton-Up" or "Interface\\Buttons\\UI-PlusButton-Up")
+                if open then
+                    for _, sub in ipairs(NodeRows(b.layer.nodes)) do Put(sub, INDENT) end
                 end
             end
         end
@@ -169,7 +243,7 @@ local function CreateSide(frame)
     end)
     side.list = list
 
-    side.heads, side.rows, side.subs = {}, {}, {}
+    side.heads, side.rows, side.subs, side.nodeSubs = {}, {}, {}, {}
     for _, layer in ipairs(LAYERS) do
         if not side.heads[layer.group] then
             local h = list:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -180,14 +254,19 @@ local function CreateSide(frame)
         b.layer = layer
         if layer.atlas then b.icon:SetAtlas(layer[3]) else b.icon:SetTexture(layer[3]) end
         b.text:SetText(L[layer[2]])
-        if layer.types then
-            -- a click unfolds its types, each turned on and off by itself
+        if layer.types or layer.nodes then
+            -- a click unfolds its types (the townsfolk's, or the kinds of herb or ore), each turned on and off by itself
             b.fold = b:CreateTexture(nil, "OVERLAY")
             b.fold:SetSize(14, 14)
             b.fold:SetPoint("RIGHT", -4, 0)
             b.text:SetPoint("RIGHT", b.fold, "LEFT", -2, 0)
             b:SetScript("OnClick", function()
-                ns.db.window.folkOpen = not ns.db.window.folkOpen
+                if layer.nodes then
+                    ns.db.window.nodesOpen = ns.db.window.nodesOpen or {}
+                    ns.db.window.nodesOpen[layer.nodes] = not ns.db.window.nodesOpen[layer.nodes]
+                else
+                    ns.db.window.folkOpen = not ns.db.window.folkOpen
+                end
                 Layout()
             end)
         else

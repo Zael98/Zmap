@@ -97,10 +97,30 @@ OUT(("no profession: herbs %d, ore %d, offered %s"):format(n0, ore0, Offered()))
 STATE.skills = { herb = 50 }
 EVENT("SKILL_LINES_CHANGED")
 FRAMES(3)
+local off = DataHerbs()   -- (the layer is off until you turn it on)
+ZNS.SetOpt("herbs", true)
+FRAMES(3)
 local n, grey, ore = DataHerbs()
-OUT(("herbalism 50: herbs %d, above skill greyed %s, ore %d, offered %s"):format(n, tostring(grey > 0), ore, Offered()))
+-- a kind above your skill, chosen in the layers panel: shown, greyed
+local above
+for _, kind in ipairs(ZNS.GatherTypes("herb")) do if kind.skill > 50 and not above then above = kind end end
+ZNS.SetGatherTypeShown(above, true)
+FRAMES(3)
+local _, greyNow = DataHerbs()
+OUT(("herbalism 50: off %d; on: herbs %d, above skill %d, ore %d, offered %s; chosen above: greyed %s"):format(off, n, grey, ore,
+    Offered(), tostring(greyNow > 0)))
+-- only one kind
+local first = ZNS.GatherTypes("herb")[1]
+ZNS.SetGatherTypeShown({ kind = "herb" }, false)
+ZNS.SetGatherTypeShown(first, true)
+FRAMES(3)
+local only = 0
+for _, pin in ipairs(PINS("gather")) do if pin.data and pin.data.item ~= first.item then only = only + 1 end end
+OUT(("one kind: others shown %d"):format(only))
+ZNS.SetGatherTypeShown({ kind = "herb" }, nil)
 STATE.skills = { herb = 50, ore = 1 }
 EVENT("SKILL_LINES_CHANGED")
+ZNS.SetOpt("ore", true)
 FRAMES(3)
 local _, _, oreNow = DataHerbs()
 OUT(("with mining: ore %s"):format(tostring(oreNow > 0)))

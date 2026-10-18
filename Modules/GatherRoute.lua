@@ -1,7 +1,8 @@
--- A gathering route: round a zone's herbs and ore that you can gather (the data's and those found), the nodes
--- near each other as one stop, in a loop as short as it gets (nearest first, then the crossings undone). Drawn
--- on the map, and the arrow leads from stop to stop, round and round, until another way takes the arrow or it
--- is stopped (the map's right-click menu, either way).
+-- A gathering route: round a zone's herbs and ore that you can gather (all of them, or one kind: chosen in the
+-- map's right-click menu), the nodes near each other as one stop, in a loop as short as it gets (nearest first,
+-- then the crossings undone). Drawn on the map, a bar at its top says what it is and where you are in it, and the
+-- arrow leads from stop to stop, round and round, until another way takes the arrow or it is stopped (the bar's
+-- close button, or the menu).
 local _, ns = ...
 local L, Geo = ns.L, ns.Geo
 local GR = {}
@@ -17,14 +18,16 @@ local YARDS = 44.6       -- yards in a canvas unit (the canvas is the same yards
 local COLOR = { 0.3, 1, 0.45 }
 
 local lines = ns.Pins.Lines()
-local route   -- { mapID, instance, stops = { { u, v }, ... }, at (the stop led to) }
+local route   -- { mapID, instance, stops = { { u, v }, ... }, at (the stop led to), label, lap (seconds) }
+local bar
 
 local function Dist(a, b) return math.sqrt(((a[1] - b[1]) * W) ^ 2 + ((a[2] - b[2]) * H) ^ 2) end
 
--- the stops: the nodes merged by cell (their middle), thinned evenly if too many
-local function Stops(mapID)
+-- the stops: the nodes (of some kinds, [key] = true; nil: every kind) merged by cell (their middle), thinned
+-- evenly if too many
+local function Stops(mapID, keys)
     local cells, list = {}, {}
-    for _, n in ipairs(ns.GatherSpots(mapID)) do
+    for _, n in ipairs(ns.GatherSpots(mapID, keys)) do
         local key = math.floor(n[1] * W / MERGE) .. ":" .. math.floor(n[2] * H / MERGE)
         local c = cells[key]
         if not c then
@@ -95,32 +98,67 @@ local function Draw()
     end
 end
 
+-- the bar at the map's top: what the route is, the stop you are led to, a lap's time; its close button stops it
+local function Bar()
+    local frame = ns.Map.Frame()
+    if not frame then return end
+    if not bar then
+        bar = CreateFrame("Frame", nil, frame.viewport, "BackdropTemplate")
+        bar:SetPoint("TOP", 0, -6)
+        bar:SetHeight(26)
+        bar:SetFrameLevel(frame.viewport:GetFrameLevel() + 200)
+        bar:EnableMouse(true)
+        bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+        bar:SetBackdropColor(0.05, 0.05, 0.06, 0.92)
+        bar:SetBackdropBorderColor(COLOR[1], COLOR[2], COLOR[3], 0.8)
+        bar.text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        bar.text:SetPoint("LEFT", 10, 0)
+        local close = CreateFrame("Button", nil, bar, "UIPanelCloseButton")
+        close:SetSize(22, 22)
+        close:SetPoint("RIGHT", -2, 0)
+        close:SetScript("OnClick", function() GR.Stop() end)
+        bar.close = close
+    end
+    if not route then
+        bar:Hide()
+        return
+    end
+    bar.text:SetText(L.GATHER_BAR:format(route.label, route.at, #route.stops, ns.Duration(route.lap)))
+    bar:SetWidth((bar.text:GetStringWidth() or 300) + 44)
+    bar:Show()
+end
+
 local function Guide()
     local s = route.stops[route.at]
     ns.Arrow.SetTarget({ instance = route.instance, u = s[1], v = s[2], name = L.GATHER_NEXT:format(route.at, #route.stops),
         gather = true })
+    Bar()
 end
 
 function GR.Stop()
     if not route then return end
     route = nil
     if ns.Map.Frame() then lines:Clear() end
+    Bar()
     local t = ns.Arrow.Target()
     if t and t.gather then ns.Arrow.Clear() end
 end
 
--- a route round the zone (its uiMap); false if there is nothing there you can gather
-function GR.Start(mapID)
-    local stops = Stops(mapID)
+-- a route round the zone (its uiMap), of some kinds ([key] = true, called label; nil: every kind you can
+-- gather); false if there is nothing there to gather
+function GR.Start(mapID, keys, label)
+    local stops = Stops(mapID, keys)
     if #stops < 2 then
         ns.Print(L.GATHER_NONE)
         return false
     end
     ns.Route.Clear()
     local u, v = Geo.UnitPosition("player")
-    route = { mapID = mapID, instance = Geo.Instance(mapID), stops = Tour(stops, u, v), at = 1 }
     local ride = (UnitLevel("player") or 1) >= 40 and 11 or 7
-    ns.Print(L.GATHER_ROUTE:format(#stops, Geo.Name(mapID), ns.Duration(Length(route.stops) / ride + #stops * GATHER)))
+    route = { mapID = mapID, instance = Geo.Instance(mapID), stops = Tour(stops, u, v), at = 1, label = label or L.GATHER_ALL }
+    route.lap = Length(route.stops) / ride + #stops * GATHER
+    ns.Print(L.GATHER_ROUTE:format(#stops, Geo.Name(mapID), ns.Duration(route.lap)))
     Draw()
     Guide()
     return true
@@ -148,11 +186,21 @@ end
 GR.Check = Check
 
 ns.On("PLAYER_LOGIN", function() C_Timer.NewTicker(1, function() ns.Safe(Check) end) end)
-ns.On("ZMAP_SHOW", function() if route then Draw() end end)
+ns.On("ZMAP_SHOW", function() if route then Draw(); Bar() end end)
+-- the menu: stop the route, or one round this zone, of what you choose (everything you can gather, or one kind:
+-- the most there first, with how many)
 ns.On("ZMAP_MENU", function(root, u, v, mapID)
     if route then
         root:CreateButton(L.MENU_GATHER_STOP, function() GR.Stop() end)
-    elseif mapID and (ns.GatherSkill("herb") or ns.GatherSkill("ore")) then
-        root:CreateButton(L.MENU_GATHER_ROUTE:format(Geo.Name(mapID)), function() GR.Start(mapID) end)
+        return
+    end
+    if not (mapID and (ns.GatherSkill("herb") or ns.GatherSkill("ore"))) then return end
+    local kinds = ns.GatherZoneTypes(mapID)
+    if #kinds == 0 then return end
+    local menu = root:CreateButton(L.MENU_GATHER_ROUTE:format(Geo.Name(mapID)))
+    menu:CreateButton(L.GATHER_ALL, function() GR.Start(mapID) end)
+    for _, e in ipairs(kinds) do
+        local t, name = e[1], ns.ItemName(e[1].item, e[1].name)
+        menu:CreateButton(("%s (%d)"):format(name, e[2]), function() GR.Start(mapID, { [t.key] = true }, name) end)
     end
 end)
