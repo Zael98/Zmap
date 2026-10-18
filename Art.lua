@@ -327,8 +327,9 @@ local function Overlaps(mapID, left, top, right, bottom)
     return l * W < right and r * W > left and t * H < bottom and b * H > top
 end
 
+local wanted = {}   -- [instance * 4096 + tile] = its file: the tiles in view (kept between updates: no garbage)
 local function UpdateTerrain(left, top, right, bottom, alpha)
-    local wanted = {}
+    wipe(wanted)
     if alpha > 0.01 then
         local count = 0
         for instance in pairs(ns.WORLD_TRANSFORM) do
@@ -342,14 +343,12 @@ local function UpdateTerrain(left, top, right, bottom, alpha)
                 local ty0 = math.max(0, math.floor(32 - math.max(wxa, wxb) / adt))
                 local ty1 = math.min(63, math.floor(32 - math.min(wxa, wxb) / adt))
                 if (tx1 - tx0 + 1) * (ty1 - ty0 + 1) <= MAX_TILES then
-                    local du, dv = Geo.TileSize(instance)
                     for ty = ty0, ty1 do
                         for tx = tx0, tx1 do
                             local fileID = tiles[ty * 64 + tx]
                             if fileID and count < MAX_TILES then
                                 count = count + 1
-                                local u, v = Geo.FromYards(instance, (32 - ty) * adt, (32 - tx) * adt)
-                                wanted[instance * 4096 + ty * 64 + tx] = { u, v, du, dv, fileID }
+                                wanted[instance * 4096 + ty * 64 + tx] = fileID
                             end
                         end
                     end
@@ -364,13 +363,17 @@ local function UpdateTerrain(left, top, right, bottom, alpha)
             terrainPool[#terrainPool + 1] = tex
         end
     end
-    for key, p in pairs(wanted) do
+    for key, fileID in pairs(wanted) do
         if not terrain[key] then
+            local instance, tile = math.floor(key / 4096), key % 4096
+            local ty, tx = math.floor(tile / 64), tile % 64
+            local u, v = Geo.FromYards(instance, (32 - ty) * Geo.ADT, (32 - tx) * Geo.ADT)
+            local du, dv = Geo.TileSize(instance)
             local tex = table.remove(terrainPool) or terrainRoot:CreateTexture(nil, "ARTWORK")
-            tex:SetTexture(p[5], nil, nil, "TRILINEAR")
-            tex:SetSize(p[3] * W * SEAM, p[4] * H * SEAM)
+            tex:SetTexture(fileID, nil, nil, "TRILINEAR")
+            tex:SetSize(du * W * SEAM, dv * H * SEAM)
             tex:ClearAllPoints()
-            tex:SetPoint("TOPLEFT", terrainRoot, "TOPLEFT", p[1] * W, -p[2] * H)
+            tex:SetPoint("TOPLEFT", terrainRoot, "TOPLEFT", u * W, -v * H)
             tex:Show()
             terrain[key] = tex
         end

@@ -128,10 +128,12 @@ local function Nodes(mapID)
     return p
 end
 
--- one node as a table: { m, u, v, x, y, object, kind, skill, item }
-local function Node(mapID, p, i)
+-- one node as a table: { m, u, v, x, y, object, kind, skill, item } (into: a table to fill, kept by its pin)
+local function Node(mapID, p, i, into)
     local o = ns.OBJECTS[p[i + 4]]
-    return { m = mapID, u = p[i], v = p[i + 1], x = p[i + 2], y = p[i + 3], object = p[i + 4], kind = o[2], skill = o[4], item = o[3] }
+    local n = into or {}
+    n.m, n.u, n.v, n.x, n.y, n.object, n.kind, n.skill, n.item = mapID, p[i], p[i + 1], p[i + 2], p[i + 3], p[i + 4], o[2], o[4], o[3]
+    return n
 end
 
 -- your skill in Herbalism / Mining (nil: you do not have it)
@@ -230,12 +232,16 @@ ns.ItemIcon = ItemIcon
 
 local DATA_MIN_ZOOM = 5   -- the data's nodes: there are thousands, so only from a zone's view in
 
+-- the data's nodes in view: where each is (its zone, its packed list, its place in it), kept from one refresh to
+-- the next (thousands of them as the view zooms: none is made a table, only those shown, in their pin's)
+local inMap, inList, inAt = {}, {}, {}
+
 function P:Refresh()
     self:ReleaseAll()
     local u0, v0, u1, v1 = ns.Pins.ViewBox()
     local count = 0
     if ns.Map.Zoom() >= DATA_MIN_ZOOM then
-        local found = {}
+        local found = 0
         if Wanted("herb") or Wanted("ore") then
             for mapID in pairs(NodeZones()) do
                 local l, r, t, b = Geo.Rect(mapID)
@@ -244,16 +250,22 @@ function P:Refresh()
                     for i = 1, #p, 5 do
                         local u, v = p[i], p[i + 1]
                         if u > u0 and u < u1 and v > v0 and v < v1 and Shown(ns.OBJECTS[p[i + 4]]) then
-                            found[#found + 1] = Node(mapID, p, i)
+                            found = found + 1
+                            inMap[found], inList[found], inAt[found] = mapID, p, i
                         end
                     end
                 end
             end
         end
-        for _, n in ipairs(ns.Pins.Spread(found, MAX_PINS)) do
+        -- at most MAX_PINS of them, every k-th (as Pins.Spread)
+        local step = found > MAX_PINS and found / MAX_PINS or 1
+        for k = 1, math.min(found, MAX_PINS) do
+            local j = math.floor((k - 1) * step) + 1
             count = count + 1
-            local mine = Skill(n.kind)
             local pin = self:Acquire()
+            local n = Node(inMap[j], inList[j], inAt[j], pin.nodeData)
+            pin.nodeData = n
+            local mine = Skill(n.kind)
             pin.icon:SetTexture(ItemIcon(n.item, n.kind))
             local reach = mine and mine >= n.skill
             pin.icon:SetDesaturated(not reach)
@@ -261,6 +273,7 @@ function P:Refresh()
             pin.data, pin.node, pin.mapID, pin.index = n, nil, n.m, nil
             self:Place(pin, n.u, n.v)
         end
+        for k = found + 1, #inMap do inMap[k], inList[k], inAt[k] = nil, nil, nil end   -- (let go of the rest)
     end
     for mapID, list in pairs(ns.db.nodes) do
         local l, r, t, b = Geo.Rect(mapID)

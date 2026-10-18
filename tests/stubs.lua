@@ -113,13 +113,21 @@ function Widget:SetPoint(point, a, b, c, d)
     else
         rel, relPoint, x, y = self.parent, point, 0, 0
     end
-    self.points[point] = { rel = rel or self.parent, relPoint = relPoint or point, x = x or 0, y = y or 0 }
+    local p = self.points[point]   -- (kept: the game's frames make no garbage moving, the memory test counts it)
+    if not p then
+        p = {}
+        self.points[point] = p
+    end
+    p.rel, p.relPoint, p.x, p.y = rel or self.parent, relPoint or point, x or 0, y or 0
     self.all = nil
 end
-function Widget:ClearAllPoints() self.points = {}; self.all = nil end
+function Widget:ClearAllPoints()
+    for k in pairs(self.points) do self.points[k] = nil end
+    self.all = nil
+end
 function Widget:SetAllPoints(rel)
     if type(rel) == "string" then rel = _G[rel] end
-    self.points = {}
+    for k in pairs(self.points) do self.points[k] = nil end
     self.all = rel or self.parent
 end
 function Widget:GetPoint(i)
@@ -186,22 +194,22 @@ function Widget:SetTexture(file, wrapH, wrapV, filter) self.file = file; self.at
 function Widget:SetAtlas(atlas) self.atlas = atlas; self.file = nil end
 function Widget:GetAtlas() return self.atlas end
 function Widget:GetTexture() return self.file end
-function Widget:SetTexCoord(l, r, t, b) self.tc = { l, r, t, b } end
-function Widget:SetVertexColor(r, g, b, a) self.color = { r, g, b, a or 1 } end
-function Widget:SetColorTexture(r, g, b, a) self.color = { r, g, b, a or 1 }; self.file = "color" end
+function Widget:SetTexCoord(l, r, t, b) self.tc = self.tc or {}; self.tc[1], self.tc[2], self.tc[3], self.tc[4] = l, r, t, b end
+function Widget:SetVertexColor(r, g, b, a) self.color = self.color or {}; self.color[1], self.color[2], self.color[3], self.color[4] = r, g, b, a or 1 end
+function Widget:SetColorTexture(r, g, b, a) self:SetVertexColor(r, g, b, a); self.file = "color" end
 function Widget:SetDrawLayer(layer, sub) self.layer, self.sublevel = layer, sub or 0 end
 function Widget:AddMaskTexture(mask) self.masks = self.masks or {}; table.insert(self.masks, mask) end
 function Widget:SetRotation(r) self.rotation = r end
 function Widget:SetDesaturation(d) self.desat = d end
 function Widget:SetBlendMode(m) self.blend = m end
-function Widget:SetStartPoint(_, rel, x, y) self.p1 = { x, y } end
-function Widget:SetEndPoint(_, rel, x, y) self.p2 = { x, y } end
+function Widget:SetStartPoint(_, rel, x, y) self.p1 = self.p1 or {}; self.p1[1], self.p1[2] = x, y end
+function Widget:SetEndPoint(_, rel, x, y) self.p2 = self.p2 or {}; self.p2[1], self.p2[2] = x, y end
 function Widget:SetThickness(t) self.thickness = t end
 -- text
 function Widget:SetText(t) self.text = t ~= nil and tostring(t) or "" end
 function Widget:GetText() return self.text end
 function Widget:SetFormattedText(f, ...) self.text = f:format(...) end
-function Widget:SetTextColor(r, g, b) self.textColor = { r, g, b } end
+function Widget:SetTextColor(r, g, b) self.textColor = self.textColor or {}; self.textColor[1], self.textColor[2], self.textColor[3] = r, g, b end
 -- buttons, edit boxes, check buttons, status bars
 function Widget:Click(button) if self.scripts.OnClick then self.scripts.OnClick(self, button or "LeftButton") end end
 function Widget:SetChecked(v) self.checked = v and true or false end

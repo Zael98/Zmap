@@ -320,47 +320,80 @@ local function At(f)
     return f.u, f.v
 end
 
+-- what is in view: the spots themselves (the data's, those met with their key, the mailboxes and anvils), kept
+-- from one refresh to the next (the view zooms through thousands of them: no table is made for each)
+local inView, inKey = {}, {}
+local npcOf = setmetatable({}, { __mode = "k" })   -- [a find met] = the NPC of its key (false: none)
+
+-- a spot to show: in view, a type shown, yours: its look
+local function Wanted(kind, title, u, v, u0, v0, u1, v1, hidden)
+    if not u or u < u0 or u > u1 or v < v0 or v > v1 or not ICONS[kind] then return end
+    local look = Look(kind, title)
+    if hidden[look.cat] or NotMine(look) then return end
+    return look
+end
+
 function P:Refresh()
     self:ReleaseAll()
     local u0, v0, u1, v1 = ns.Pins.ViewBox()
-    -- what is in view: { kind, m, x, y, u, v, look, and npc, object or folk + key }; people before mailboxes and
-    -- anvils. (Only what is in view makes an entry: the world's townsfolk are thousands.)
-    local people, things = {}, {}
     local hidden = Hidden()
-    local function Add(list, kind, m, x, y, u, v, title)
-        if not u or u < u0 or u > u1 or v < v0 or v > v1 or not ICONS[kind] then return end
-        local look = Look(kind, title)
-        if hidden[look.cat] or NotMine(look) then return end
-        local e = { kind = kind, m = m, x = x, y = y, u = u, v = v, look = look }
-        list[#list + 1] = e
-        return e
-    end
+    -- people first (the data's, then those met that it lacks), mailboxes and anvils after them
+    local people = 0
     for _, f in ipairs(ns.Npcs.Townsfolk()) do
         local u, v = At(f)
-        local e = Add(people, f.kind, f.m, f.x, f.y, u, v, ns.NPCS[f.id][2])
-        if e then e.npc = f.id end
-    end
-    for key, f in pairs(ns.db.folk) do
-        local npc = tonumber(key:match(":(%d+)$"))
-        if not (npc and ns.NPCS and ns.NPCS[npc]) then   -- (the data shows it already)
-            local u, v = Geo.ToWorld(f.m, f.x, f.y)
-            local e = Add(people, f.kind, f.m, f.x, f.y, u, v, f.sub)
-            if e then e.folk, e.key = f, key end
+        if Wanted(f.kind, ns.NPCS[f.id][2], u, v, u0, v0, u1, v1, hidden) then
+            people = people + 1
+            inView[people], inKey[people] = f, false
         end
     end
+    for key, f in pairs(ns.db.folk) do
+        if npcOf[f] == nil then npcOf[f] = tonumber(key:match(":(%d+)$")) or false end
+        local npc = npcOf[f]
+        if not (npc and ns.NPCS and ns.NPCS[npc]) then   -- (the data shows it already)
+            local u, v = Geo.ToWorld(f.m, f.x, f.y)
+            if Wanted(f.kind, f.sub, u, v, u0, v0, u1, v1, hidden) then
+                people = people + 1
+                inView[people], inKey[people] = f, key
+            end
+        end
+    end
+    local total = people
     for _, o in ipairs(Utilities()) do
         local u, v = At(o)
-        local e = Add(things, o.kind, o.m, o.x, o.y, u, v)
-        if e then e.object = o.kind end
+        if Wanted(o.kind, nil, u, v, u0, v0, u1, v1, hidden) then
+            total = total + 1
+            inView[total], inKey[total] = o, true
+        end
     end
-    local shown = ns.Pins.Spread(people, MAX_PINS)
-    for _, e in ipairs(ns.Pins.Spread(things, MAX_PINS - #shown)) do shown[#shown + 1] = e end
-    for _, e in ipairs(shown) do
-        local pin = self:Acquire()
-        Draw(pin.icon, e.look)
-        pin.m, pin.x, pin.y, pin.npc, pin.folk, pin.key, pin.object = e.m, e.x, e.y, e.npc, e.folk, e.key, e.object
-        self:Place(pin, e.u, e.v)
+    -- at most MAX_PINS, every k-th of the people, then of the rest as many as there is room for (as Pins.Spread)
+    local function Show(first, n, room)
+        local step = n > room and n / room or 1
+        for k = 1, math.min(n, room) do
+            local s = inView[first + math.floor((k - 1) * step)]
+            local key = inKey[first + math.floor((k - 1) * step)]
+            local pin = self:Acquire()
+            local u, v
+            if key == true then   -- a mailbox, an anvil...
+                u, v = At(s)
+                Draw(pin.icon, Look(s.kind))
+                pin.npc, pin.folk, pin.key, pin.object = nil, nil, nil, s.kind
+            elseif key then       -- met
+                u, v = Geo.ToWorld(s.m, s.x, s.y)
+                Draw(pin.icon, Look(s.kind, s.sub))
+                pin.npc, pin.folk, pin.key, pin.object = nil, s, key, nil
+            else                  -- the data's
+                u, v = At(s)
+                Draw(pin.icon, Look(s.kind, ns.NPCS[s.id][2]))
+                pin.npc, pin.folk, pin.key, pin.object = s.id, nil, nil, nil
+            end
+            pin.m, pin.x, pin.y = s.m, s.x, s.y
+            self:Place(pin, u, v)
+        end
+        return math.min(n, room)
     end
+    local shown = Show(1, people, MAX_PINS)
+    Show(people + 1, total - people, MAX_PINS - shown)
+    for k = total + 1, #inView do inView[k], inKey[k] = nil, nil end   -- (let go of the rest)
 end
 
 function P:Tooltip(pin, tip)

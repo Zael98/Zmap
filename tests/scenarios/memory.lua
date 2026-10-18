@@ -37,5 +37,28 @@ OUT(("map open, walking: %.0f KB in 10 s"):format(Garbage(10, function() STATE.p
 OUT(("map open, panning: %.0f KB in 10 s"):format(Garbage(10, function(i)
     ZNS.Map.SetView(u * ZNS.Geo.W + i * 0.05, v * ZNS.Geo.H, ZNS.Map.ZoomFor(1429) * 1.5)
 end)))
+-- a minute zooming in and out with the wheel and panning, herbs shown: the second such minute (what the first
+-- built, zone art and the like, is kept), all of it garbage
+STATE.skills = { herb = 50 }
+ADVANCE(6)
+ZNS.SetOpt("herbs", true)
+local function Minute()
+    for _ = 1, 6 do
+        for _ = 1, 6 do WHEEL(u, v, 1, 8) end
+        for _ = 1, 6 do WHEEL(u, v, -1, 8) end
+        for k = 1, 40 do
+            ZNS.Map.SetView((u + k * 0.0004) * ZNS.Geo.W, v * ZNS.Geo.H, ZNS.Map.Zoom())
+            FRAME(0.05)
+        end
+    end
+end
+Minute()
+collectgarbage("collect")
+collectgarbage("stop")
+local c0 = collectgarbage("count")
+Minute()
+local zooming = collectgarbage("count") - c0
+collectgarbage("restart")
+OUT(("map open, zooming: %.0f KB a minute"):format(zooming))
 ZNS.Map.Close()
 OUT("errors " .. #STATE.errors)
