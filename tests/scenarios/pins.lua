@@ -77,4 +77,13 @@ ZNS.SetOpt("replaceMap", false)
 SetItemRef("worldmap:1429:3000:3000", "[Map Pin Location]", "LeftButton")
 OUT(("chat link, M not replaced: blizzard %s, pins %d"):format(tostring(WorldMapFrame:IsShown()), Count()))
 ZNS.SetOpt("replaceMap", true)
+-- an addon that sends its waypoints to TomTom (not installed): Zmap's pin and arrow
+local before = Count()
+local uid = TomTom:AddWaypoint(1429, 0.5, 0.5, { title = "Questie: Lobos", from = "Questie", crazy = true })
+local arrow = ZNS.Arrow.Target()
+OUT(("tomtom: pins +%d, arrow %s, valid %s, exists %s"):format(Count() - before, tostring(arrow and arrow.name),
+    tostring(TomTom:IsValidWaypoint(uid)), tostring(TomTom:WaypointExists(1429, 0.5, 0.5))))
+TomTom:RemoveWaypoint(uid)
+OUT(("tomtom removed: pins +%d, valid %s, unknown map %s"):format(Count() - before, tostring(TomTom:IsValidWaypoint(uid)),
+    tostring((TomTom:AddWaypoint(99999, 0.5, 0.5)))))
 OUT("errors " .. #STATE.errors)

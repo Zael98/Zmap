@@ -405,3 +405,70 @@ ns.On("ZMAP_DB", function()
         if p.temp then ns.db.pins[id] = nil end
     end
 end)
+
+--------------------------------------------------------------------------------------------------------------
+-- TomTom's API, for the addons that send their waypoints to TomTom (Questie, guides): while TomTom is not
+-- installed (it loads before Zmap: its global would be there), they become Zmap's pins and arrow
+--------------------------------------------------------------------------------------------------------------
+
+local API = { waypoints = {} }   -- [uid] = pin id; a uid is { mapID, x, y, title }
+WP.TomTom = API
+
+-- opts: title (or desc), from (the addon), persistent (kept after this session), crazy (false: no arrow)
+function API:AddWaypoint(m, x, y, opts)
+    opts = type(opts) == "table" and opts or {}
+    if not (m and x and y and Geo.Kind(m)) then return end   -- (a map the stitched map lacks: an instance's)
+    local title = opts.title or opts.desc
+    local id = WP.Add(m, x, y, title, { temp = not opts.persistent, by = opts.from, color = 5, navigate = opts.crazy ~= false })
+    local uid = { m, x, y, title = title }
+    self.waypoints[uid] = id
+    return uid
+end
+
+function API:AddMFWaypoint(m, floor, x, y, opts) return self:AddWaypoint(m, x, y, opts) end
+
+function API:IsValidWaypoint(uid)
+    local id = uid and self.waypoints[uid]
+    return id ~= nil and Pin(id) ~= nil
+end
+
+function API:RemoveWaypoint(uid)
+    local id = uid and self.waypoints[uid]
+    if not id then return end
+    self.waypoints[uid] = nil
+    if Pin(id) then WP.Remove(id) end
+end
+
+function API:SetCrazyArrow(uid)
+    if self:IsValidWaypoint(uid) then WP.Navigate(self.waypoints[uid]) end
+end
+
+function API:WaypointExists(m, x, y, desc)
+    for uid in pairs(self.waypoints) do
+        if uid[1] == m and math.abs(uid[2] - x) < 0.0005 and math.abs(uid[3] - y) < 0.0005 and (not desc or uid.title == desc) then
+            return true
+        end
+    end
+    return false
+end
+
+-- yards from you (nil: not on your continent)
+function API:GetDistanceToWaypoint(uid)
+    if not self:IsValidWaypoint(uid) then return end
+    local u, v, m = Geo.UnitPosition("player")
+    local tu, tv = Geo.ToWorld(uid[1], uid[2], uid[3])
+    if not (u and tu) or Geo.Instance(m) ~= Geo.Instance(uid[1]) then return end
+    return Geo.Yards(Geo.Instance(m), u, v, tu, tv)
+end
+
+-- the arrow to the nearest of them
+function API:SetClosestWaypoint()
+    local best, bd
+    for uid in pairs(self.waypoints) do
+        local d = self:GetDistanceToWaypoint(uid)
+        if d and (not bd or d < bd) then best, bd = uid, d end
+    end
+    if best then self:SetCrazyArrow(best) end
+end
+
+if TomTom == nil then TomTom = API end
