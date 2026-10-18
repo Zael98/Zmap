@@ -3,6 +3,17 @@
 ## Unreleased
 
 - **Battleground maps**: Alterac Valley, Warsong Gulch, Arathi Basin and Forever's new Darkspear Islands. Open the map inside one and it shows it (Forever's own pictures, Alterac Valley's drawn whole), with **your group** (drawn by the game's own frame, as Blizzard's map does: class colours, your arrow), **the objectives** (bases, towers, graveyards, mines, in their owner's colours, with their names on hover) and **the flags** where they are or who carries them. Right-click to go back to the world.
+- **Capture countdowns** in Arathi Basin and Alterac Valley: an assaulted base, tower or graveyard counts down under its icon, in the colour of who assaults it (Zmap follows them with the map closed too). And **who carries each flag** in Warsong Gulch, under it.
+- **The search opens any map**: a battleground's, and a dungeon's (over its entrance).
+- **How to get there** also takes your **hearthstone** (or Astral Recall; waiting for it if it is on cooldown), the **teleports** you can cast (mages, druids) and the **Deeprun Tram**.
+- **Quest objectives as areas**: a quest's mobs and objects drawn as the area round each group of them, in the quest's colour, with one mark in the middle (an option, on; off, a dot for each spawn as before).
+- **Quests panel** (the top bar's button): the quests you carry with their objectives, each in its colour on the map; a click goes to the nearest objective, or to who takes the quest once done, and sets the arrow.
+- **Gathering route** (right-click the map): a loop round the zone's herbs and ore you can gather, drawn on the map, the arrow from stop to stop.
+- **Rares**: their deaths are kept (and shared with your guild); Zmap learns how long each takes to come back and its tooltip says when it is back. Dead ones are greyed on the map.
+- **TomTom's API** while TomTom is not installed: Questie's and guides' waypoints become Zmap's pins and arrow.
+- **Translations** use the game's own words where they name the same thing (minimap tracking, legend...).
+- **Less memory**: the layers that show what is in view no longer rebuild on every move (walking with the map open made 25 times more garbage), the townsfolk layer only builds what is in view, and the search keeps a third of the memory and only once used. `/zmap check` shows memory after a collection too.
+- Data from the client's build 1.60.1.70450 (names fixed in some languages, three capitals' new art).
 
 ## 1.3.0 — Zephras Isle
 
