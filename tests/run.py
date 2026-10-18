@@ -84,7 +84,7 @@ CHECKS = {
                        r"^specialties: enchanting Trade_Engraving, cooking INV_Misc_Food_15, warrior UI-Classes-Circles, weaponsmith INV_Sword_04, food INV_Drink_05, tailoring Trade_Tailoring, cook trainer INV_Misc_Food_15, enchanter Trade_Engraving$", r"^errors 0$"]),
     "route": (False, [r"^goldshire: walk$", r"^ironforge: fly(,walk)?, arrow Vuela de .+",
                       r"^darnassus: .*boat.*, \d+:\d\d$", r"^step after reaching the first: 2, panel rows \d+$",
-                      r"^cleared: true$", r"^errors 0$"]),
+                      r"^cleared: true$", r"^no flights known: walk$", r"^errors 0$"]),
     "locales": (False, [r"^languages: DE EN ES FR IT KO PT RU TW ZH$", r"^DE: missing none; format mismatch none$", r"^EN: missing none; format mismatch none$", r"^ES: missing none; format mismatch none$", r"^FR: missing none; format mismatch none$", r"^IT: missing none; format mismatch none$", r"^KO: missing none; format mismatch none$", r"^PT: missing none; format mismatch none$", r"^RU: missing none; format mismatch none$", r"^TW: missing none; format mismatch none$", r"^ZH: missing none; format mismatch none$"]),
 }
 

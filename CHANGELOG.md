@@ -4,6 +4,7 @@
 
 ### 🧭 How to get there
 - Right-click the map > **How to get here**: the quickest way from where you are, on foot, by the flights you know and by your faction's boats and zeppelins. Drawn leg by leg, listed with times, and the arrow leads you through each leg.
+- Only the flights your character knows are used: Zmap learns them each time you open a flight master's map (the game does not say which ones you have not discovered).
 - **At a flight master**: where to fly for your destination (or the nearest quest to turn in), with a button to take that flight — or "quicker by land".
 
 ### ⚠️ Rares

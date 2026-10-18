@@ -25,8 +25,13 @@ local function Usable(id)
     return n ~= nil and (n[4] == "N" or n[4] == MyFaction())
 end
 
+-- Which flight masters you know: the client's word when it marks some undiscovered; Forever's client marks
+-- none (a level 1 knew all of them), so then the ones seen on a flight master's map (each character's,
+-- learned there); before any, none.
 local function Known(id)
-    return not known or known[id] ~= false
+    if known then return known[id] ~= false end
+    local learned = ns.char and ns.char.flights
+    return learned ~= nil and learned[id] == true
 end
 
 function F.Name(id)
@@ -42,12 +47,12 @@ end
 local function ScanKnown()
     if not (C_TaxiMap and C_TaxiMap.GetTaxiNodesForMap) then return end
     local found = {}
-    local any = false
+    local any = false   -- (any marked undiscovered: the client's word can be trusted)
     for _, mapID in ipairs({ 1415, 1414 }) do
         local ok, list = pcall(C_TaxiMap.GetTaxiNodesForMap, mapID)
         if ok and type(list) == "table" then
             for _, info in ipairs(list) do
-                any = true
+                if info.isUndiscovered then any = true end
                 found[info.nodeID] = not info.isUndiscovered
                 if info.name and info.name ~= "" then clientNames[info.nodeID] = info.name end
             end
@@ -422,9 +427,21 @@ local function ShowAdvice()
     advisor:Show()
 end
 
+-- the flight masters this character knows: every one on a flight master's map
+local function LearnKnown()
+    local ok, list = pcall(C_TaxiMap.GetAllTaxiNodes, TaxiMapID())
+    if not (ok and type(list) == "table") or not ns.char then return end
+    ns.char.flights = ns.char.flights or {}
+    for _, n in ipairs(list) do
+        if n.nodeID then ns.char.flights[n.nodeID] = true end
+    end
+    P:Update()
+end
+
 ns.On("TAXIMAP_OPENED", function()
     known = nil
     ScanKnown()
+    ns.Safe(LearnKnown)
     C_Timer.After(0, function() ns.Safe(ShowAdvice) end)   -- (once the game has shown its flight map)
 end)
 ns.On("TAXIMAP_CLOSED", function() if advisor then advisor:Hide() end end)

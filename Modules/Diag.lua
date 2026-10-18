@@ -222,7 +222,7 @@ local function Check()
         local nodes = ns.Flights.Network()
         local n = 0
         for _ in pairs(nodes) do n = n + 1 end
-        return n > 0, n
+        return true, n > 0 and n or "none yet (they are learned when you open a flight master's map)"
     end)
     Try("route to your capital", function()
         local capital = UnitFactionGroup("player") == "Horde" and 1454 or 1453

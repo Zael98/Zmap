@@ -3,6 +3,9 @@
 START()
 STATE.player.wx, STATE.player.wy = -8840, 480      -- at Stormwind's flight master
 STATE.player.level = 30
+STATE.taxiCurrent = 2
+EVENT("TAXIMAP_OPENED")   -- (the flight masters you know are learned at one)
+EVENT("TAXIMAP_CLOSED")
 OPEN()
 local function Modes()
     local r = ZNS.Route.Current()
@@ -28,4 +31,9 @@ ZNS.Route.Check()
 OUT(("step after reaching the first: %d, panel rows %d"):format(ZNS.Route.Current().step, #r.legs))
 ZNS.Route.Clear()
 OUT("cleared: " .. tostring(ZNS.Route.Current() == nil and ZNS.Arrow.Target() == nil))
+-- a new character, no flight master's map seen yet: no flights in the way (the client marks none unknown)
+ZNS.char.flights = nil
+ZNS.Route.To(iu, iv, "Forjaz")
+OUT("no flights known: " .. Modes())
+ZNS.Route.Clear()
 OUT("errors " .. #STATE.errors)
