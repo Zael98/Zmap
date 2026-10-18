@@ -695,16 +695,38 @@ def build_dungeon_maps():
 # battleground's map is not explored). What moves on them (your group, the objectives, the flags), the game says.
 # --------------------------------------------------------------------------------------------------------------
 
+POI_ICONS = 136441   # Interface/Minimap/POIIcons: the objectives' icons, 14 a row, 256/14 px each
+# seconds an assaulted objective takes to fall (the server's, as classic has them): Alterac Valley, Arathi Basin
+CAPTURE = {30: 240, 529: 60}
+
+
+def conflict_side(icon):
+    """Who assaults an objective "In Conflict": its icon is half the assaulter's colour (blue A, red H), half grey."""
+    img = np.asarray(texture(POI_ICONS).convert("RGBA")).astype(int)
+    s = 256 / 14
+    x0, y0 = int(round(icon % 14 * s)), int(round(icon // 14 * s))
+    a = img[y0:y0 + int(s), x0:x0 + int(s)]
+    blue = ((a[..., 2] > a[..., 0] + 40) & (a[..., 3] > 128)).sum()
+    red = ((a[..., 0] > a[..., 2] + 40) & (a[..., 3] > 128)).sum()
+    return "A" if blue > red else "H"
+
+
 def build_battleground_maps():
     pvp = {r["ID"] for r in table("Map") if r["InstanceType"] in ("3", "4")}
     names = names_by_locale("UiMap")
+    # each objective's state is a point of interest of its own: those "In Conflict", and who assaults
+    conflicts = {}
+    for r in table("AreaPOI"):
+        if r["ContinentID"] in pvp and r["Description_lang"] == "In Conflict":
+            conflicts.setdefault(int(r["ContinentID"]), {})[int(r["ID"])] = conflict_side(int(r["Icon"]))
     out = {}
     for r in sorted(table("UiMapAssignment"), key=lambda r: int(r["OrderIndex"])):
         m, inst = r["UiMapID"], r["MapID"]
         tiles, ovs = map_art().get(m, ([], []))
         if inst not in pvp or int(inst) in out or len(tiles) != 12:
             continue
-        out[int(inst)] = {"map": int(m), "floors": [{"tiles": tiles, "names": names[m], "overlays": ovs}], "bosses": []}
+        out[int(inst)] = {"map": int(m), "floors": [{"tiles": tiles, "names": names[m], "overlays": ovs}], "bosses": [],
+                          "capture": CAPTURE.get(int(inst)), "conflicts": conflicts.get(int(inst), {})}
     return out
 
 
@@ -776,10 +798,19 @@ def write_dungeon_maps(dmaps):
          "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW },",
          "--   overlays (drawn whole) = { { w, h, x, y, fileIDs... }, ... } or nil }, ... },",
          "--   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)",
-         "--   map: a battleground's uiMap (where the game places your group, its objectives and flags)",
+         "--   map: a battleground's uiMap (where the game places your group, its objectives and flags); capture: the",
+         "--   seconds an assaulted objective takes to fall; conflicts: [the point of interest of an objective in",
+         "--   conflict] = who assaults it (A, H)",
          "ns.DUNGEON_MAPS = {"]
     for inst, d in sorted(out_sorted(dmaps)):
-        L.append(f"    [{inst}] = {{ {'map = %d, ' % d['map'] if d.get('map') else ''}floors = {{")
+        extra = ""
+        if d.get("map"):
+            extra += f"map = {d['map']}, "
+        if d.get("capture"):
+            extra += f"capture = {d['capture']}, "
+        if d.get("conflicts"):
+            extra += "conflicts = { " + ", ".join(f'[{k}] = "{v}"' for k, v in sorted(d["conflicts"].items())) + " }, "
+        L.append(f"    [{inst}] = {{ {extra}floors = {{")
         for f in d["floors"]:
             ovs = ""
             if f.get("overlays"):

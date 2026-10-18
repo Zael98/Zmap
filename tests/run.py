@@ -93,6 +93,8 @@ CHECKS = {
                              r"^alterac bosses listed: 0$", r"^alterac objectives after update: 3$",
                              r"^warsong: overlays 0, objectives 0, flags 1, group frame on 1460$",
                              r"^warsong flags after a pick up: 2$",
+                             r"^warsong carriers: Grommash, Lyra$", r"^arathi timers: Establos (1:00|0:59)$",
+                             r"^arathi timers later: Establos 0:[23]\d$",
                              r"^deadmines: live nil, group frame shown false, flags shown 0$", r"^errors 0$"]),
     "isle": (False, [r"^position: zone 2521, on the isle true$", r"^zone at the player: 2521$", r"^opened on the isle: true$",
                      r"^quest givers on the isle: [1-9]\d*$", r"^airships: 2, docks on the isle 2$",

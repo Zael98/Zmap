@@ -56,6 +56,33 @@ STATE.flags[2].x, STATE.flags[2].y, STATE.flags[2].texture = 0.6, 0.8, "Interfac
 FRAMES(4)
 OUT("warsong flags after a pick up: " .. ZNS.Dungeon.Live().flags)
 
+-- who carries them: ours (Alliance) by an enemy (an arena unit), theirs by one of the group (its aura)
+STATE.units.arena1 = { name = "Grommash", class = "WARRIOR" }
+STATE.group = { { name = "Lyra", class = "PRIEST", map = 1460, x = 0.5, y = 0.5 } }
+STATE.auras = { party1 = "Bandera de Grito de Guerra" }
+FRAMES(25)
+OUT("warsong carriers: " .. table.concat(ZNS.Dungeon.Live().carriers, ", "))
+STATE.units.arena1, STATE.group, STATE.auras = nil, {}, nil
+
+-- Arathi Basin: an objective assaulted while Zmap watches gets the countdown; one already in conflict does not
+ZNS.Map.Close()
+STATE.instanceID, STATE.instanceName = 529, "Cuenca de Arathi"
+STATE.flags = {}
+STATE.pois[1461] = { { id = 1610, name = "Establos", textureIndex = 38, x = 0.3, y = 0.3 },
+    { id = 1632, name = "Granja", textureIndex = 32, x = 0.6, y = 0.6 } }
+EVENT("AREA_POIS_UPDATED")
+OPEN()
+FRAMES(3)
+STATE.pois[1461][1] = { id = 1613, name = "Establos", textureIndex = 39, x = 0.3, y = 0.3 }
+EVENT("AREA_POIS_UPDATED")
+FRAMES(3)
+OUT("arathi timers: " .. table.concat(ZNS.Dungeon.Live().timers, ", "))
+ZNS.Map.Close()
+FRAMES(600)   -- (thirty seconds, the map closed)
+OPEN()
+FRAMES(3)
+OUT("arathi timers later: " .. table.concat(ZNS.Dungeon.Live().timers, ", "))
+
 -- a dungeon after it: no live layer
 ZNS.Map.Close()
 STATE.instanceType, STATE.instanceID, STATE.instanceName = "party", 36, "Las Minas de la Muerte"

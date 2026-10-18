@@ -172,16 +172,75 @@ local function PinTooltip(pin)
     GameTooltip:Show()
 end
 
+local SIDE_COLOR = { A = { 0.35, 0.65, 1 }, H = { 1, 0.3, 0.25 } }
+
 local function NewPin(size, level)
     local pin = CreateFrame("Button", nil, art)
     pin:SetSize(size, size)
     pin:SetFrameLevel(art:GetFrameLevel() + level)
     pin.icon = pin:CreateTexture(nil, "ARTWORK")
     pin.icon:SetAllPoints()
+    pin.label = pin:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    pin.label:SetPoint("TOP", pin, "BOTTOM", 0, -1)
+    pin.label:SetShadowOffset(1, -1)
     pin:SetScript("OnEnter", PinTooltip)
     pin:SetScript("OnLeave", GameTooltip_Hide)
     pin:SetScript("OnMouseUp", BackOnRightClick)
     return pin
+end
+
+-- The objectives' states while you are in a battleground, heard with the map closed too (an objective's state
+-- is a point of interest of its own): [its name] = { id, since (false: it was so when Zmap first saw it) }
+local states, trackedMap = {}, nil
+local function TrackObjectives()
+    local _, kind, _, _, _, _, _, inst = GetInstanceInfo()
+    local d = kind == "pvp" and inst and Data(inst)
+    local map = d and d.map
+    if map ~= trackedMap then
+        wipe(states)
+        trackedMap = map
+    end
+    if not (map and C_AreaPoiInfo and C_AreaPoiInfo.GetAreaPOIForMap) then return end
+    for _, id in ipairs(C_AreaPoiInfo.GetAreaPOIForMap(map) or {}) do
+        local info = C_AreaPoiInfo.GetAreaPOIInfo(map, id)
+        local key = info and info.name
+        if key and not IsSecret(key) then
+            local s = states[key]
+            if not s then
+                states[key] = { id = id, since = false }
+            elseif s.id ~= id then
+                s.id, s.since = id, GetTime()
+            end
+        end
+    end
+end
+
+-- seconds until an assaulted objective falls (nil: not known, it was assaulted before Zmap saw it change)
+local function TimeLeft(d, id, name)
+    if C_AreaPoiInfo.GetAreaPOISecondsLeft then
+        local s = C_AreaPoiInfo.GetAreaPOISecondsLeft(id)
+        if s and not IsSecret(s) and s > 0 then return s end
+    end
+    local st = states[name]
+    if st and st.id == id and st.since and d.capture then
+        return math.max(0, d.capture - (GetTime() - st.since))
+    end
+end
+
+-- the countdowns under the objectives in conflict, in the colour of who assaults
+local function UpdateTimers()
+    local d = current and Data(current.inst)
+    for _, pin in ipairs(poiPins) do
+        local left = pin:IsShown() and pin.side and TimeLeft(d, pin.poi, pin.name)
+        if left and left > 0 then
+            local c = SIDE_COLOR[pin.side]
+            pin.label:SetText(("%d:%02d"):format(math.floor(left / 60), math.floor(left % 60)))
+            pin.label:SetTextColor(c[1], c[2], c[3])
+            pin.label:Show()
+        else
+            pin.label:Hide()
+        end
+    end
 end
 
 -- the objectives: the game's points of interest on the map, their icon showing who holds them
@@ -189,6 +248,7 @@ local function UpdatePOIs()
     for _, pin in ipairs(poiPins) do pin:Hide() end
     local map = LiveMap()
     if not (map and C_AreaPoiInfo and C_AreaPoiInfo.GetAreaPOIForMap) then return end
+    local conflicts = Data(current.inst).conflicts or {}
     local n = 0
     for _, id in ipairs(C_AreaPoiInfo.GetAreaPOIForMap(map) or {}) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(map, id)
@@ -207,18 +267,56 @@ local function UpdatePOIs()
                 local coords = C_Minimap and C_Minimap.GetPOITextureCoords or GetPOITextureCoords
                 pin.icon:SetTexCoord(coords(info.textureIndex or 0))
             end
-            pin.name, pin.desc = info.name, info.description
+            pin.name, pin.desc, pin.poi, pin.side = info.name, info.description, id, conflicts[id]
             pin.x, pin.y = x, y
             Place(pin)
             pin:Show()
         end
     end
+    UpdateTimers()
+end
+
+-- who carries a flag: one of your faction's, an enemy (the game shows them as arena units); the enemies' one,
+-- one of your group (its aura on them). name, class, or nil
+local FLAG_AURAS = { 23333, 23335, 301089, 301091 }   -- Warsong Flag, Silverwing Flag, Horde Flag, Alliance Flag
+local function Named(unit)
+    local name = UnitName(unit)
+    if name and not IsSecret(name) then return name, select(2, UnitClass(unit)) end
+end
+local function HasFlag(unit)
+    if not (C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName) then return false end
+    for _, spell in ipairs(FLAG_AURAS) do
+        local name = C_Spell.GetSpellName(spell)
+        local ok, aura = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, name or "", "HELPFUL")
+        if name and ok and aura then return true end
+    end
+    return false
+end
+local function Carrier(texture)
+    local flag = type(texture) == "string" and (texture:find("Alliance") and "Alliance" or texture:find("Horde") and "Horde")
+    if not flag then return end
+    if flag == UnitFactionGroup("player") then
+        for i = 1, 5 do
+            if UnitExists("arena" .. i) then return Named("arena" .. i) end
+        end
+        return
+    end
+    if HasFlag("player") then return Named("player") end
+    local prefix, count = IsInRaid() and "raid" or "party", IsInRaid() and 40 or 4
+    for i = 1, count do
+        local unit = prefix .. i
+        if UnitExists(unit) and HasFlag(unit) then return Named(unit) end
+    end
 end
 
 -- the flags (or what is carried like one), where they are or who carries them
-local function UpdateFlags()
+local carrierWait = 0
+local function UpdateFlags(elapsed)
     local map = LiveMap()
     local count = map and GetNumBattlefieldFlagPositions and GetNumBattlefieldFlagPositions() or 0
+    carrierWait = carrierWait - (elapsed or 1)
+    local carriers = carrierWait <= 0   -- (who carries them: once a second, they are looked for in the group)
+    if carriers then carrierWait = 1 end
     for i = 1, math.max(count, #flagPins) do
         local x, y, texture
         if i <= count then x, y, texture = C_PvP.GetBattlefieldFlagPosition(i, map) end
@@ -228,6 +326,14 @@ local function UpdateFlags()
             flagPins[i] = pin
             pin.icon:SetTexture(texture)
             pin.x, pin.y = x, y
+            if carriers then
+                local name, class = Carrier(texture)
+                pin.name = name
+                local c = class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
+                pin.label:SetText(name or "")
+                pin.label:SetTextColor(c and c.r or 1, c and c.g or 1, c and c.b or 1)
+                pin.label:SetShown(name ~= nil)
+            end
             Place(pin)
             pin:Show()
         elseif pin then
@@ -262,8 +368,9 @@ local function LiveUpdate(_, elapsed)
     end
     flagWait = flagWait - elapsed
     if flagWait <= 0 then
+        UpdateFlags(0.1 - flagWait)
+        UpdateTimers()
         flagWait = 0.1
-        UpdateFlags()
     end
 end
 
@@ -278,21 +385,36 @@ local function StartLive()
     elseif units then
         units:Hide()
     end
+    TrackObjectives()
     UpdatePOIs()
-    flagWait = 0
+    flagWait, carrierWait = 0, 0
     UpdateFlags()
     view:SetScript("OnUpdate", map and ns.Guard(LiveUpdate) or nil)
 end
 
-ns.On("AREA_POIS_UPDATED", function() if LiveMap() then UpdatePOIs() end end)
+ns.On("AREA_POIS_UPDATED", function()
+    TrackObjectives()
+    if LiveMap() then UpdatePOIs() end
+end)
+ns.On("PLAYER_ENTERING_WORLD", TrackObjectives)
 
 -- for /zmap check: what the live layer shows (nil: no battleground's map shown)
 function D.Live()
     if not LiveMap() then return end
-    local pois, flags = 0, 0
-    for _, pin in ipairs(poiPins) do if pin:IsShown() then pois = pois + 1 end end
-    for _, pin in ipairs(flagPins) do if pin:IsShown() then flags = flags + 1 end end
-    return { units = units and units:IsShown() or false, pois = pois, flags = flags }
+    local pois, flags, timers, carriers = 0, 0, {}, {}
+    for _, pin in ipairs(poiPins) do
+        if pin:IsShown() then
+            pois = pois + 1
+            if pin.label:IsShown() then timers[#timers + 1] = pin.name .. " " .. pin.label:GetText() end
+        end
+    end
+    for _, pin in ipairs(flagPins) do
+        if pin:IsShown() then
+            flags = flags + 1
+            if pin.label:IsShown() then carriers[#carriers + 1] = pin.label:GetText() end
+        end
+    end
+    return { units = units and units:IsShown() or false, pois = pois, flags = flags, timers = timers, carriers = carriers }
 end
 
 --------------------------------------------------------------------------------------------------------------

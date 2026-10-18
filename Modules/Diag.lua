@@ -247,7 +247,8 @@ local function Check()
         if kind ~= "pvp" then return true, "(not in a battleground)" end
         local live = ns.Dungeon.Live()
         if not live then return false, "not shown (open the map here)" end
-        return live.units, ("group frame %s, objectives %d, flags %d"):format(tostring(live.units), live.pois, live.flags)
+        return live.units, ("group frame %s, objectives %d (timers: %s), flags %d (carried by: %s)"):format(tostring(live.units),
+            live.pois, table.concat(live.timers, ", "), live.flags, table.concat(live.carriers, ", "))
     end)
     Try("minimap pins", function()
         return ZmapMinimapPins ~= nil and Minimap:GetWidth() > 0, ("minimap %d px, %s, rotating %s"):format(Minimap:GetWidth(),

@@ -6,9 +6,11 @@ local _, ns = ...
 -- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW },
 --   overlays (drawn whole) = { { w, h, x, y, fileIDs... }, ... } or nil }, ... },
 --   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)
---   map: a battleground's uiMap (where the game places your group, its objectives and flags)
+--   map: a battleground's uiMap (where the game places your group, its objectives and flags); capture: the
+--   seconds an assaulted objective takes to fall; conflicts: [the point of interest of an objective in
+--   conflict] = who assaults it (A, H)
 ns.DUNGEON_MAPS = {
-    [30] = { map = 1459, floors = {
+    [30] = { map = 1459, capture = 240, conflicts = { [1353] = "A", [1354] = "H", [1356] = "A", [1357] = "H", [1363] = "A", [1364] = "H", [1369] = "A", [1370] = "H", [1372] = "H", [1373] = "A", [1375] = "A", [1376] = "H", [1378] = "H", [1379] = "A", [1381] = "A", [1382] = "H", [1387] = "H", [1388] = "A", [1390] = "A", [1391] = "H", [1393] = "A", [1394] = "H", [1396] = "A", [1397] = "H", [1399] = "A", [1400] = "H", [1406] = "H", [1407] = "A", [1529] = "H", [1530] = "A" }, floors = {
         { { 8097518, 8097522, 8097523, 8097524, 8097525, 8097526, 8097527, 8097528, 8097529, 8097519, 8097520, 8097521 }, { "Alterac Valley", "Valle de Alterac", "Valle de Alterac", "Alteractal", "Vallée d'Alterac", "Vale Alterac", nil, "Альтеракская долина", "알터랙 계곡", "奥特兰克山谷", "奧特蘭克山谷" }, { { 288, 256, 348, 13, 8097530, 8097531 }, { 256, 293, 399, 375, 8097532, 8097533 }, { 320, 320, 335, 172, 8097534, 8097535, 8097536, 8097537 } } },
     }, bosses = {
     } },
@@ -338,7 +340,7 @@ ns.DUNGEON_MAPS = {
         { { 8097602, 8097606, 8097607, 8097608, 8097609, 8097610, 8097611, 8097612, 8097613, 8097603, 8097604, 8097605 }, { "Warsong Gulch", "Garganta Grito de Guerra", "Garganta Grito de Guerra", "Warsongschlucht", "Goulet des Warsong", "Ravina Brado Guerreiro", nil, "Ущелье Песни Войны", "전쟁노래 협곡", "战歌峡谷", "戰歌峽谷" } },
     }, bosses = {
     } },
-    [529] = { map = 1461, floors = {
+    [529] = { map = 1461, capture = 60, conflicts = { [1612] = "A", [1613] = "H", [1617] = "A", [1618] = "H", [1622] = "A", [1623] = "H", [1627] = "A", [1628] = "H", [1632] = "A", [1633] = "H" }, floors = {
         { { 8097579, 8097583, 8097584, 8097585, 8097586, 8097587, 8097588, 8097589, 8097590, 8097580, 8097581, 8097582 }, { "Arathi Basin", "Cuenca de Arathi", "Cuenca de Arathi", "Arathibecken", "Bassin d'Arathi", "Bacia Arathi", nil, "Низина Арати", "아라시 분지", "阿拉希盆地", "阿拉希盆地" } },
     }, bosses = {
     } },

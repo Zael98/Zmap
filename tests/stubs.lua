@@ -302,13 +302,19 @@ function IsPlayerMoving() return STATE.moving end
 function UnitOnTaxi() return STATE.onTaxi end
 function UnitIsGhost(u) return u == "player" and STATE.ghost end
 function UnitIsDeadOrGhost(u) local m = STATE.group[tonumber((u or ""):match("%d+") or 0)] return m and m.dead or false end
--- other units the scenarios put around: STATE.units[token] = { id = npcID, name = "..." } (nameplates, mouseover)
+-- other units the scenarios put around: STATE.units[token] = { id = npcID, name = "...", class } (nameplates,
+-- mouseover, arena1...)
 STATE.units = {}
+-- the group's units: partyN, raidN
+local function Member(u)
+    local n = type(u) == "string" and (u:match("^party(%d+)$") or u:match("^raid(%d+)$"))
+    return n and STATE.group[tonumber(n)]
+end
 function UnitName(u)
     if u == "player" then return "Domi" end
     if u == "npc" then return STATE.npc and STATE.npc.name end
     if STATE.units[u] then return STATE.units[u].name end
-    local m = STATE.group[tonumber((u or ""):match("%d+") or 0)]
+    local m = Member(u)
     return m and m.name
 end
 function UnitGUID(u)
@@ -318,13 +324,16 @@ end
 function UnitIsPlayer(u) return u == "player" end
 function UnitClass(u)
     if u == "player" then return "Guerrero", STATE.player.class, STATE.player.classID or 1 end
-    local m = STATE.group[tonumber((u or ""):match("%d+") or 0)]
+    if STATE.units[u] then return "x", STATE.units[u].class or "WARRIOR" end
+    local m = Member(u)
     return "x", m and m.class or "MAGE"
 end
 function UnitRace(u) return "Humano", "Human", STATE.player.raceID or 1 end
 function UnitLevel(u) return u == "player" and STATE.player.level or 20 end
 function UnitFactionGroup() return STATE.player.faction end
-function UnitExists(u) return u == "player" or STATE.units[u] ~= nil or STATE.group[tonumber((u or ""):match("%d+") or 0)] ~= nil end
+function UnitExists(u) return u == "player" or STATE.units[u] ~= nil or Member(u) ~= nil end
+-- auras: STATE.auras[unit] = the name of the one it has
+C_UnitAuras = { GetAuraDataBySpellName = function(u, name) return (STATE.auras or {})[u] == name and { name = name } or nil end }
 function UnitIsUnit(a, b) return a == b end
 function UnitInParty(name) for _, m in ipairs(STATE.group) do if m.name == name then return true end end return false end
 function UnitInRaid() return nil end
@@ -376,7 +385,8 @@ C_ClassColor = { GetClassColor = function() return { r = 0.78, g = 0.61, b = 0.4
 C_Spell = {
     GetSpellName = function(id)
         return ({ [2366] = "Recolectar hierbas", [2575] = "Minería", [133] = "Bola de Fuego", [3561] = "Teletransporte: Ventormenta",
-            [3562] = "Teletransporte: Forjaz", [556] = "Llamada astral" })[id]
+            [3562] = "Teletransporte: Forjaz", [556] = "Llamada astral",
+            [23333] = "Bandera de Grito de Guerra", [23335] = "Bandera de Ala de Plata" })[id]
     end,
     IsSpellUsable = function(id) return (STATE.spells or {})[id] == true end,
     GetSpellCooldown = function(id)
