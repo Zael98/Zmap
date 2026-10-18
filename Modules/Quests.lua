@@ -3,7 +3,7 @@
 local _, ns = ...
 local L, Geo = ns.L, ns.Geo
 
-local P = ns.Pins.New("quests", { level = 50, size = 22, option = "quests", minZoom = 1.5 })
+local P = ns.Pins.New("quests", { level = 50, size = 22, option = "quests", minZoom = 1.5, cull = true })
 
 function P:OnCreate(pin)
     pin.num = pin:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -18,8 +18,13 @@ function P:Refresh()
     wipe(ns.BlizzardQuestPins)
     if not (C_QuestLog and C_QuestLog.GetQuestsOnMap) then return end
     local seen = {}
+    local u0, v0, u1, v1 = ns.Pins.ViewBox()
     for _, mapID in ipairs(Geo.Zones()) do
-        local ok, list = pcall(C_QuestLog.GetQuestsOnMap, mapID)
+        local l, r, t, b = Geo.Rect(mapID)
+        local ok, list = false, nil
+        if l < u1 and r > u0 and t < v1 and b > v0 then   -- (the zones in view: the game makes a list for each asked)
+            ok, list = pcall(C_QuestLog.GetQuestsOnMap, mapID)
+        end
         for _, q in ipairs(ok and list or {}) do
             local key = q.questID .. ":" .. math.floor(q.x * 200) .. ":" .. math.floor(q.y * 200)
             if not seen[key] and q.x and q.y then

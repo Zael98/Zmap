@@ -92,9 +92,11 @@ local function LearnUnit(unit, withTitle)
     local id = NpcID(UnitGUID(unit))
     if not id or not NPCS[id] then return end
     local title
-    if withTitle and C_TooltipInfo and C_TooltipInfo.GetUnit then
+    local titles = Book("npcTitles")
+    if withTitle and titles[id] == nil and C_TooltipInfo and C_TooltipInfo.GetUnit then   -- (once: a tooltip's data is big)
         local ok, data = pcall(C_TooltipInfo.GetUnit, unit)
         title = ok and TitleOf(data)
+        if not title then titles[id] = false end
     end
     Learn(id, UnitName(unit), title)
 end

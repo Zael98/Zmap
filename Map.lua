@@ -176,12 +176,16 @@ end
 
 local cursorText, playerText, statusText
 
+local lastU, lastV   -- (the cursor where the text was last worked out: the zone under it is asked only on a move)
 local function UpdateCursorText()
     if not viewport:IsMouseOver() then
         cursorText:SetText("")
+        lastU = nil
         return
     end
     local u, v = Map.CursorUV()
+    if u == lastU and v == lastV then return end
+    lastU, lastV = u, v
     local mapID, x, y = Geo.ZoneAt(u, v)
     if mapID then
         cursorText:SetText(L.CURSOR:format(Geo.Name(mapID), ns.Coords(x, y)))
