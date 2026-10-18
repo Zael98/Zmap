@@ -20,8 +20,9 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Minimapa**: el destino (en el borde si está lejos), tus pines, misiones, objetivos y hierbas o minerales cercanos.
 - **Zephras Isle**: la zona de inicio de los Windshaper Skyborne (un mapa aparte en el juego) está en el mar del norte, entre los continentes, como cualquier otra zona; con las aeronaves que llevan a ella desde Dalaran y Mulgore.
 - **Cuevas y minas**: las cuevas, minas y entradas de mazmorra del cliente en su sitio real; al acercarte emerge su mapa entero (sin el marco) y la superficie se oscurece. Las de varias plantas tienen un botón por planta abajo.
-- **Ruta de recolección** (clic derecho en el mapa): un circuito por las hierbas y minerales de la zona que puedes recoger, con la flecha de parada en parada.
-- **Panel de misiones** (botón de la barra): tus misiones con sus objetivos; un clic te lleva al más cercano.
+- **Hierbas y minerales a elegir**: en el panel de capas cada uno se despliega en sus tipos (con la habilidad que piden); apagados hasta que los enciendes.
+- **Ruta de recolección** (clic derecho en el mapa): un circuito de todo lo que puedes recoger o de un tipo concreto, con la flecha de parada en parada y una barra arriba para quitarla.
+- **Registro de misiones en el mapa** (botón «Misiones»), como el del mapa de Blizzard: por zonas, con su icono, su color, la casilla para seguirlas y sus objetivos; al pulsar una, sus detalles (descripción, objetivos, recompensas) con Volver, Ir allí, Seguir, Compartir y Abandonar. Pulsar una misión en el mapa la abre aquí, no en el mapa de Blizzard.
 - **Mapas de campo de batalla**: Valle de Alterac, Garganta Grito de Guerra, Cuenca de Arathi y las Islas Lanza Negra de Forever. Dentro de uno, el mapa lo abre con tu grupo (dibujado por el propio marco del juego), los objetivos (bases, torres, cementerios, con el color de quien los tiene) y las banderas.
 - **Mapas de mazmorra**: dentro de una instancia el mapa abre el de la mazmorra, por plantas y con sus jefes; también con un clic en la entrada. Botón para volver al mundo.
 - **Hermandad sin Zmap**: quien no tiene Zmap aparece en su zona (un círculo hueco junto al nombre de la zona); el juego solo dice en qué zona está, no el punto exacto.

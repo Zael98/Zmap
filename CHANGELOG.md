@@ -7,12 +7,13 @@
 - **The search opens any map**: a battleground's, and a dungeon's (over its entrance).
 - **How to get there** also takes your **hearthstone** (or Astral Recall; waiting for it if it is on cooldown), the **teleports** you can cast (mages, druids) and the **Deeprun Tram**.
 - **Quest objectives as areas**: a quest's mobs and objects drawn as the area round each group of them, in the quest's colour, with one mark in the middle (an option, on; off, a dot for each spawn as before).
-- **Quests panel** (the top bar's button): the quests you carry with their objectives, each in its colour on the map; a click goes to the nearest objective, or to who takes the quest once done, and sets the arrow.
-- **Gathering route** (right-click the map): a loop round the zone's herbs and ore you can gather, drawn on the map, the arrow from stop to stop.
+- **Your quest log, on the map** (the top bar's Quests button), as Blizzard's map has it: the quests under their zone (headers fold), each with its icon, its colour on Zmap's map, a box to track it and what is left of it. A click shows its **details** (what it is about, what it asks, its rewards) with Back, Go there (the arrow), Track, Share and Abandon. **A click on a quest on the map opens it there too, not in Blizzard's map** (Ctrl+click: the arrow).
+- **Herbs and ore: you choose what the map shows.** In the layers panel each unfolds into its kinds (the skill each needs); by default those you can gather. Off until you turn them on.
+- **Gathering route** (right-click the map): a loop round the zone's herbs and ore, of everything you can gather or of one kind (the most there first), drawn on the map, the arrow from stop to stop, and a bar at the top with where you are in it and a button to stop it.
 - **Rares**: their deaths are kept (and shared with your guild); Zmap learns how long each takes to come back and its tooltip says when it is back. Dead ones are greyed on the map.
 - **TomTom's API** while TomTom is not installed: Questie's and guides' waypoints become Zmap's pins and arrow.
 - **Translations** use the game's own words where they name the same thing (minimap tracking, legend...).
-- **Less memory**: the layers that show what is in view no longer rebuild on every move (walking with the map open made 25 times more garbage), the townsfolk layer only builds what is in view, and the search keeps a third of the memory and only once used. `/zmap check` shows memory after a collection too.
+- **Less memory**: the layers that show what is in view no longer rebuild on every move (walking with the map open made 25 times more garbage), the townsfolk layer only builds what is in view, and the search keeps a third of the memory and only once used; zooming makes a fifteenth of the garbage it did (the herbs and townsfolk layers no longer make a table for everything in view). `/zmap check` shows memory after a collection too.
 - Data from the client's build 1.60.1.70450 (names fixed in some languages, three capitals' new art).
 
 ## 1.3.0 — Zephras Isle
