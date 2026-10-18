@@ -286,10 +286,9 @@ function strsplit(sep, s)
     for part in (s .. sep):gmatch("(.-)" .. sep:gsub("%p", "%%%0")) do out[#out + 1] = part end
     return unpack(out)
 end
-function hooksecurefunc(owner, name, fn)
-    if type(owner) ~= "table" then owner, name, fn = _G, owner, name end   -- (a global, or a table's method)
-    local old = owner[name]
-    owner[name] = function(...) local r = { old(...) } fn(...) return unpack(r) end
+function hooksecurefunc(name, fn)
+    local old = _G[name]
+    _G[name] = function(...) local r = { old(...) } fn(...) return unpack(r) end
 end
 function PlaySound() STATE.sounds = STATE.sounds + 1 end
 SOUNDKIT = setmetatable({}, { __index = function() return 1 end })
@@ -723,17 +722,8 @@ function IsIndoors() return STATE.indoors end
 function GetFramerate() return 60 end
 function GetBuildInfo() return "1.60.1", "70374", "Oct 1 2026", 16001 end
 function GetBindingAction(key) return key == "M" and "CLICK ZmapToggle:LeftButton" or "" end
-MinimapCluster = CreateFrame("Frame", "MinimapCluster", UIParent)
-MinimapCluster.MinimapContainer = CreateFrame("Frame", nil, MinimapCluster)
-MinimapCluster.ZoneTextButton = CreateFrame("Button", nil, MinimapCluster)
-MinimapCluster.Tracking = CreateFrame("Frame", nil, MinimapCluster)
-Minimap = CreateFrame("Frame", "Minimap", MinimapCluster.MinimapContainer)
+Minimap = CreateFrame("Frame", "Minimap", UIParent)
 Minimap:SetSize(140, 140)
-function Minimap:SetMaskTexture(mask) self.mask = mask end
-function Minimap:GetZoom() return self.zoom or 0 end
-function Minimap:SetZoom(z) self.zoom = z end
-MinimapCompassTexture = Minimap:CreateTexture(nil, "OVERLAY")
-function MinimapCluster:UpdateMinimapConfig() Minimap:SetMaskTexture("ui-hud-minimap-frame-generic-mask") end
 function UpdateAddOnMemoryUsage() end
 function GetAddOnMemoryUsage() return collectgarbage("count") end
 function UnitClassification(u) return STATE.units[u] and STATE.units[u].class or "normal" end

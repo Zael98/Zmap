@@ -17,7 +17,6 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Misiones al estilo Questie**: signos de exclamación donde están las misiones que puedes coger (según tu nivel, raza, clase y las que ya hiciste; las de nivel bajo, opcionales), y para las misiones de tu registro sus objetivos (los bichos y objetos, un color por misión) y, cuando están completas, a quién entregarlas.
 - **Hierbas y minerales** de los datos (unos 25.000 puntos) en gris los que aún no puedes recoger; además de los que recoges tú, que se recuerdan y se comparten con la hermandad. Solo con la profesión: sin Herboristería no salen hierbas ni su opción, y lo mismo con Minería.
 - **Buzones, yunques, forjas y piedras de encuentro** en el mapa.
-- **Estilo del minimapa**: el de Blizzard, redondo con aro dorado o sin borde, cuadrado (Zmap), con marco oscuro o sin borde; tamaño, nombre de zona y botón de rastreo.
 - **Minimapa**: el destino (en el borde si está lejos), tus pines, misiones, objetivos y hierbas o minerales cercanos.
 - **Zephras Isle**: la zona de inicio de los Windshaper Skyborne (un mapa aparte en el juego) está en el mar del norte, entre los continentes, como cualquier otra zona; con las aeronaves que llevan a ella desde Dalaran y Mulgore.
 - **Cuevas y minas**: las cuevas, minas y entradas de mazmorra del cliente en su sitio real; al acercarte emerge su mapa entero (sin el marco) y la superficie se oscurece. Las de varias plantas tienen un botón por planta abajo.
