@@ -97,6 +97,7 @@ ns.LOCALES.DE = {
     MENU_ROUTE_HERE = "Wie komme ich hierhin", DOCK = "Anleger (%s)", WAY_WALK = "Geh nach %s", WAY_FLY = "Flieg von %s nach %s",
     WAY_SAIL = "Nimm: %s", WAY_TITLE = "Nach %s: ~%s", WAY_HERE = "hier",
     WAY_NO_POSITION = "Deine Position ist hier unbekannt (eine Instanz?).", WAY_NONE = "Von hier aus gibt es keinen Weg dorthin.",
+    OPT_CAVES = "Höhlen und Minen",
     FOLK_ALL = "Alle", FOLK_MINE = "Nur meine Klasse und Berufe", FOLK_TYPE_innkeeper = "Gastwirte", FOLK_TYPE_banker = "Bankiers",
     FOLK_TYPE_auctioneer = "Auktionatoren", FOLK_TYPE_stable = "Stallmeister", FOLK_TYPE_spirit = "Geistheiler",
     FOLK_TYPE_repair = "Reparatur", FOLK_TYPE_trainer = "Klassenlehrer", FOLK_TYPE_proftrainer = "Berufslehrer",

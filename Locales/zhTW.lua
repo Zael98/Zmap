@@ -97,6 +97,7 @@ ns.LOCALES.TW = {
     MENU_ROUTE_HERE = "如何抵達這裡", DOCK = "碼頭（%s）", WAY_WALK = "前往 %s", WAY_FLY = "從 %s 飛往 %s",
     WAY_SAIL = "搭乘：%s", WAY_TITLE = "前往 %s：約 %s", WAY_HERE = "這裡",
     WAY_NO_POSITION = "這裡無法得知你的位置（副本？）。", WAY_NONE = "從這裡無法抵達那裡。",
+    OPT_CAVES = "洞穴和礦坑",
     FOLK_ALL = "全部", FOLK_MINE = "只顯示我的職業和專業", FOLK_TYPE_innkeeper = "旅店老闆", FOLK_TYPE_banker = "銀行員",
     FOLK_TYPE_auctioneer = "拍賣師", FOLK_TYPE_stable = "獸欄管理員", FOLK_TYPE_spirit = "靈魂醫者",
     FOLK_TYPE_repair = "修理", FOLK_TYPE_trainer = "職業訓練師", FOLK_TYPE_proftrainer = "專業訓練師",

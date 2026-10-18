@@ -97,6 +97,7 @@ ns.LOCALES.RU = {
     MENU_ROUTE_HERE = "Как сюда добраться", DOCK = "Причал (%s)", WAY_WALK = "Идите в %s", WAY_FLY = "Летите из %s в %s",
     WAY_SAIL = "Садитесь: %s", WAY_TITLE = "До %s: ~%s", WAY_HERE = "здесь",
     WAY_NO_POSITION = "Здесь ваша позиция неизвестна (подземелье?).", WAY_NONE = "Отсюда туда не добраться.",
+    OPT_CAVES = "Пещеры и шахты",
     FOLK_ALL = "Все", FOLK_MINE = "Только мой класс и профессии", FOLK_TYPE_innkeeper = "Хозяева таверн", FOLK_TYPE_banker = "Банкиры",
     FOLK_TYPE_auctioneer = "Аукционисты", FOLK_TYPE_stable = "Смотрители стойл", FOLK_TYPE_spirit = "Целители душ",
     FOLK_TYPE_repair = "Ремонт", FOLK_TYPE_trainer = "Учителя классов", FOLK_TYPE_proftrainer = "Учителя профессий",

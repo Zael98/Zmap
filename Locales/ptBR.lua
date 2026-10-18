@@ -97,6 +97,7 @@ ns.LOCALES.PT = {
     MENU_ROUTE_HERE = "Como chegar aqui", DOCK = "Cais (%s)", WAY_WALK = "Vá até %s", WAY_FLY = "Voe de %s até %s",
     WAY_SAIL = "Pegue: %s", WAY_TITLE = "Até %s: ~%s", WAY_HERE = "aqui",
     WAY_NO_POSITION = "Sua posição não é conhecida aqui (uma instância?).", WAY_NONE = "Não há caminho até lá daqui.",
+    OPT_CAVES = "Cavernas e minas",
     FOLK_ALL = "Todos", FOLK_MINE = "Só minha classe e profissões", FOLK_TYPE_innkeeper = "Estalajadeiros", FOLK_TYPE_banker = "Banqueiros",
     FOLK_TYPE_auctioneer = "Leiloeiros", FOLK_TYPE_stable = "Mestres de estábulo", FOLK_TYPE_spirit = "Curandeiros Espirituais",
     FOLK_TYPE_repair = "Reparos", FOLK_TYPE_trainer = "Instrutores de classe", FOLK_TYPE_proftrainer = "Instrutores de profissão",

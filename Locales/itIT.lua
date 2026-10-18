@@ -97,6 +97,7 @@ ns.LOCALES.IT = {
     MENU_ROUTE_HERE = "Come arrivare qui", DOCK = "Molo (%s)", WAY_WALK = "Vai a %s", WAY_FLY = "Vola da %s a %s",
     WAY_SAIL = "Prendi: %s", WAY_TITLE = "Fino a %s: ~%s", WAY_HERE = "qui",
     WAY_NO_POSITION = "Qui la tua posizione non è nota (un'istanza?).", WAY_NONE = "Da qui non c'è modo di arrivarci.",
+    OPT_CAVES = "Grotte e miniere",
     FOLK_ALL = "Tutti", FOLK_MINE = "Solo la mia classe e professioni", FOLK_TYPE_innkeeper = "Locandieri", FOLK_TYPE_banker = "Banchieri",
     FOLK_TYPE_auctioneer = "Banditori", FOLK_TYPE_stable = "Stallieri", FOLK_TYPE_spirit = "Spiriti guaritori",
     FOLK_TYPE_repair = "Riparazioni", FOLK_TYPE_trainer = "Istruttori di classe", FOLK_TYPE_proftrainer = "Istruttori di professione",

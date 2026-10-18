@@ -7,7 +7,7 @@ local Map = {}
 ns.Map = Map
 
 local W, H = Geo.W, Geo.H
-local MIN_ZOOM, MAX_ZOOM = 1, 64   -- 1: the world's map just fills the window
+local MIN_ZOOM, MAX_ZOOM = 1, 128  -- 1: the world's map just fills the window (128: a small cave fills it)
 local WHEEL = 1.35           -- zoom per wheel notch
 local EASE = 14              -- how fast the zoom eases towards its goal (per second)
 local GLIDE = 0.5            -- seconds a "go there" takes
@@ -106,12 +106,16 @@ function Map.SetView(x, y, z)
     ApplyView()
 end
 
--- the zoom at which a map's rectangle fills the view
+-- the zoom at which a rectangle (l, r, t, b on 947), or a map's, fills the view
+local function ZoomForRect(l, r, t, b, share)
+    local vw, vh = ViewSize()
+    return math.min(vw / ((r - l) * W), vh / ((b - t) * H)) * (share or 0.9) / Fit()
+end
+
 function Map.ZoomFor(mapID, share)
     local l, r, t, b = Geo.Rect(mapID)
     if not l then return view.z end
-    local vw, vh = ViewSize()
-    return math.min(vw / ((r - l) * W), vh / ((b - t) * H)) * (share or 0.9) / Fit()
+    return ZoomForRect(l, r, t, b, share)
 end
 
 -- glide to a point (u, v) at a zoom
@@ -141,6 +145,10 @@ function Map.CenterOnPlayer(fitZone)
         return false
     end
     local z = fitZone and Map.ZoomFor(mapID, 0.85) or math.max(view.z, 2.5)
+    -- underground (indoors, in a cave's box): the cave's own map, surfaced
+    local cave, l, r, t, b = nil
+    if fitZone and IsIndoors and IsIndoors() and ns.Opt("caves") then cave, l, r, t, b = ns.Art.CaveAt(u, v) end
+    if cave then z = ZoomForRect(l, r, t, b, 1) end
     Map.SetView(u * W, v * H, z)
     following = true
     return true

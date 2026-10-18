@@ -1,5 +1,11 @@
 # Zmap
 
+## 1.2.0 — Caves and mines
+
+- **31 caves, mines and ways into dungeons** (Fargodeep Mine, Skull Rock, Blackrock Mountain, Wailing Caverns, Maraudon...) on the map at their real place: zoom right in on one and its own map surfaces, the land above dimmed; zoom back out and it sinks. Open the map inside one and it shows it. A layer to turn them off.
+- Zoom goes twice as far in (a small cave can fill the window).
+- Cave masks from [OpenMap](https://www.curseforge.com/wow/addons/openmap) (MIT).
+
 ## 1.1.0 — How to get there, rare warnings and ten languages
 
 ### 🧭 How to get there

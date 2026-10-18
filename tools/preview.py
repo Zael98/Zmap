@@ -22,7 +22,7 @@ _masks = {}
 
 
 def mask_image(path):
-    name = path.replace("\\", "/").split("/")[-1]
+    name = path.replace("\\", "/").split("/Masks/")[-1]   # (Caves/38: a subfolder's)
     if name not in _masks:
         _masks[name] = Image.open(ROOT / "Media" / "Masks" / f"{name}.tga").getchannel("A")
     return _masks[name]
@@ -51,6 +51,17 @@ def render(name, width):
         w, h = it["w"] * scale, it["h"] * scale
         if x0 > width or y0 > height or x0 + w < 0 or y0 + h < 0 or w < 0.5 or h < 0.5:
             continue
+        # only the part in the picture (far in, a texture is many times the picture's size)
+        fx0, fx1 = max(0, -x0) / w, min(w, width - x0) / w
+        fy0, fy1 = max(0, -y0) / h, min(h, height - y0) / h
+        if fx0 > 0 or fy0 > 0 or fx1 < 1 or fy1 < 1:
+            tl, tr, tt, tb = it["tc"]
+            it = dict(it, x=it["x"] + it["w"] * fx0, y=it["y"] + it["h"] * fy0, w=it["w"] * (fx1 - fx0), h=it["h"] * (fy1 - fy0),
+                      tc=(tl + (tr - tl) * fx0, tl + (tr - tl) * fx1, tt + (tb - tt) * fy0, tt + (tb - tt) * fy1))
+            x0, y0 = (it["x"] - l) * scale, (it["y"] - t) * scale
+            w, h = it["w"] * scale, it["h"] * scale
+            if w < 0.5 or h < 0.5:
+                continue
         img = build_data.texture(int(it["file"])).convert("RGBA")
         tl, tr, tt, tb = it["tc"]
         fw, fh = img.size

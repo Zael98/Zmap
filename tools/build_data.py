@@ -636,6 +636,58 @@ def build_dungeon_maps():
     return result
 
 
+# --------------------------------------------------------------------------------------------------------------
+# Caves and the ways into some dungeons: Blizzard's micro maps (Mists Classic's tables; their pictures are in
+# Forever's install), placed at their world box. Their masks (Media/Masks/Caves) are OpenMap's (MIT): a cave
+# without one is left out. Where several floors share a place, the first; Blackrock Mountain's deeper ones
+# never by themselves.
+# --------------------------------------------------------------------------------------------------------------
+
+CAVE_SKIP = {34, 35}   # Blackrock Mountain's lower floors (under its main one)
+
+
+def build_caves():
+    um = {r["ID"]: r for r in table("UiMap", build=MISTS)}
+    names = {loc: {r["ID"]: r["Name_lang"] for r in table("UiMap", loc, MISTS)} for loc in LOCALES}
+    boxes = {}
+    for r in sorted(table("UiMapAssignment", build=MISTS), key=lambda r: int(r["OrderIndex"])):
+        m = r["UiMapID"]
+        if um.get(m, {}).get("Type") == "5" and int(r["MapID"]) in CONTINENT_MAPS and m not in boxes:
+            boxes[m] = (int(r["MapID"]), float(r["Region_0"]), float(r["Region_1"]), float(r["Region_3"]), float(r["Region_4"]))
+    art = {r["UiMapID"]: r["UiMapArtID"] for r in table("UiMapXMapArt", build=MISTS) if r["PhaseID"] == "0"}
+    tiles = {}
+    for r in table("UiMapArtTile", build=MISTS):
+        if r["LayerIndex"] == "0":
+            tiles.setdefault(r["UiMapArtID"], []).append(r)
+    masks = ROOT / "Media" / "Masks" / "Caves"
+    out, first = {}, {}
+    for m, box in sorted(boxes.items(), key=lambda kv: int(kv[0])):
+        ts = sorted(tiles.get(art.get(m), []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
+        name = names["enUS"].get(m, "")
+        if int(m) in CAVE_SKIP or len(ts) != 12 or not (masks / f"{m}.tga").exists() or name in first:
+            continue
+        if not casc(int(ts[0]["FileDataID"])):
+            continue
+        first[name] = m
+        out[int(m)] = {"names": {loc: names[loc].get(m, name) for loc in LOCALES}, "box": box,
+                       "tiles": [int(t["FileDataID"]) for t in ts]}
+    return out
+
+
+def write_caves(caves):
+    L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
+         "-- caves and the ways into some dungeons: [micro map] = { { names enUS, esES, esMX, deDE, frFR, ptBR, itIT,",
+         "--   ruRU, koKR, zhCN, zhTW }, instance, minX, minY, maxX, maxY (its picture's world box, yards),",
+         "--   { 12 tile file IDs, row by row } } (masks: Media/Masks/Caves/<id>.tga, OpenMap's, MIT)",
+         "ns.CAVES = {"]
+    for m, c in sorted(caves.items()):
+        inst, x0, y0, x1, y1 = c["box"]
+        L.append(f"    [{m}] = {{ {loc_names(c['names'])}, {inst}, {num(x0)}, {num(y0)}, {num(x1)}, {num(y1)}, "
+                 f"{{ {', '.join(str(t) for t in c['tiles'])} }} }},")
+    L.append("}")
+    (ROOT / "Data" / "Caves.lua").write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
 def write_dungeon_maps(dmaps):
     L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
          "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW } }, ... },",
@@ -714,6 +766,9 @@ def main():
           f"{sum(len(d['bosses']) for d in dmaps.values())} bosses, "
           f"{sum(1 for d in dmaps.values() for b in d['bosses'] if b['floor'])} placed")
     write_dungeon_maps(dmaps)
+    caves = build_caves()
+    print(f"caves: {len(caves)}")
+    write_caves(caves)
     tints = build_tints(maps)
     with open(ROOT / "Data" / "Maps.lua", "a", encoding="utf-8") as f:
         f.write("\n-- each zone's tint towards the zones' common colour (its painting's own palette shows at its borders)\n")

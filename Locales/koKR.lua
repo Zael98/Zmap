@@ -97,6 +97,7 @@ ns.LOCALES.KO = {
     MENU_ROUTE_HERE = "여기로 가는 길", DOCK = "부두 (%s)", WAY_WALK = "%s(으)로 이동", WAY_FLY = "%s에서 %s(으)로 비행",
     WAY_SAIL = "탑승: %s", WAY_TITLE = "%s까지: ~%s", WAY_HERE = "여기",
     WAY_NO_POSITION = "이곳에서는 위치를 알 수 없습니다 (인스턴스?).", WAY_NONE = "여기서 그곳으로 가는 길이 없습니다.",
+    OPT_CAVES = "동굴과 광산",
     FOLK_ALL = "모두", FOLK_MINE = "내 직업과 전문 기술만", FOLK_TYPE_innkeeper = "여관주인", FOLK_TYPE_banker = "은행원",
     FOLK_TYPE_auctioneer = "경매인", FOLK_TYPE_stable = "야수 관리인", FOLK_TYPE_spirit = "영혼의 치유사",
     FOLK_TYPE_repair = "수리", FOLK_TYPE_trainer = "직업 전문가", FOLK_TYPE_proftrainer = "전문 기술 전문가",

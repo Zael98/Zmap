@@ -40,14 +40,13 @@ local function Layer(parent, level)
     return f
 end
 
--- A map's art: 1002 x 668 pixels in 256 px tiles, row by row, over its rectangle. The last column and
--- row are cut to the art's edge (their files run past it).
-local function Tiles(parent, mapID, layer, sublevel, mask)
-    local l, r, t, b = Geo.Rect(mapID)
+-- A map's art: 1002 x 668 pixels in 256 px tiles, row by row (files), over a rectangle (l, r, t, b on 947).
+-- The last column and row are cut to the art's edge (their files run past it).
+local function TilesAt(parent, l, r, t, b, files, layer, sublevel, mask)
     local sx, sy = (r - l) * W / ART_W, (b - t) * H / ART_H
     local ox, oy = l * W, t * H
     local list = {}
-    for i, fileID in ipairs(ns.MAPS[mapID][5]) do
+    for i, fileID in ipairs(files) do
         local row, col = math.floor((i - 1) / 4), (i - 1) % 4
         local x0, y0 = col * TILE, row * TILE
         local w, h = math.min(TILE, ART_W - x0), math.min(TILE, ART_H - y0)
@@ -68,14 +67,24 @@ local function Tiles(parent, mapID, layer, sublevel, mask)
     return list
 end
 
--- A mask stretched over a map's rectangle.
-local function Mask(parent, mapID, file)
+-- a map's own art over its rectangle
+local function Tiles(parent, mapID, layer, sublevel, mask)
     local l, r, t, b = Geo.Rect(mapID)
+    return TilesAt(parent, l, r, t, b, ns.MAPS[mapID][5], layer, sublevel, mask)
+end
+
+-- A mask stretched over a rectangle (Media/Masks/<file>).
+local function MaskAt(parent, l, r, t, b, file)
     local mask = parent:CreateMaskTexture()
     mask:SetTexture(MASKS .. file, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
     mask:SetSize((r - l) * W, (b - t) * H)
     mask:SetPoint("TOPLEFT", parent, "TOPLEFT", l * W, -t * H)
     return mask
+end
+
+local function Mask(parent, mapID, file)
+    local l, r, t, b = Geo.Rect(mapID)
+    return MaskAt(parent, l, r, t, b, file)
 end
 
 -- The power of two a texture file is padded to (the exploration overlays' last tiles: 16 px at least).
@@ -189,6 +198,71 @@ local function BuildCity(mapID)
     return f
 end
 
+--------------------------------------------------------------------------------------------------------------
+-- Caves (Data/Caves.lua: Blizzard's micro maps, through OpenMap's masks) at their place: zoom right in on
+-- one and it surfaces, the land above it dimmed; zoom back out and it sinks
+--------------------------------------------------------------------------------------------------------------
+
+local CAVE_FULL, CAVE_START = 2.2, 3.5     -- the view's width / the cave's where it has surfaced / starts to
+local caveRoot, caveDim
+local caves = {}   -- [id] = its frame
+
+-- a cave's rectangle on 947: l, r, t, b (its picture's top left is the box's north-west: max X, max Y)
+function Art.CaveRect(id)
+    local c = ns.CAVES and ns.CAVES[id]
+    if not c then return end
+    local u0, v0 = Geo.FromYards(c[2], c[5], c[6])
+    local u1, v1 = Geo.FromYards(c[2], c[3], c[4])
+    if not (u0 and u1) then return end
+    return math.min(u0, u1), math.max(u0, u1), math.min(v0, v1), math.max(v0, v1)
+end
+
+-- the cave a map point (u, v) lies in, and its rectangle
+function Art.CaveAt(u, v)
+    for id in pairs(ns.CAVES or {}) do
+        local l, r, t, b = Art.CaveRect(id)
+        if l and u >= l and u <= r and v >= t and v <= b then return id, l, r, t, b end
+    end
+end
+
+local function BuildCave(id)
+    local l, r, t, b = Art.CaveRect(id)
+    local f = Layer(caveRoot, caveRoot:GetFrameLevel() + 1)
+    TilesAt(f, l, r, t, b, ns.CAVES[id][7], "ARTWORK", 0, MaskAt(f, l, r, t, b, "Caves\\" .. id))
+    caves[id] = f
+    return f
+end
+
+-- each cave in view as far as it has surfaced; the land dimmed for the one you look at
+local function UpdateCaves(vl, vt, vr, vb, left, top, right, bottom)
+    local on = ns.Opt("caves")
+    local vw, vh = vr - vl, vb - vt
+    local cx, cy = (vl + vr) / 2, (vt + vb) / 2
+    local focus = 0
+    for id in pairs(ns.CAVES or {}) do
+        local l, r, t, b = Art.CaveRect(id)
+        local a = 0
+        if on and l and l * W < right and r * W > left and t * H < bottom and b * H > top then
+            a = 1 - Smooth(CAVE_FULL, CAVE_START, vw / ((r - l) * W))
+        end
+        local f = caves[id]
+        if a > 0.01 and not f then f = BuildCave(id) end
+        if f then
+            f:SetAlpha(a)
+            f:SetShown(a > 0.01)
+        end
+        if a > 0.01 then
+            local off = math.max(math.abs((l + r) / 2 * W - cx) / (vw / 2), math.abs((t + b) / 2 * H - cy) / (vh / 2))
+            focus = math.max(focus, a * (1 - Smooth(0.35, 0.8, off)))
+        end
+    end
+    caveDim:SetSize(vw * 3, vh * 3)
+    caveDim:ClearAllPoints()
+    caveDim:SetPoint("CENTER", caveRoot, "TOPLEFT", cx, -cy)
+    caveDim:SetAlpha(0.45 * focus)
+    caveDim:SetShown(focus > 0.01)
+end
+
 function Art.Init(canvas)
     local base = canvas:GetFrameLevel()
     worldFrame = Layer(canvas, base + 1)
@@ -196,13 +270,16 @@ function Art.Init(canvas)
     zoneRoot = Layer(canvas, base + 3)          -- its zones' halos, cores and overlays: + 1, + 2, + 3
     terrainRoot = Layer(canvas, base + 8)
     cityRoot = Layer(canvas, base + 9)          -- its cities: + 1
+    caveRoot = Layer(canvas, base + 10)         -- the land dimmed under the caves; the caves: + 1
+    caveDim = caveRoot:CreateTexture(nil, "BACKGROUND")
+    caveDim:SetColorTexture(0.05, 0.035, 0.02, 1)
     Tiles(worldFrame, ns.WORLD, "BACKGROUND", 0)
     for id, d in pairs(ns.MAPS) do
         if d[1] == "continent" then
             Tiles(contFrame, id, "BACKGROUND", 0, Mask(contFrame, id, "frame"))
         end
     end
-    Art.levelTop = base + 11                    -- above the art: lines and pins
+    Art.levelTop = base + 12                    -- above the art: lines and pins
 end
 
 --------------------------------------------------------------------------------------------------------------
@@ -278,6 +355,7 @@ end
 function Art.Update()
     if not worldFrame then return end
     local left, top, right, bottom = ns.Map.ViewRect()
+    local vl, vt, vr, vb = left, top, right, bottom
     local z, k = ns.Map.Zoom(), ns.Map.K()
     -- a margin around the view, so panning finds the next zone already there
     local mx, my = (right - left) * 0.25, (bottom - top) * 0.25
@@ -323,6 +401,7 @@ function Art.Update()
     end
     local terrainA = ns.Opt("minimap") and Smooth(11, 18, z) or 0
     UpdateTerrain(left, top, right, bottom, terrainA)
+    UpdateCaves(vl, vt, vr, vb, left, top, right, bottom)
 end
 
 -- the zoom at which the minimap's terrain is fully in (for the options' text)
@@ -337,7 +416,7 @@ end)
 ns.On("ZMAP_OPTION", function(key)
     if key == "unexplored" or key == "harmonize" then
         for id in pairs(zones) do Art.ApplyExplored(id) end
-    elseif key == "minimap" and ns.Map.IsShown() then
+    elseif (key == "minimap" or key == "caves") and ns.Map.IsShown() then
         Art.Update()
     end
 end)

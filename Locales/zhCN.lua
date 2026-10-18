@@ -97,6 +97,7 @@ ns.LOCALES.ZH = {
     MENU_ROUTE_HERE = "如何到达这里", DOCK = "码头（%s）", WAY_WALK = "前往 %s", WAY_FLY = "从 %s 飞往 %s",
     WAY_SAIL = "乘坐：%s", WAY_TITLE = "前往 %s：约 %s", WAY_HERE = "这里",
     WAY_NO_POSITION = "这里无法得知你的位置（副本？）。", WAY_NONE = "从这里无法到达那里。",
+    OPT_CAVES = "洞穴和矿洞",
     FOLK_ALL = "全部", FOLK_MINE = "只显示我的职业和专业", FOLK_TYPE_innkeeper = "旅店老板", FOLK_TYPE_banker = "银行职员",
     FOLK_TYPE_auctioneer = "拍卖师", FOLK_TYPE_stable = "兽栏管理员", FOLK_TYPE_spirit = "灵魂医者",
     FOLK_TYPE_repair = "修理", FOLK_TYPE_trainer = "职业训练师", FOLK_TYPE_proftrainer = "专业训练师",

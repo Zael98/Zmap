@@ -10,6 +10,7 @@ local LAYERS = {
     { "labels", "OPT_LABELS", I .. "INV_Misc_Note_01", group = "LAYER_GROUP_MAP" },
     { "levels", "OPT_LEVELS", I .. "INV_Misc_Bone_Skull_01", group = "LAYER_GROUP_MAP" },
     { "minimap", "OPT_MINIMAP", I .. "INV_Misc_Spyglass_02", group = "LAYER_GROUP_MAP" },
+    { "caves", "OPT_CAVES", I .. "Trade_Mining", group = "LAYER_GROUP_MAP" },
     { "harmonize", "OPT_HARMONIZE", I .. "INV_Misc_Map_01", group = "LAYER_GROUP_MAP" },
     { "pins", "OPT_PINS", "Waypoint-MapPin-Untracked", atlas = true, group = "LAYER_GROUP_TRAVEL" },
     { "flights", "OPT_FLIGHTS", "TaxiNode_Neutral", atlas = true, group = "LAYER_GROUP_TRAVEL" },

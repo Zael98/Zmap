@@ -112,4 +112,27 @@ OUT("ART riverglades", DUMP_ART())
 local bl, br, bt, bb = ZNS.Geo.Rect(1413)
 Settle((bl + br) / 2 * W, (bt + bb) / 2 * H, 4.2)
 OUT("ART barrens", DUMP_ART())
+-- a cave: inside Fargodeep Mine the map opens on it, surfaced; zoomed out, it sinks
+ZNS.Map.Close()
+STATE.instance = false
+STATE.player.inst, STATE.player.wx, STATE.player.wy = 0, -9780, 160
+STATE.indoors = true
+OPEN()
+FRAMES(5)
+local cave = ZNS.Art.CaveAt(ZNS.Geo.FromYards(0, -9780, 160))
+local caveTex = 0
+for _, w in ipairs(ALL_WIDGETS) do
+    if w.kind == "Texture" and w.shown and w.masks and w.masks[1] and tostring(w.masks[1].file):find("Caves", 1, true) then caveTex = caveTex + 1 end
+end
+OUT(("cave: inside %s, zoom %.0f, tiles %d"):format(tostring(cave), ZNS.Map.Zoom(), caveTex))
+OUT("ART fargodeep", DUMP_ART())
+local cu, cv = ZNS.Geo.FromYards(0, -9780, 160)
+ZNS.Map.SetView(cu * W, cv * H, 6)
+FRAMES(5)
+local shownAfter = 0
+for _, w in ipairs(ALL_WIDGETS) do
+    if w.kind == "Texture" and w.masks and w.masks[1] and tostring(w.masks[1].file):find("Caves", 1, true) and w.parent.shown and w.parent.alpha > 0.01 then shownAfter = 1 end
+end
+OUT("cave zoomed out: shown " .. tostring(shownAfter == 1))
+STATE.indoors, STATE.instance = false, true
 OUT("errors " .. #STATE.errors)

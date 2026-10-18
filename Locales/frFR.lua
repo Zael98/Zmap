@@ -97,6 +97,7 @@ ns.LOCALES.FR = {
     MENU_ROUTE_HERE = "Comment y aller", DOCK = "Quai (%s)", WAY_WALK = "Allez à %s", WAY_FLY = "Volez de %s à %s",
     WAY_SAIL = "Prenez : %s", WAY_TITLE = "Vers %s : ~%s", WAY_HERE = "ici",
     WAY_NO_POSITION = "Votre position est inconnue ici (une instance ?).", WAY_NONE = "Aucun chemin d'ici.",
+    OPT_CAVES = "Grottes et mines",
     FOLK_ALL = "Tous", FOLK_MINE = "Seulement ma classe et mes métiers", FOLK_TYPE_innkeeper = "Aubergistes", FOLK_TYPE_banker = "Banquiers",
     FOLK_TYPE_auctioneer = "Commissaires-priseurs", FOLK_TYPE_stable = "Maîtres des écuries", FOLK_TYPE_spirit = "Esprits guérisseurs",
     FOLK_TYPE_repair = "Réparations", FOLK_TYPE_trainer = "Maîtres de classe", FOLK_TYPE_proftrainer = "Maîtres de métier",
