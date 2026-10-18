@@ -102,10 +102,34 @@ local function Contains(mapID, u, v)
     return l and u >= l and u <= r and v >= t and v <= b
 end
 
+-- a zone on an instance of its own (Zephras Isle), placed in a sea of Azeroth's map: the world is its parent
+function Geo.IsIsle(mapID)
+    local d = MAPS[mapID]
+    return d ~= nil and d[1] == "zone" and d[2] == ns.WORLD
+end
+
+-- the continents and the isles: every map a position on the stitched map can be on
+local lands
+function Geo.Lands()
+    if not lands then
+        lands = { unpack(CONTINENTS) }
+        for _, id in ipairs(Geo.Zones()) do
+            if Geo.IsIsle(id) then lands[#lands + 1] = id end
+        end
+    end
+    return lands
+end
+
 -- The zone under a point of the stitched map: mapID, x, y (its own coordinates). The client knows the
 -- zones' true outlines; without it, the smallest zone whose rectangle holds the point.
 function Geo.ZoneAt(u, v)
     if C_Map and C_Map.GetMapInfoAtPosition then
+        for _, id in ipairs(Geo.Zones()) do
+            if Geo.IsIsle(id) and Contains(id, u, v) then
+                local x, y = Geo.ToZone(id, u, v)
+                return id, x, y
+            end
+        end
         for _, cont in ipairs(CONTINENTS) do
             if Contains(cont, u, v) then
                 local cu, cv = Geo.ToZone(cont, u, v)

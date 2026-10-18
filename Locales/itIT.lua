@@ -43,7 +43,7 @@ ns.LOCALES.IT = {
     FLIGHT_HINT_ORIGIN = "Pianificazione da qui. Clic di nuovo o clic destro: torna al più vicino",
     FLIGHT_TIMER = "In volo verso %s: %s", FLIGHT_TIMER_UP = "In volo verso %s: %s (cronometrato)",
     DUNGEON = "Spedizione", RAID = "Incursione", DUNGEON_LEVEL = "Livello %s",
-    BOAT = "Nave", ZEPPELIN = "Zeppelin",
+    BOAT = "Nave", ZEPPELIN = "Zeppelin", AIRSHIP = "Aeronave",
     QUEST_DONE = "Completata: consegnala",
     QUEST_HINT = "Clic: apri nel registro · Ctrl+clic: vai lì",
     HERB = "Erba", ORE = "Minerale", GATHERED_TIMES = "Raccolto %d volte", FOUND_BY = "Trovato da %s",

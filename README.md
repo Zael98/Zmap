@@ -7,7 +7,7 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Mapa continuo**: mapa del mundo → continente → zonas cosidas → terreno del minimapa al acercarte → mapa propio de cada capital. Todo con las texturas del propio juego; las máscaras que cosen las zonas salen de los datos del cliente.
 - **Zonas sin explorar**: mostrarlas, oscurecidas (por defecto) u ocultas.
 - **Nombres y niveles de zona**, coloreados según tu nivel.
-- **Pines** (Ctrl+clic o clic derecho): nombre, nota, color; compartir con el grupo, la hermandad o como enlace en el chat. `/zway x y nombre` (y `/way` si no tienes TomTom).
+- **Pines** (Ctrl+clic o clic derecho): nombre, nota, color; compartir con el grupo, la hermandad o como enlace en el chat (al pulsar un enlace de mapa del chat se abre Zmap en ese punto). `/zway x y nombre` (y `/way` si no tienes TomTom).
 - **Flecha en pantalla** hacia el destino, con distancia y tiempo estimado; también activa el marcador del propio juego. Al morir, apunta a tu cadáver.
 - **Vuelos**: los puntos de vuelo de tu facción (los no descubiertos en gris). Al pasar el ratón, la ruta y el tiempo desde el más cercano; con un clic eliges otro origen. Mientras vuelas, un temporizador que aprende la duración real de cada vuelo.
 - **Mazmorras y bandas** con su nivel en Forever, **barcos y zepelines** con su ruta, **misiones** (clic: abre la misión en el registro).
@@ -18,6 +18,7 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Hierbas y minerales** de los datos (unos 25.000 puntos) en gris los que aún no puedes recoger; además de los que recoges tú, que se recuerdan y se comparten con la hermandad. Solo con la profesión: sin Herboristería no salen hierbas ni su opción, y lo mismo con Minería.
 - **Buzones, yunques, forjas y piedras de encuentro** en el mapa.
 - **Minimapa**: el destino (en el borde si está lejos), tus pines, misiones, objetivos y hierbas o minerales cercanos.
+- **Zephras Isle**: la zona de inicio de los Windshaper Skyborne (un mapa aparte en el juego) está en el mar del norte, entre los continentes, como cualquier otra zona; con las aeronaves que llevan a ella desde Dalaran y Mulgore.
 - **Cuevas y minas**: las cuevas, minas y entradas de mazmorra del cliente en su sitio real; al acercarte emerge su mapa entero (sin el marco) y la superficie se oscurece. Las de varias plantas tienen un botón por planta abajo.
 - **Mapas de mazmorra**: dentro de una instancia el mapa abre el de la mazmorra, por plantas y con sus jefes; también con un clic en la entrada. Botón para volver al mundo.
 - **Hermandad sin Zmap**: quien no tiene Zmap aparece en su zona (un círculo hueco junto al nombre de la zona); el juego solo dice en qué zona está, no el punto exacto.

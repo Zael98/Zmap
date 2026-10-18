@@ -1,5 +1,11 @@
 # Zmap
 
+## 1.3.0 — Zephras Isle
+
+- **Zephras Isle**, the Windshaper Skyborne's starting zone (an instance of its own, in no map of Azeroth), is on the map in the northern sea between the continents: your position on it, its quests, NPCs, gathering and exploration, like any zone. It shows from the world's zoom on.
+- **The airships to Zephras Isle** (from Dalaran in the Alterac Mountains and from Mulgore) on the map with the boats and zeppelins, and in the way to get there.
+- **Map links in chat** open Zmap on that point with a pin there (instead of Blizzard's map), while Zmap takes M's place.
+
 ## 1.2.0 — Caves and mines
 
 - **Caves, mines and ways into dungeons** (Fargodeep Mine, Skull Rock, Blackrock Mountain, Wailing Caverns, Maraudon...) on the map at their real place: zoom right in on one and its own map surfaces, the land above dimmed; zoom back out and it sinks. Open the map inside one and it shows it. A layer to turn them off.

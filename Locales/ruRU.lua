@@ -43,7 +43,7 @@ ns.LOCALES.RU = {
     FLIGHT_HINT_ORIGIN = "Планирование отсюда. Щёлкните снова или правой кнопкой: вернуться к ближайшему",
     FLIGHT_TIMER = "Полёт в %s: %s", FLIGHT_TIMER_UP = "Полёт в %s: %s (замер)",
     DUNGEON = "Подземелье", RAID = "Рейд", DUNGEON_LEVEL = "Уровень %s",
-    BOAT = "Корабль", ZEPPELIN = "Дирижабль",
+    BOAT = "Корабль", ZEPPELIN = "Дирижабль", AIRSHIP = "Воздушный корабль",
     QUEST_DONE = "Выполнено: сдайте задание",
     QUEST_HINT = "Щелчок: открыть в журнале · Ctrl+щелчок: идти туда",
     HERB = "Трава", ORE = "Руда", GATHERED_TIMES = "Собрано %d раз", FOUND_BY = "Нашёл: %s",

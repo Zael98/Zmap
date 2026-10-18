@@ -63,4 +63,18 @@ ZmapFrame.pinsButton:Click()
 PICK(ZNS.L.DELETE_ALL)
 ANSWER(ZNS.L.YES)
 OUT("delete all: pins " .. Count())
+
+-- a map link clicked in chat: Zmap opens on the point (Blizzard's map closed again), a pin there; twice, one pin
+ZNS.Map.Close()
+SetItemRef("worldmap:1429:4200:6500", "[Map Pin Location]", "LeftButton")
+SetItemRef("worldmap:1429:4200:6500", "[Map Pin Location]", "LeftButton")
+FRAMES(40)
+local lu, lv = ZNS.Geo.ToWorld(1429, 0.42, 0.65)
+local vl, vt, vr, vb = ZNS.Map.ViewRect()
+OUT(("chat link: zmap %s, blizzard %s, pins %d, on the point %s"):format(tostring(ZmapFrame:IsShown()), tostring(WorldMapFrame:IsShown()),
+    Count(), tostring(math.abs((vl + vr) / 2 / ZNS.Geo.W - lu) < 0.002 and math.abs((vt + vb) / 2 / ZNS.Geo.H - lv) < 0.002)))
+ZNS.SetOpt("replaceMap", false)
+SetItemRef("worldmap:1429:3000:3000", "[Map Pin Location]", "LeftButton")
+OUT(("chat link, M not replaced: blizzard %s, pins %d"):format(tostring(WorldMapFrame:IsShown()), Count()))
+ZNS.SetOpt("replaceMap", true)
 OUT("errors " .. #STATE.errors)

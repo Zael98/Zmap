@@ -31,6 +31,10 @@ BUILD = "1.60.1.70374"
 LOCALES = ["enUS", "esES", "esMX", "deDE", "frFR", "ptBR", "itIT", "ruRU", "koKR", "zhCN", "zhTW"]
 WORLD = 947
 CONTINENT_MAPS = {0: 1415, 1: 1414}       # instance map -> its continent uiMap
+# instances that are a zone on their own, not on the continents nor in Azeroth's map art (Zephras Isle: the
+# Windshaper Skyborne's start, in the sky): placed in an empty sea at the continents' scale, so their zone is a
+# place like any other. instance map -> where its zone's top left lands on 947 (u, v)
+ISLES = {2991: (0.405, 0.10)}
 ART_W, ART_H, TILE = 1002, 668, 256       # every map art here: 1002x668 in 256 px tiles (UiMapArtStyleLayer 1)
 HALO_SIZE, CORE_SIZE = 64, 128            # mask textures (stretched over the zone)
 SPEED = 30                                # flights, yards a second (calibrated in game by Modules/Flights.lua)
@@ -143,6 +147,11 @@ def build_maps():
         b = -(u1 - u0) / (max_y - min_y)
         d = -(v1 - v0) / (max_x - min_x)
         transforms[inst] = (u0 - b * max_y, b, v0 - d * max_x, d)
+    _, b, _, d = transforms[1]
+    for inst, (u0, v0) in ISLES.items():
+        zone = next(m for m, r in assign.items() if r["MapID"] == str(inst) and uimap[m]["ParentUiMapID"] == str(WORLD))
+        max_x, max_y = (float(assign[zone][k]) for k in ("Region_3", "Region_4"))
+        transforms[inst] = (u0 - b * max_y, b, v0 - d * max_x, d)
 
     def rect_on_world(m):
         a = assign[m]
@@ -167,8 +176,8 @@ def build_maps():
         if r["Type"] != "3" or m not in assign:
             continue
         inst = int(assign[m]["MapID"])
-        if inst not in CONTINENT_MAPS:
-            continue   # its own instance (Zephras Isle, Darkspear Islands): not on the continents
+        if inst not in CONTINENT_MAPS and not (inst in ISLES and r["ParentUiMapID"] == str(WORLD)):
+            continue   # another instance of its own (or an isle's copy the world map does not show)
         art = xart.get(m)
         ovs = []
         for o in sorted(overlays.get(art, []), key=lambda o: int(o["ID"])):
@@ -313,7 +322,7 @@ def build_masks(maps, write=True):
 def build_minimap():
     wdt_of = {int(r["ID"]): int(r["WdtFileDataID"]) for r in table("Map")}
     out = {}
-    for inst in CONTINENT_MAPS:
+    for inst in [*CONTINENT_MAPS, *ISLES]:
         data = casc(wdt_of[inst])
         i = 0
         while i + 8 <= len(data):
@@ -389,6 +398,8 @@ TRANSPORTS = {   # path: kind, faction, name (the key), the areas at its ends (t
     301: ("zeppelin", "H", "Undercity - Grom'gol", (1497, 117)),
     302: ("zeppelin", "H", "Orgrimmar - Undercity", (1637, 1497)),
     303: ("boat", "A", "Feathermoon Stronghold - Feralas", (1116, 357)),
+    11398: ("airship", "N", "Dalaran - Valanaar Skydocks", (279, 16628)),
+    11457: ("airship", "N", "Mulgore - Valanaar Skydocks", (215, 16628)),
 }
 
 
@@ -405,7 +416,7 @@ def build_transports():
         pieces, docks = [], []
         for r in pts:
             inst, x, y = int(r["ContinentID"]), float(r["Loc_0"]), float(r["Loc_1"])
-            if inst not in CONTINENT_MAPS:
+            if inst not in CONTINENT_MAPS and inst not in ISLES:
                 continue
             # a new piece on another continent, or where the path jumps (the vessel is moved at sea)
             if not pieces or pieces[-1][0] != inst or math.dist(pieces[-1][1][-1], (x, y)) > 2000:

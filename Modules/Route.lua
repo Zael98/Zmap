@@ -10,7 +10,7 @@ local CROSSING = 240      -- seconds a boat or zeppelin takes, waiting for it in
 local TAKE_OFF = 10       -- seconds lost at each flight master
 local REACHED = 40        -- yards from a leg's end that count as there
 local ISLANDS = { [1438] = "teldrassil", [1457] = "teldrassil" }   -- zones you cannot walk out of
-local COLORS = { walk = { 1, 1, 1 }, fly = { 1, 0.82, 0.1 }, boat = { 0.35, 0.68, 1 }, zeppelin = { 1, 0.5, 0.2 } }
+local COLORS = { walk = { 1, 1, 1 }, fly = { 1, 0.82, 0.1 }, boat = { 0.35, 0.68, 1 }, zeppelin = { 1, 0.5, 0.2 }, airship = { 0.75, 0.6, 1 } }
 
 local lines = ns.Pins.Lines()
 local route     -- { legs = { { mode, from = point, to = point, seconds, name } }, seconds, step, dest }

@@ -12,7 +12,7 @@
 ## Notes-zhCN: 一张无缝的世界地图：所有区域拼接在一起，从整个世界一直缩放到小地图地形。带箭头的标记、飞行路线和时间、地下城、船只、任务、队伍和公会、草药、矿石和城镇居民。/zmap
 ## Notes-zhTW: 一張無縫的世界地圖：所有區域拼接在一起，從整個世界一直縮放到小地圖地形。帶箭頭的標記、飛行路線和時間、地城、船隻、任務、隊伍和公會、草藥、礦石和城鎮居民。/zmap
 ## Author: Domi
-## Version: 1.2.0
+## Version: 1.3.0
 ## IconTexture: Interface\Icons\INV_Misc_Map_01
 ## SavedVariables: ZmapDB
 ## SavedVariablesPerCharacter: ZmapCharDB

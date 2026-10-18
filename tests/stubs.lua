@@ -237,6 +237,12 @@ end
 UIParent = New("Frame", nil, "UIParent")
 UIParent.w, UIParent.h = 1920, 1080
 WorldMapFrame = CreateFrame("Frame", "WorldMapFrame")
+WorldMapFrame:Hide()
+function HideUIPanel(f) f:Hide() end
+-- a chat link clicked: the game's map opens on a map link
+function SetItemRef(link)
+    if tostring(link):match("^worldmap:") then WorldMapFrame:Show() end
+end
 GameTooltip = CreateFrame("Frame", "GameTooltip")
 function GameTooltip:SetOwner() STATE.tooltip = {} end
 function GameTooltip:SetText(t) STATE.tooltip = { tostring(t) } end

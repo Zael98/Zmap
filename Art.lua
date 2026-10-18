@@ -9,6 +9,8 @@
 --              the overlays; where two zones' rectangles share land, their cores cross-fade)
 --   terrain    the minimap's tiles, the real ground from above, when zoomed in close
 --   cities     each capital's own map, faded round, once it is big enough on screen to read
+-- An isle (a zone on an instance of its own, Zephras Isle) is in no art underneath: its zone is drawn from the
+-- world's zoom on.
 -- Zones and cities are built the first time they come into view, and hidden out of it.
 local _, ns = ...
 local Geo = ns.Geo
@@ -23,7 +25,7 @@ local DIM = { 0.78, 0.76, 0.72 } -- unexplored overlays, when dimmed (with some 
 local DIM_DESAT = 0.35
 local SEAM = 1 + 1 / 256         -- terrain tiles overlap by a hair, so no seam shows between them
 
-local worldFrame, contFrame, zoneRoot, terrainRoot, cityRoot
+local worldFrame, contFrame, zoneRoot, isleRoot, terrainRoot, cityRoot
 local zones, cities = {}, {}
 local terrain, terrainPool = {}, {}   -- [tile key] = texture in use; spare textures
 
@@ -178,11 +180,12 @@ end
 --------------------------------------------------------------------------------------------------------------
 
 local function BuildZone(mapID)
-    local base = zoneRoot:GetFrameLevel()
+    local root = Geo.IsIsle(mapID) and isleRoot or zoneRoot
+    local base = root:GetFrameLevel()
     local z = {}
-    z.halo = Layer(zoneRoot, base + 1)
-    z.core = Layer(zoneRoot, base + 2)
-    z.over = Layer(zoneRoot, base + 3)
+    z.halo = Layer(root, base + 1)
+    z.core = Layer(root, base + 2)
+    z.over = Layer(root, base + 3)
     z.base = Tiles(z.halo, mapID, "BORDER", 0, Mask(z.halo, mapID, mapID .. "h"))
     for _, tex in ipairs(Tiles(z.core, mapID, "BORDER", 0, Mask(z.core, mapID, mapID .. "c"))) do z.base[#z.base + 1] = tex end
     z.overlays = Overlays(z.over, mapID, Mask(z.over, mapID, mapID .. "c"))
@@ -300,6 +303,7 @@ function Art.Init(canvas)
     worldFrame = Layer(canvas, base + 1)
     contFrame = Layer(canvas, base + 2)
     zoneRoot = Layer(canvas, base + 3)          -- its zones' halos, cores and overlays: + 1, + 2, + 3
+    isleRoot = Layer(canvas, base + 3)          -- the isles' (as the zones', never faded)
     terrainRoot = Layer(canvas, base + 8)
     cityRoot = Layer(canvas, base + 9)          -- its cities: + 1
     caveRoot = Layer(canvas, base + 10)         -- the land dimmed under the caves; the caves: + 1
@@ -403,17 +407,15 @@ function Art.Update()
     contFrame:SetShown(contA > 0.01)
     zoneRoot:SetAlpha(zoneA)
     zoneRoot:SetShown(zoneA > 0.01)
-    if zoneA > 0.01 then
-        for id, d in pairs(ns.MAPS) do
-            if d[1] == "zone" then
-                local seen = Overlaps(id, left, top, right, bottom)
-                local zz = zones[id]
-                if seen and not zz then zz = BuildZone(id) end
-                if zz then
-                    zz.halo:SetShown(seen)
-                    zz.core:SetShown(seen)
-                    zz.over:SetShown(seen)
-                end
+    for id, d in pairs(ns.MAPS) do
+        if d[1] == "zone" and (zoneA > 0.01 or Geo.IsIsle(id)) then
+            local seen = Overlaps(id, left, top, right, bottom)
+            local zz = zones[id]
+            if seen and not zz then zz = BuildZone(id) end
+            if zz then
+                zz.halo:SetShown(seen)
+                zz.core:SetShown(seen)
+                zz.over:SetShown(seen)
             end
         end
     end

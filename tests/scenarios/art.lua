@@ -19,11 +19,13 @@ local function Settle(x, y, z)
 end
 
 Settle(W / 2, H / 2, 1)
-local zonesShown = 0
+local zonesShown, isleShown = 0, 0
 for _, w in ipairs(ALL_WIDGETS) do
-    if w.kind == "MaskTexture" and tostring(w.file):match("%d+c$") and w.parent:IsVisible() then zonesShown = zonesShown + 1 end
+    if w.kind == "MaskTexture" and tostring(w.file):match("%d+c$") and w.parent:IsVisible() then
+        if tostring(w.file):match("2521c$") then isleShown = isleShown + 1 else zonesShown = zonesShown + 1 end
+    end
 end
-OUT(("world: world shown %s, zones shown %d"):format(tostring(ZmapFrame:IsVisible()), zonesShown))
+OUT(("world: world shown %s, zones shown %d, isle shown %d"):format(tostring(ZmapFrame:IsVisible()), zonesShown, isleShown))
 OUT("ART world", DUMP_ART())
 
 local l, r, t, b = ZNS.Geo.Rect(1415)
@@ -39,7 +41,7 @@ for _, w in ipairs(ALL_WIDGETS) do
         local id = tonumber(tostring(w.file):match("(%d+)c$"))
         local zl, zr, zt, zb = ZNS.Geo.Rect(id)
         local mx, my = (vr - vl) * 0.25, (vb - vt) * 0.25
-        if not (zl * W < vr + mx and zr * W > vl - mx and zt * H < vb + my and zb * H > vt - my) then all = false end
+        if not ZNS.Geo.IsIsle(id) and not (zl * W < vr + mx and zr * W > vl - mx and zt * H < vb + my and zb * H > vt - my) then all = false end
     end
 end
 OUT(("continent: zones built %d, all of them in view %s"):format(Masks("c"), tostring(all)))

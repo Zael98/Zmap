@@ -1,13 +1,16 @@
--- Boats and zeppelins you can take: the way each sails (from the client's tables, Data/Places.lua) and an
--- icon at each dock. Alliance boats, Horde zeppelins and the neutral Booty Bay boat, by your faction.
+-- Boats, zeppelins and airships you can take: the way each sails (from the client's tables, Data/Places.lua)
+-- and an icon at each dock. Alliance boats, Horde zeppelins, the neutral Booty Bay boat and the airships to
+-- Zephras Isle, by your faction.
 local _, ns = ...
 local L, Geo = ns.L, ns.Geo
 
 local P = ns.Pins.New("transports", { level = 35, size = 20, option = "transports", minZoom = 1.3 })
 local lines = ns.Pins.Lines()
 
-local COLORS = { boat = { 0.35, 0.68, 1 }, zeppelin = { 1, 0.5, 0.2 } }
-local ICONS = { boat = "Interface\\Icons\\INV_AllianceShipMount", zeppelin = "Interface\\Icons\\INV_HordeZeppelinMount" }
+local COLORS = { boat = { 0.35, 0.68, 1 }, zeppelin = { 1, 0.5, 0.2 }, airship = { 0.75, 0.6, 1 } }
+local ICONS = { boat = "Interface\\Icons\\INV_AllianceShipMount", zeppelin = "Interface\\Icons\\INV_HordeZeppelinMount",
+    airship = "Interface\\Icons\\INV_AllianceShipMount" }
+local KINDS = { boat = "BOAT", zeppelin = "ZEPPELIN", airship = "AIRSHIP" }
 
 local function Mine(faction)
     local f = UnitFactionGroup("player")
@@ -55,7 +58,7 @@ end
 
 function P:Tooltip(pin, tip)
     tip:SetText(pin.route, 1, 1, 1)
-    tip:AddLine(pin.kind == "boat" and L.BOAT or L.ZEPPELIN, 0.7, 0.7, 0.7)
+    tip:AddLine(L[KINDS[pin.kind]], 0.7, 0.7, 0.7)
 end
 
 function P:OnHidden() lines:Clear() end

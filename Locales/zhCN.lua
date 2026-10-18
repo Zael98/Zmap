@@ -43,7 +43,7 @@ ns.LOCALES.ZH = {
     FLIGHT_HINT_ORIGIN = "正在从这里规划。再次点击或右键：回到最近的",
     FLIGHT_TIMER = "飞往 %s：%s", FLIGHT_TIMER_UP = "飞往 %s：%s（计时中）",
     DUNGEON = "地下城", RAID = "团队副本", DUNGEON_LEVEL = "等级 %s",
-    BOAT = "船", ZEPPELIN = "飞艇",
+    BOAT = "船", ZEPPELIN = "飞艇", AIRSHIP = "飞船",
     QUEST_DONE = "已完成：去交任务",
     QUEST_HINT = "点击：在任务日志中打开 · Ctrl+点击：前往",
     HERB = "草药", ORE = "矿石", GATHERED_TIMES = "已采集 %d 次", FOUND_BY = "由 %s 发现",

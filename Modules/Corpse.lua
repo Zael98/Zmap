@@ -8,8 +8,8 @@ local corpse   -- u, v, instance
 local function Find()
     corpse = nil
     if not (C_DeathInfo and C_DeathInfo.GetCorpseMapPosition) or not UnitIsGhost("player") then return end
-    -- the corpse may be in another zone than the graveyard: look on the continent
-    for _, cont in ipairs({ 1415, 1414 }) do
+    -- the corpse may be in another zone than the graveyard: look on the continent (or the isle)
+    for _, cont in ipairs(Geo.Lands()) do
         local pos = C_DeathInfo.GetCorpseMapPosition(cont)
         if pos and pos.x and not (pos.x == 0 and pos.y == 0) then
             local u, v = Geo.ToWorld(cont, pos.x, pos.y)

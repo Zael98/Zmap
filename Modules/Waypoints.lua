@@ -198,6 +198,27 @@ function WP.LinkAt(u, v)
     if mapID then WP.LinkMapPoint(mapID, x, y) end
 end
 
+-- a map link clicked in chat (the game's own, "worldmap:mapID:x:y", x and y in ten-thousandths): while Zmap
+-- takes M's place, Zmap opens on that point with a pin there for the session, instead of Blizzard's map (it
+-- has opened it already: closed again)
+function WP.OpenMapLink(link)
+    local mapID, x, y = tostring(link):match("^worldmap:(%d+):(%d+):(%d+)")
+    mapID, x, y = tonumber(mapID), tonumber(x), tonumber(y)
+    if not (mapID and Geo.Kind(mapID) and ns.Opt("replaceMap")) then return end
+    x, y = x / 10000, y / 10000
+    if WorldMapFrame and WorldMapFrame:IsShown() and not InCombatLockdown() then HideUIPanel(WorldMapFrame) end
+    local id
+    for pid, p in pairs(ns.db.pins) do
+        if p.m == mapID and math.abs(p.x - x) < 0.0005 and math.abs(p.y - y) < 0.0005 then id = pid end
+    end
+    id = id or WP.Add(mapID, x, y, nil, { temp = true, color = 2 })
+    ns.Map.Open()
+    local u, v = Geo.ToWorld(mapID, x, y)
+    ns.Map.GoTo(u, v, ns.Map.ZoomFor(mapID) * (Geo.Kind(mapID) == "zone" and 2 or 1))
+    return id
+end
+if SetItemRef then hooksecurefunc("SetItemRef", function(link) WP.OpenMapLink(link) end) end
+
 function WP.Share(id, channel)
     local p = Pin(id)
     if not p then return end
