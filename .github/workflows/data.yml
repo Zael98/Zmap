@@ -1,0 +1,90 @@
+# Every day: is there a newer Forever client (wago.tools) or Questie release than Zmap's data was made from? If so,
+# the data is made again, tested, and offered as a pull request to look at and merge (or, while the repository does
+# not let Actions open pull requests, an issue with the link that opens it). Nothing is published: a release is
+# still only a v* tag, pushed when one is ordered.
+name: Datos
+
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Buscar versiones nuevas
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python tools/check_updates.py >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
+      - name: ¿Ya propuesto?
+        id: pending
+        if: steps.check.outputs.label != ''
+        run: |
+          if git ls-remote --exit-code --heads origin "datos/${{ steps.check.outputs.label }}" > /dev/null; then
+            echo "skip=yes" >> "$GITHUB_OUTPUT"
+          fi
+      # Warcraft DB's pages, kept between runs (the NPC data asks for thousands of them)
+      - name: Caché de Warcraft DB
+        if: steps.check.outputs.questie != '' && steps.pending.outputs.skip != 'yes'
+        uses: actions/cache@v4
+        with:
+          path: tools/cache/wdb
+          key: wdb-${{ github.run_id }}
+          restore-keys: wdb-
+      - name: Rehacer los datos
+        id: data
+        if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes'
+        run: |
+          pip install numpy pillow scipy 'lupa>=2'
+          if [ -n "${{ steps.check.outputs.build }}" ]; then
+            sed -i 's/^BUILD = ".*"/BUILD = "${{ steps.check.outputs.build }}"/' tools/build_data.py
+            python tools/build_data.py
+          fi
+          if [ -n "${{ steps.check.outputs.questie }}" ]; then
+            python tools/build_npcs.py
+          fi
+          set +e
+          python tests/run.py > tests-report.txt 2>&1
+          echo "tests=$?" >> "$GITHUB_OUTPUT"
+          cat tests-report.txt
+      - name: Proponer los datos nuevos
+        if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LABEL: ${{ steps.check.outputs.label }}
+          TESTS: ${{ steps.data.outputs.tests }}
+        run: |
+          branch="datos/$LABEL"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add Data Media tools/build_data.py
+          git commit -m "Datos: $LABEL"
+          git push origin "$branch"
+          if [ "$TESTS" = "0" ]; then result="Las pruebas pasan."; else result="**Las pruebas fallan**: hay que mirarlo antes de unirlo."; fi
+          {
+            echo "Hay datos nuevos: $LABEL. Están regenerados en esta rama. $result"
+            echo
+            echo "Para incorporarlos, une este pull request. No se publica nada hasta que se suba una etiqueta v*."
+            echo
+            echo '```'
+            tail -n 40 tests-report.txt
+            echo '```'
+          } > body.md
+          if ! gh pr create --base main --head "$branch" --title "Datos nuevos: $LABEL" --body-file body.md; then
+            { echo "Abre el pull request con un clic: https://github.com/${{ github.repository }}/compare/main...$branch?expand=1"; echo; cat body.md; } > issue.md
+            gh issue create --title "Datos nuevos: $LABEL" --body-file issue.md
+          fi
