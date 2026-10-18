@@ -192,6 +192,10 @@ function Layout()
             end
         end
     end
+    if lastGroup == "LAYER_GROUP_MINIMAP" then
+        side.mmStyle.text:SetText(L.OPT_MM_STYLE .. ": " .. L["MM_" .. ns.Opt("mmStyle")])
+        Put(side.mmStyle)
+    end
     y = y - 6
     Put(side.more)
     side.unexplored.text:SetText(L.OPT_UNEXPLORED .. ": " .. L["UNEXPLORED_" .. ns.Opt("unexplored")])
@@ -330,6 +334,14 @@ local function CreateSide(frame)
         Layout()
     end)
     side.unexplored = unexplored
+    -- the minimap's look: a click, the next one
+    local mmStyle = Row(list)
+    mmStyle.icon:SetTexture(I .. "INV_Misc_Spyglass_03")
+    mmStyle:SetScript("OnClick", function()
+        ns.MinimapStyle.Next()
+        Layout()
+    end)
+    side.mmStyle = mmStyle
     local more = Row(list)
     more.icon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
     more.text:SetText(L.MORE_OPTIONS)
@@ -506,6 +518,16 @@ local function Build()
     Check(panel, "arrow", L.OPT_ARROW, 16, y - 20, L.OPT_ARROW_TIP)
     Check(panel, "corpseArrow", L.OPT_CORPSE, 16, y - 46)
     Check(panel, "flightTimer", L.OPT_FLIGHT_TIMER, 16, y - 72)
+
+    -- the minimap's look (right of sharing and navigation)
+    y = -460 - 26
+    Header(panel, L.LAYER_GROUP_MINIMAP, 360, y)
+    local styles, names = ns.MinimapStyle.ORDER, {}
+    for i, key in ipairs(styles) do names[i] = L["MM_" .. key] end
+    Cycle(panel, "mmStyle", L.OPT_MM_STYLE, styles, names, 364, y - 22)
+    Stepper(panel, "mmScale", L.OPT_MM_SIZE, 0.6, 1.6, 0.1, 364, y - 50)
+    Check(panel, "mmZone", L.OPT_MM_ZONE, 360, y - 76)
+    Check(panel, "mmTracking", L.OPT_MM_TRACKING, 360, y - 102)
 
     panel:SetScript("OnShow", function()
         for _, fn in ipairs(refreshers) do fn() end
