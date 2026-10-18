@@ -64,6 +64,7 @@ Modules\Quests.lua
 Modules\Gather.lua
 Modules\Npcs.lua
 Modules\QuestMap.lua
+Modules\QuestPanel.lua
 Modules\Rares.lua
 Modules\Townsfolk.lua
 Modules\Dungeon.lua

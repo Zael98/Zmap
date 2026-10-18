@@ -204,6 +204,40 @@ local function Navigate(mark)
     ns.Waypoints.Add(mark.m, mark.x, mark.y, WhoName(mark), { navigate = true, temp = true })
 end
 
+-- a quest of your log: its colour on the map, and whether it is ready to turn in
+function QM.Color(id)
+    for i, q in ipairs(QM.InLog()) do
+        if q == id then return COLORS[(i - 1) % #COLORS + 1] end
+    end
+end
+function QM.IsFinished(id)
+    if dirty then Build() end
+    return finished[id] == true
+end
+
+-- where to go for a quest of your log: its nearest objective, or who takes it once it is done (a mark; nil:
+-- the data knows no place)
+function QM.Next(id)
+    local u, v = Geo.UnitPosition("player")
+    local done, best, bd = QM.IsFinished(id), nil, nil
+    for _, m in ipairs(QM.Objectives()) do
+        if m.quest == id and (m.turnIn == true) == done then
+            local d = u and (m.u - u) ^ 2 + (m.v - v) ^ 2 or 0
+            if not bd or d < bd then best, bd = m, d end
+        end
+    end
+    return best
+end
+
+-- the map there, and the arrow
+function QM.GoTo(id)
+    local mark = QM.Next(id)
+    if not mark then return false end
+    ns.Map.GoTo(mark.u, mark.v, math.max(ns.Map.Zoom(), 6))
+    Navigate(mark)
+    return true
+end
+
 local givers = ns.Pins.New("givers", { level = 48, size = 20, option = "available", minZoom = 3, cull = true })
 
 function givers:Refresh()
@@ -455,6 +489,7 @@ local function Changed()
     dirty = true
     givers:Update()
     objectives:Update()
+    ns.Fire("ZMAP_QUESTS")   -- (the quests panel)
 end
 local later = ns.Debounce(0.5, Changed)
 ns.On("QUEST_LOG_UPDATE", later)

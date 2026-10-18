@@ -81,7 +81,7 @@ ns.LOCALES.DE = {
     NPC = "NSC", RARE = "Selten", RARE_ELITE = "Seltene Elite", ELITE = "Elite", OPT_RARES = "Seltene Gegner",
     FOUND_HINT = "Klick: hingehen · Rechtsklick: Markierungen entfernen",
     QUEST = "Quest", QUESTS_HERE = "Annehmbare Quests", TURN_IN = "Abgeben: %s", CLICK_NAVIGATE = "Klick: hingehen",
-    OPT_AVAILABLE = "Annehmbare Quests", OPT_TRIVIAL = "Niedrigstufige Quests", OPT_OBJECTIVES = "Questziele", OPT_OBJECTIVE_AREAS = "Zielgebiete",
+    OPT_AVAILABLE = "Annehmbare Quests", OPT_TRIVIAL = "Niedrigstufige Quests", OPT_OBJECTIVES = "Questziele", OPT_OBJECTIVE_AREAS = "Zielgebiete", QUEST_PANEL = "Quests (%d)", QUEST_PANEL_TIP = "Deine Quests und ihre Ziele: Ein Klick führt zum nächsten Ziel oder, wenn erledigt, zum Questabnehmer.", QUEST_READY = "Bereit zum Abgeben", QUEST_PANEL_EMPTY = "Keine Quests im Log", QUEST_NOWHERE = "Die Daten wissen nicht, wo es ist.",
     NEEDS_SKILL = "Benötigt %d %s", HERBALISM = "Kräuterkunde", MINING = "Bergbau",
     FOLK_anvil = "Amboss", FOLK_forge = "Schmiede", FOLK_stone = "Versammlungsstein",
     ONLY_ZONE = "Ohne Zmap: nur die Zone ist bekannt (%s)", OPT_MINIMAP_PINS = "Markierungen auf der Minikarte",

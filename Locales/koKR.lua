@@ -81,7 +81,7 @@ ns.LOCALES.KO = {
     NPC = "NPC", RARE = "희귀", RARE_ELITE = "희귀 정예", ELITE = "정예", OPT_RARES = "희귀 몹",
     FOUND_HINT = "클릭: 그곳으로 가기 · 오른쪽 클릭: 표시 지우기",
     QUEST = "퀘스트", QUESTS_HERE = "받을 수 있는 퀘스트", TURN_IN = "보고: %s", CLICK_NAVIGATE = "클릭: 그곳으로 가기",
-    OPT_AVAILABLE = "받을 수 있는 퀘스트", OPT_TRIVIAL = "낮은 레벨 퀘스트", OPT_OBJECTIVES = "퀘스트 목표", OPT_OBJECTIVE_AREAS = "목표 지역",
+    OPT_AVAILABLE = "받을 수 있는 퀘스트", OPT_TRIVIAL = "낮은 레벨 퀘스트", OPT_OBJECTIVES = "퀘스트 목표", OPT_OBJECTIVE_AREAS = "목표 지역", QUEST_PANEL = "퀘스트 (%d)", QUEST_PANEL_TIP = "내 퀘스트와 목표: 클릭하면 가장 가까운 목표나, 완료된 퀘스트는 보고할 곳으로 갑니다.", QUEST_READY = "보고 가능", QUEST_PANEL_EMPTY = "퀘스트 목록이 비어 있음", QUEST_NOWHERE = "위치 정보가 없습니다.",
     NEEDS_SKILL = "%d 필요 (%s)", HERBALISM = "약초채집", MINING = "채광",
     FOLK_anvil = "모루", FOLK_forge = "용광로", FOLK_stone = "만남의 돌",
     ONLY_ZONE = "Zmap 없음: 지역만 알 수 있음 (%s)", OPT_MINIMAP_PINS = "미니맵 표시",
