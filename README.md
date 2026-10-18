@@ -18,7 +18,7 @@ Mapa del mundo continuo para WoW Forever (1.60.1). Sustituye al mapa del juego (
 - **Hierbas y minerales** de los datos (unos 25.000 puntos) en gris los que aún no puedes recoger; además de los que recoges tú, que se recuerdan y se comparten con la hermandad. Solo con la profesión: sin Herboristería no salen hierbas ni su opción, y lo mismo con Minería.
 - **Buzones, yunques, forjas y piedras de encuentro** en el mapa.
 - **Minimapa**: el destino (en el borde si está lejos), tus pines, misiones, objetivos y hierbas o minerales cercanos.
-- **Cuevas y minas**: 31 cuevas, minas y entradas de mazmorra en su sitio real; al acercarte emerge su mapa y la superficie se oscurece. Las máscaras son de OpenMap (MIT, `Media/Masks/Caves/LICENSE-OpenMap.txt`).
+- **Cuevas y minas**: las cuevas, minas y entradas de mazmorra del cliente en su sitio real; al acercarte emerge su mapa entero (sin el marco) y la superficie se oscurece.
 - **Mapas de mazmorra**: dentro de una instancia el mapa abre el de la mazmorra, por plantas y con sus jefes; también con un clic en la entrada. Botón para volver al mundo.
 - **Hermandad sin Zmap**: quien no tiene Zmap aparece en su zona (un círculo hueco junto al nombre de la zona); el juego solo dice en qué zona está, no el punto exacto.
 - **Igualar colores** (opcional): suaviza el cambio de color entre zonas vecinas.

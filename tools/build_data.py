@@ -638,9 +638,8 @@ def build_dungeon_maps():
 
 # --------------------------------------------------------------------------------------------------------------
 # Caves and the ways into some dungeons: Blizzard's micro maps (Mists Classic's tables; their pictures are in
-# Forever's install), placed at their world box. Their masks (Media/Masks/Caves) are OpenMap's (MIT): a cave
-# without one is left out. Where several floors share a place, the first; Blackrock Mountain's deeper ones
-# never by themselves.
+# Forever's install), placed at their world box. Where several floors share a place, the first; Blackrock
+# Mountain's deeper ones never by themselves.
 # --------------------------------------------------------------------------------------------------------------
 
 CAVE_SKIP = {34, 35}   # Blackrock Mountain's lower floors (under its main one)
@@ -659,12 +658,11 @@ def build_caves():
     for r in table("UiMapArtTile", build=MISTS):
         if r["LayerIndex"] == "0":
             tiles.setdefault(r["UiMapArtID"], []).append(r)
-    masks = ROOT / "Media" / "Masks" / "Caves"
     out, first = {}, {}
     for m, box in sorted(boxes.items(), key=lambda kv: int(kv[0])):
         ts = sorted(tiles.get(art.get(m), []), key=lambda r: (int(r["RowIndex"]), int(r["ColIndex"])))
         name = names["enUS"].get(m, "")
-        if int(m) in CAVE_SKIP or len(ts) != 12 or not (masks / f"{m}.tga").exists() or name in first:
+        if int(m) in CAVE_SKIP or len(ts) != 12 or name in first:
             continue
         if not casc(int(ts[0]["FileDataID"])):
             continue
@@ -678,7 +676,7 @@ def write_caves(caves):
     L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
          "-- caves and the ways into some dungeons: [micro map] = { { names enUS, esES, esMX, deDE, frFR, ptBR, itIT,",
          "--   ruRU, koKR, zhCN, zhTW }, instance, minX, minY, maxX, maxY (its picture's world box, yards),",
-         "--   { 12 tile file IDs, row by row } } (masks: Media/Masks/Caves/<id>.tga, OpenMap's, MIT)",
+         "--   { 12 tile file IDs, row by row } }",
          "ns.CAVES = {"]
     for m, c in sorted(caves.items()):
         inst, x0, y0, x1, y1 = c["box"]

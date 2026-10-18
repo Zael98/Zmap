@@ -199,8 +199,9 @@ local function BuildCity(mapID)
 end
 
 --------------------------------------------------------------------------------------------------------------
--- Caves (Data/Caves.lua: Blizzard's micro maps, through OpenMap's masks) at their place: zoom right in on
--- one and it surfaces, the land above it dimmed; zoom back out and it sinks
+-- Caves (Data/Caves.lua: Blizzard's micro maps) at their place, their whole picture without its frame (a
+-- mask cut to the cave's shape left parts of it out): zoom right in on one and it surfaces, the land above
+-- it dimmed; zoom back out and it sinks
 --------------------------------------------------------------------------------------------------------------
 
 local CAVE_FULL, CAVE_START = 2.2, 3.5     -- the view's width / the cave's where it has surfaced / starts to
@@ -228,7 +229,7 @@ end
 local function BuildCave(id)
     local l, r, t, b = Art.CaveRect(id)
     local f = Layer(caveRoot, caveRoot:GetFrameLevel() + 1)
-    TilesAt(f, l, r, t, b, ns.CAVES[id][7], "ARTWORK", 0, MaskAt(f, l, r, t, b, "Caves\\" .. id))
+    TilesAt(f, l, r, t, b, ns.CAVES[id][7], "ARTWORK", 0, MaskAt(f, l, r, t, b, "frame"))
     caves[id] = f
     return f
 end

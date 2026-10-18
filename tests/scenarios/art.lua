@@ -120,19 +120,21 @@ STATE.indoors = true
 OPEN()
 FRAMES(5)
 local cave = ZNS.Art.CaveAt(ZNS.Geo.FromYards(0, -9780, 160))
-local caveTex = 0
-for _, w in ipairs(ALL_WIDGETS) do
-    if w.kind == "Texture" and w.shown and w.masks and w.masks[1] and tostring(w.masks[1].file):find("Caves", 1, true) then caveTex = caveTex + 1 end
+local caveFiles = {}
+for _, f in ipairs(ZNS.CAVES[38][7]) do caveFiles[f] = true end
+local function CaveShown()
+    local n = 0
+    for _, w in ipairs(ALL_WIDGETS) do
+        if w.kind == "Texture" and caveFiles[w.file] and w.shown and w.parent.shown and w.parent.alpha > 0.01 then n = n + 1 end
+    end
+    return n
 end
+local caveTex = CaveShown()
 OUT(("cave: inside %s, zoom %.0f, tiles %d"):format(tostring(cave), ZNS.Map.Zoom(), caveTex))
 OUT("ART fargodeep", DUMP_ART())
 local cu, cv = ZNS.Geo.FromYards(0, -9780, 160)
 ZNS.Map.SetView(cu * W, cv * H, 6)
 FRAMES(5)
-local shownAfter = 0
-for _, w in ipairs(ALL_WIDGETS) do
-    if w.kind == "Texture" and w.masks and w.masks[1] and tostring(w.masks[1].file):find("Caves", 1, true) and w.parent.shown and w.parent.alpha > 0.01 then shownAfter = 1 end
-end
-OUT("cave zoomed out: shown " .. tostring(shownAfter == 1))
+OUT("cave zoomed out: shown " .. tostring(CaveShown() > 0))
 STATE.indoors, STATE.instance = false, true
 OUT("errors " .. #STATE.errors)
