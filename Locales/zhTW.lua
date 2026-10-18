@@ -81,7 +81,7 @@ ns.LOCALES.TW = {
     NPC = "NPC", RARE = "稀有生物", RARE_ELITE = "稀有精英生物", ELITE = "精英", OPT_RARES = "稀有怪",
     FOUND_HINT = "點擊：前往 · 右鍵：清除標記",
     QUEST = "任務", QUESTS_HERE = "可接任務", TURN_IN = "交任務：%s", CLICK_NAVIGATE = "點擊：前往",
-    OPT_AVAILABLE = "可接任務", OPT_TRIVIAL = "低等級任務", OPT_OBJECTIVES = "任務目標", OPT_OBJECTIVE_AREAS = "目標區域", QUEST_PANEL = "任務 (%d)", QUEST_PANEL_TIP = "地圖上的任務日誌：任務和目標；點擊顯示任務詳情。", QUEST_GO = "前往", QUEST_READY = "可以交任務", QUEST_PANEL_EMPTY = "任務日誌中沒有任務", QUEST_NOWHERE = "資料中沒有它的位置。", MENU_GATHER_ROUTE = "%s採集路線", MENU_GATHER_STOP = "停止採集路線", GATHER_ROUTE = "採集路線：%d個點，%s，每圈約%s", GATHER_NEXT = "下一個採集點（%d/%d）", GATHER_NONE = "這裡沒有你能採集的草藥或礦石。", GATHER_ALL = "所有我能採集的", GATHER_BAR = "採集路線：%s · 第%d/%d點 · 每圈約%s", RARE_DIED = "%s前被擊殺", RARE_BACK_IN = "約%s後重生", RARE_MAYBE_BACK = "可能已經重生", RARE_RESPAWN = "死亡後約%s重生", RARE_RESPAWN_UNKNOWN = "重生時間：尚不知道",
+    OPT_AVAILABLE = "可接任務", OPT_TRIVIAL = "低等級任務", OPT_REPEATABLE = "可重複任務", OPT_OBJECTIVES = "任務目標", OPT_OBJECTIVE_AREAS = "目標區域", QUEST_PANEL = "任務 (%d)", QUEST_PANEL_TIP = "地圖上的任務日誌：任務和目標；點擊顯示任務詳情。", QUEST_GO = "前往", QUEST_READY = "可以交任務", QUEST_PANEL_EMPTY = "任務日誌中沒有任務", QUEST_NOWHERE = "資料中沒有它的位置。", MENU_GATHER_ROUTE = "%s採集路線", MENU_GATHER_STOP = "停止採集路線", GATHER_ROUTE = "採集路線：%d個點，%s，每圈約%s", GATHER_NEXT = "下一個採集點（%d/%d）", GATHER_NONE = "這裡沒有你能採集的草藥或礦石。", GATHER_ALL = "所有我能採集的", GATHER_BAR = "採集路線：%s · 第%d/%d點 · 每圈約%s", RARE_DIED = "%s前被擊殺", RARE_BACK_IN = "約%s後重生", RARE_MAYBE_BACK = "可能已經重生", RARE_RESPAWN = "死亡後約%s重生", RARE_RESPAWN_UNKNOWN = "重生時間：尚不知道",
     NEEDS_SKILL = "需要 %d %s", HERBALISM = "草藥學", MINING = "採礦",
     FOLK_anvil = "鐵砧", FOLK_forge = "熔爐", FOLK_stone = "集合石",
     ONLY_ZONE = "沒有 Zmap：只知道區域（%s）", OPT_MINIMAP_PINS = "小地圖上的標記",

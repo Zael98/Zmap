@@ -19,6 +19,7 @@ local LAYERS = {
     { "quests", "OPT_QUESTS", "QuestTurnin", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "available", "OPT_AVAILABLE", "QuestNormal", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "trivial", "OPT_TRIVIAL", "TrivialQuests", atlas = true, group = "LAYER_GROUP_QUESTS" },
+    { "repeatable", "OPT_REPEATABLE", "QuestDaily", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "objectives", "OPT_OBJECTIVES", "WhiteCircle-RaidBlips", atlas = true, color = { 1, 0.35, 0.3 }, group = "LAYER_GROUP_QUESTS" },
     { "objectiveAreas", "OPT_OBJECTIVE_AREAS", "WhiteCircle-RaidBlips", atlas = true, color = { 1, 0.82, 0.1 }, group = "LAYER_GROUP_QUESTS" },
     { "townsfolk", "OPT_TOWNSFOLK", I .. "INV_Misc_Coin_01", types = true, group = "LAYER_GROUP_PEOPLE" },

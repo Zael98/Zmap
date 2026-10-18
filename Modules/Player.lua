@@ -48,6 +48,22 @@ end
 function P:Refresh() Update() end
 
 ns.On("ZMAP_TICK", function() if P.frame and P.frame:IsShown() then Update() end end)
+
+-- between the ticks, every frame: the arrow where you are and how you face (the world's yards: plain numbers, no
+-- garbage), so it glides instead of jumping ten times a second
+local IsSecret = issecretvalue or function() return false end
+local glider = CreateFrame("Frame")
+glider:SetScript("OnUpdate", function()
+    if not (pin and pin:IsShown() and ns.Map.IsShown()) then return end
+    local wx, wy, _, instance = UnitPosition("player")
+    if not wx or IsSecret(wx) or IsSecret(wy) then return end
+    local u, v = Geo.FromYards(instance, wx, wy)
+    if not u then return end
+    P:Place(pin, u, v)
+    ns.Map.Follow(u, v)   -- (the view with it, when it follows you)
+    local facing = GetPlayerFacing()
+    if facing and not IsSecret(facing) then pin.icon:SetRotation(facing) end
+end)
 -- the ping: a ring that grows and fades for two seconds after the map opens
 local animator = CreateFrame("Frame")
 local function Animate()

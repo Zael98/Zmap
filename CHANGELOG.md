@@ -5,6 +5,8 @@
 - **The quest log is part of the map**: a panel down its right side from the moment it opens, in the layers panel's style, folding away to a tab. Its zones' + / - fold their quests (they did nothing).
 - **New buttons**: Zmap's own, dark with a thin gold edge, brighter under the mouse (the top bar, the quest log, dungeon and cave floors).
 - **Go there always finds the quest**: when Zmap has no mark of it, the game's own mark of it, or who takes it in the data. A finished quest's hand-in is marked unless the game marks that very hand-in.
+- **Your arrow glides**: it follows you and turns every frame (it jumped ten times a second), the view with it.
+- **The quests reviewed**: those Questie itself never shows on Forever (2,394 on its list: duplicates, not in the game...) and those Forever's client no longer has are left out (356 that Zmap marked). **Repeatable quests** (lost items such as the saptas, reputation turn-ins) only with their new layer on (off).
 - **Quests you cannot take are no longer marked** once you talk to their giver: what it really offers is learned (until you level up or hand in a quest). On the minimap too.
 - Less garbage from the game's own lists: an NPC's tooltip is read once, Blizzard's quest marks are asked for only for the zones in view, and the cursor's zone only when it moves.
 

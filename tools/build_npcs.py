@@ -368,11 +368,46 @@ def ids_of(group):
     return out
 
 
+def questie_blacklist():
+    """The quests Questie never shows (duplicates, not in the game, GM island...), its list read as it reads it on
+    Forever: Era content. {questID} (those it only hides on the map are left: they may be in your log)."""
+    from lupa import lua51
+    zips = sorted((CACHE / "questie").glob("Questie-*.zip"))
+    with zipfile.ZipFile(zips[-1]) as z:
+        src = z.read("Questie/Database/Corrections/QuestieQuestBlacklist.lua").decode("utf-8")
+    L = lua51.LuaRuntime(unpack_returned_tuples=True)
+    L.execute("""
+        local function Off() return false end
+        Questie = setmetatable({ IsForever = true }, { __index = function() return false end })
+        local expansions = { Era = 1, Tbc = 2, Wotlk = 3, Cata = 4, MoP = 5, Current = 1 }
+        local phases = setmetatable({ activePhases = {} }, { __index = function() return Off end })
+        local modules = { Expansions = expansions, ContentPhases = phases }
+        QuestieLoader = {
+            CreateModule = function(_, name) modules[name] = modules[name] or {} return modules[name] end,
+            ImportModule = function(_, name) return modules[name] or setmetatable({}, { __index = function() return Off end }) end,
+        }
+    """)
+    L.execute(src)
+    listed = L.eval('QuestieLoader:ImportModule("QuestieQuestBlacklist"):Load()')
+    return {int(k) for k, v in listed.items() if v is True}
+
+
 def build_quests(npcs):
     items = entities("Item")
     quests = {}
     quest_objects = set()
+    blacklist = questie_blacklist()
+    print(f"Questie's blacklist (Era): {len(blacklist)} quests left out")
+    # the quests Forever's client has (QuestV2: those with a "done" bit; repeatable ones have none, so they are
+    # kept): a non-repeatable quest it lacks was taken out of Forever
+    in_client = {int(r["ID"]) for r in build_data.table("QuestV2")}
+    gone = 0
     for qid, row in entities("Quest").items():
+        if qid in blacklist:
+            continue
+        if qid not in in_client and not (row.get(24) or 0) & 1:
+            gone += 1
+            continue
         starts = as_map(row.get(2))
         ends = as_map(row.get(3))
         objectives = as_map(row.get(10))
@@ -414,6 +449,7 @@ def build_quests(npcs):
         }
         quest_objects.update(quest["startObjs"] + quest["endObjs"] + quest["objs"])
         quests[qid] = quest
+    print(f"not in Forever's client: {gone} quests left out")
     return quests, quest_objects
 
 

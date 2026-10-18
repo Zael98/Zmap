@@ -56,6 +56,7 @@ end
 function QM.Available(id, q, level, race, class)
     if completed[id] or inLog[id] then return false end
     if ns.char.notOffered and ns.char.notOffered[id] then return false end   -- (its giver did not offer it)
+    if q[16] % 2 == 1 and not ns.Opt("repeatable") then return false end    -- repeatable: only when asked for
     if math.floor(q[16] / 2) % 2 == 1 then return false end   -- needs a profession or spell
     if q[16] >= 8 then return false end                        -- a holiday's
     if level < q[3] or (q[15] > 0 and level > q[15]) then return false end
@@ -570,6 +571,10 @@ ns.On("QUEST_REMOVED", later)
 ns.On("PLAYER_LEVEL_UP", later)
 ns.On("ZMAP_OPTION", function(key)
     if key == "trivial" then givers:Update() end
+    if key == "repeatable" then
+        dirty = true
+        givers:Update()
+    end
     if key == "objectiveAreas" then objectives:Update() end
 end)
 ns.On("ZMAP_SHOW", function() dirty = true end)
