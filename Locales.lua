@@ -87,7 +87,7 @@ local EN = {
     FOUND_HINT = "Click: go there · Right-click: clear the marks",
     -- quests from the data
     QUEST = "Quest", QUESTS_HERE = "Quests to pick up", TURN_IN = "Turn in: %s", CLICK_NAVIGATE = "Click: go there",
-    OPT_AVAILABLE = "Quests to pick up", OPT_TRIVIAL = "Low-level quests", OPT_OBJECTIVES = "Quest objectives", OPT_OBJECTIVE_AREAS = "Objective areas", QUEST_PANEL = "Quests (%d)", QUEST_PANEL_TIP = "Your quests and their objectives: a click goes to the nearest objective, or to who takes the quest once done.", QUEST_READY = "Ready to turn in", QUEST_PANEL_EMPTY = "No quests in your log", QUEST_NOWHERE = "The data does not know where it is.",
+    OPT_AVAILABLE = "Quests to pick up", OPT_TRIVIAL = "Low-level quests", OPT_OBJECTIVES = "Quest objectives", OPT_OBJECTIVE_AREAS = "Objective areas", QUEST_PANEL = "Quests (%d)", QUEST_PANEL_TIP = "Your quests and their objectives: a click goes to the nearest objective, or to who takes the quest once done.", QUEST_READY = "Ready to turn in", QUEST_PANEL_EMPTY = "No quests in your log", QUEST_NOWHERE = "The data does not know where it is.", MENU_GATHER_ROUTE = "Gathering route in %s", MENU_GATHER_STOP = "Stop the gathering route", GATHER_ROUTE = "Gathering route: %d stops in %s, about %s a lap", GATHER_NEXT = "Next node (%d/%d)", GATHER_NONE = "No herbs or ore you can gather here.",
     -- herbs and ore from the data
     NEEDS_SKILL = "Needs %d %s", HERBALISM = "Herbalism", MINING = "Mining",
     FOLK_anvil = "Anvil", FOLK_forge = "Forge", FOLK_stone = "Meeting stone",
@@ -198,7 +198,7 @@ local ES = {
     NPC = "PNJ", RARE = "Raro", RARE_ELITE = "Raro élite", ELITE = "Élite", OPT_RARES = "Raros",
     FOUND_HINT = "Clic: ir hasta allí · Clic derecho: quitar las marcas",
     QUEST = "Misión", QUESTS_HERE = "Misiones para coger", TURN_IN = "Entregar: %s", CLICK_NAVIGATE = "Clic: ir hasta allí",
-    OPT_AVAILABLE = "Misiones para coger", OPT_TRIVIAL = "Misiones de nivel bajo", OPT_OBJECTIVES = "Objetivos de misión", OPT_OBJECTIVE_AREAS = "Zonas de objetivo", QUEST_PANEL = "Misiones (%d)", QUEST_PANEL_TIP = "Tus misiones y sus objetivos: un clic te lleva al objetivo más cercano, o a quien recoge la misión cuando está hecha.", QUEST_READY = "Lista para entregar", QUEST_PANEL_EMPTY = "No llevas misiones", QUEST_NOWHERE = "Los datos no saben dónde está.",
+    OPT_AVAILABLE = "Misiones para coger", OPT_TRIVIAL = "Misiones de nivel bajo", OPT_OBJECTIVES = "Objetivos de misión", OPT_OBJECTIVE_AREAS = "Zonas de objetivo", QUEST_PANEL = "Misiones (%d)", QUEST_PANEL_TIP = "Tus misiones y sus objetivos: un clic te lleva al objetivo más cercano, o a quien recoge la misión cuando está hecha.", QUEST_READY = "Lista para entregar", QUEST_PANEL_EMPTY = "No llevas misiones", QUEST_NOWHERE = "Los datos no saben dónde está.", MENU_GATHER_ROUTE = "Ruta de recolección en %s", MENU_GATHER_STOP = "Quitar la ruta de recolección", GATHER_ROUTE = "Ruta de recolección: %d paradas en %s, unos %s por vuelta", GATHER_NEXT = "Siguiente nodo (%d/%d)", GATHER_NONE = "Aquí no hay hierbas ni minerales que puedas recoger.",
     NEEDS_SKILL = "Requiere %d de %s", HERBALISM = "Herboristería", MINING = "Minería",
     FOLK_anvil = "Yunque", FOLK_forge = "Forja", FOLK_stone = "Piedra de encuentro",
     ONLY_ZONE = "Sin Zmap: solo se sabe su zona (%s)", OPT_MINIMAP_PINS = "Marcas en el minimapa",

@@ -302,6 +302,17 @@ function ns.NodeSpawns(item, name)
     return out
 end
 
+-- for a gathering route: the nodes of a zone you can gather now, the data's and those found ({ u, v } each)
+function ns.GatherSpots(mapID)
+    local out = {}
+    for _, n in ipairs(ns.GatherNear(mapID)) do out[#out + 1] = { n.u, n.v } end
+    for _, n in ipairs(ns.db.nodes[mapID] or {}) do
+        local u, v = Geo.ToWorld(mapID, n.x, n.y)
+        if u and Wanted(n.kind) then out[#out + 1] = { u, v } end
+    end
+    return out
+end
+
 -- for the search: every kind of node found, by name
 function ns.GatherList()
     local out = {}

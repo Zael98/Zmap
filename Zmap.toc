@@ -62,6 +62,7 @@ Modules\Dungeons.lua
 Modules\Transports.lua
 Modules\Quests.lua
 Modules\Gather.lua
+Modules\GatherRoute.lua
 Modules\Npcs.lua
 Modules\QuestMap.lua
 Modules\QuestPanel.lua
