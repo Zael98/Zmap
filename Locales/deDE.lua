@@ -42,7 +42,7 @@ ns.LOCALES.DE = {
     FLIGHT_HINT = "Klick: von hier planen · Strg+Klick: hingehen",
     FLIGHT_HINT_ORIGIN = "Planung von hier. Erneut klicken oder Rechtsklick: zurück zum nächsten",
     FLIGHT_TIMER = "Flug nach %s: %s", FLIGHT_TIMER_UP = "Flug nach %s: %s (wird gemessen)",
-    DUNGEON = "Dungeon", RAID = "Schlachtzug", DUNGEON_LEVEL = "Stufe %s",
+    DUNGEON = "Dungeon", RAID = "Schlachtzug", BATTLEGROUND = "Schlachtfeld", DUNGEON_LEVEL = "Stufe %s",
     BOAT = "Schiff", ZEPPELIN = "Zeppelin", AIRSHIP = "Luftschiff",
     QUEST_DONE = "Abgeschlossen: abgeben",
     QUEST_HINT = "Klick: im Questlog öffnen · Strg+Klick: hingehen",

@@ -42,7 +42,7 @@ ns.LOCALES.KO = {
     FLIGHT_HINT = "클릭: 여기서 계획 · Ctrl+클릭: 그곳으로 가기",
     FLIGHT_HINT_ORIGIN = "여기서 계획 중. 다시 클릭 또는 오른쪽 클릭: 가장 가까운 곳으로",
     FLIGHT_TIMER = "%s(으)로 비행: %s", FLIGHT_TIMER_UP = "%s(으)로 비행: %s (측정 중)",
-    DUNGEON = "던전", RAID = "공격대", DUNGEON_LEVEL = "레벨 %s",
+    DUNGEON = "던전", RAID = "공격대", BATTLEGROUND = "전장", DUNGEON_LEVEL = "레벨 %s",
     BOAT = "배", ZEPPELIN = "비행선", AIRSHIP = "비공정",
     QUEST_DONE = "완료: 보고하세요",
     QUEST_HINT = "클릭: 퀘스트 목록에서 열기 · Ctrl+클릭: 그곳으로 가기",

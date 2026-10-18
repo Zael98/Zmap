@@ -85,7 +85,17 @@ local function Base()
         Add(Entry("flight", ns.Flights.Name(id), L.FLIGHT_MASTER, u, v, 8, nil, "TaxiNode_Neutral"))
     end
     for _, e in ipairs(ns.DungeonList()) do
-        Add(Entry("dungeon", e.name, e.raid and L.RAID or L.DUNGEON, e.u, e.v, 7, nil, e.raid and "Raid" or "Dungeon"))
+        local entry = Entry("dungeon", e.name, e.raid and L.RAID or L.DUNGEON, e.u, e.v, 7, nil, e.raid and "Raid" or "Dungeon")
+        entry.inst = e.inst and ns.Dungeon.Has(e.inst) and e.inst or nil   -- (its map opens)
+        Add(entry)
+    end
+    -- the battlegrounds: no place in the world, their map
+    for inst, d in pairs(ns.DUNGEON_MAPS or {}) do
+        if d.map then
+            local entry = Entry("battleground", ns.Name(d.floors[1][2]), L.BATTLEGROUND, 0.5, 0.5, nil, "Interface\\Icons\\INV_BannerPVP_01")
+            entry.inst, entry.nowhere = inst, true
+            Add(entry)
+        end
     end
     npcIds, npcAt = {}, 1
     for id in pairs(ns.NPCS or {}) do npcIds[#npcIds + 1] = id end
@@ -185,7 +195,7 @@ local function Score(name, want)
 end
 
 -- zones and cities first, then subzones and your pins, dungeons, NPCs and flight masters, townsfolk and herbs
-local KIND = { zone = 0, subzone = 1, pin = 1, quest = 1, dungeon = 2, node = 2, npc = 3, flight = 3, folk = 4, herb = 4 }
+local KIND = { zone = 0, subzone = 1, pin = 1, quest = 1, dungeon = 2, battleground = 2, node = 2, npc = 3, flight = 3, folk = 4, herb = 4 }
 
 -- a match's rank (lower first), or nil
 local function Rank(kind, key, alt, subKey, want)
@@ -245,7 +255,11 @@ end
 
 function Search.Go(c)
     if not c then return end
-    if c.npc then
+    if c.inst then   -- a dungeon with its map (over its entrance) or a battleground
+        ns.Npcs.Show(nil)
+        if not c.nowhere then ns.Map.GoTo(c.u, c.v, math.max(ns.Map.Zoom(), c.zoom or 7)) end
+        ns.Dungeon.Open(c.inst, c.text)
+    elseif c.npc then
         local m, x, y = ns.Npcs.Nearest(c.npc)
         local u, v = Geo.ToWorld(m, x, y)
         ns.Map.GoTo(u, v, math.max(ns.Map.Zoom(), c.zoom or 10))

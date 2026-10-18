@@ -42,7 +42,7 @@ ns.LOCALES.PT = {
     FLIGHT_HINT = "Clique: planejar daqui · Ctrl+clique: ir até lá",
     FLIGHT_HINT_ORIGIN = "Planejando daqui. Clique de novo ou clique direito: voltar ao mais próximo",
     FLIGHT_TIMER = "Voando para %s: %s", FLIGHT_TIMER_UP = "Voando para %s: %s (cronometrando)",
-    DUNGEON = "Masmorra", RAID = "Raide", DUNGEON_LEVEL = "Nível %s",
+    DUNGEON = "Masmorra", RAID = "Raide", BATTLEGROUND = "Campo de batalha", DUNGEON_LEVEL = "Nível %s",
     BOAT = "Barco", ZEPPELIN = "Zepelim", AIRSHIP = "Aeronave",
     QUEST_DONE = "Concluída: entregue-a",
     QUEST_HINT = "Clique: abrir no registro · Ctrl+clique: ir até lá",
