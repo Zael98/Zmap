@@ -292,6 +292,26 @@ FRAMES(3)
 local marks = #PINS("rareseen")
 OUT(("rares: warned %d, sent %d, marks %d, last %s"):format(#STATE.printed - printedBefore, rareSent, marks, LAST_PRINT()))
 
+-- a rare dies (your target): known dead, kept; seen alive an hour later, how long it takes is learned; dead again,
+-- its tooltip says when it is back
+local function Tip(id)
+    local lines = {}
+    ZNS.RareTooltip({ AddLine = function(_, text) lines[#lines + 1] = text end }, id)
+    return table.concat(lines, " / ")
+end
+STATE.units.target = { id = 471, name = "Madre Colmillo", dead = true }
+EVENT("UNIT_HEALTH", "target")
+local deadNow, first = ZNS.RareDead(471), Tip(471)
+ADVANCE(3600)
+STATE.units.target = { id = 471, name = "Madre Colmillo" }
+EVENT("PLAYER_TARGET_CHANGED")
+local learned = ZNS.db.rareLog[471].respawn
+ADVANCE(400)
+STATE.units.target = { id = 471, name = "Madre Colmillo", dead = true }
+EVENT("UNIT_HEALTH", "target")
+OUT(("rare death: dead %s, %s; learned %s; again: %s"):format(tostring(deadNow), first, tostring(learned), Tip(471)))
+STATE.units.target = nil
+
 -- quests: one done by reaching a place is offered and marks the place; one asking for something bought marks
 -- its sellers
 STATE.player.level = 7

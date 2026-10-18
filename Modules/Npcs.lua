@@ -338,11 +338,14 @@ function rares:Refresh()
         if u > u0 and u < u1 and v > v0 and v < v1 then
             local pin = self:Acquire()
             pin.icon:SetAtlas(N.Elite(r.id) and "VignetteKillElite" or "VignetteKill")
+            pin.icon:SetDesaturated(ns.RareDead ~= nil and ns.RareDead(r.id))   -- (dead, not back yet)
             pin.npc, pin.m, pin.x, pin.y = r.id, r.m, r.x, r.y
             self:Place(pin, u, v)
         end
     end
 end
+
+ns.On("ZMAP_RARES", function() rares:Update() end)   -- (one died, Rares.lua)
 
 local function NpcTooltip(pin, tip)
     local id = pin.npc
@@ -359,6 +362,7 @@ local function NpcTooltip(pin, tip)
     tip:AddLine(("%s  %s"):format(Geo.Name(pin.m), ns.Coords(pin.x, pin.y)), 0.6, 0.6, 0.6)
     local seen = not NPCS[id] and Seen(id)
     if seen and seen.by then tip:AddLine(L.FOUND_BY:format(seen.by), 0.6, 0.8, 1) end
+    if N.Rare(id) and ns.RareTooltip then ns.RareTooltip(tip, id) end
     tip:AddLine(L.CTRL_NAVIGATE, 0.6, 0.6, 0.6)
 end
 N.Tooltip = NpcTooltip
