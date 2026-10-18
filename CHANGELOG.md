@@ -1,6 +1,6 @@
 # Zmap
 
-## Unreleased
+## 1.4.0 — Battlegrounds, quest log, routes and less memory
 
 - **Battleground maps**: Alterac Valley, Warsong Gulch, Arathi Basin and Forever's new Darkspear Islands. Open the map inside one and it shows it (Forever's own pictures, Alterac Valley's drawn whole), with **your group** (drawn by the game's own frame, as Blizzard's map does: class colours, your arrow), **the objectives** (bases, towers, graveyards, mines, in their owner's colours, with their names on hover) and **the flags** where they are or who carries them. Right-click to go back to the world.
 - **Capture countdowns** in Arathi Basin and Alterac Valley: an assaulted base, tower or graveyard counts down under its icon, in the colour of who assaults it (Zmap follows them with the map closed too). And **who carries each flag** in Warsong Gulch, under it.
