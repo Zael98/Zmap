@@ -81,7 +81,7 @@ ns.LOCALES.TW = {
     NPC = "NPC", RARE = "稀有", RARE_ELITE = "稀有精英", ELITE = "精英", OPT_RARES = "稀有怪",
     FOUND_HINT = "點擊：前往 · 右鍵：清除標記",
     QUEST = "任務", QUESTS_HERE = "可接任務", TURN_IN = "交任務：%s", CLICK_NAVIGATE = "點擊：前往",
-    OPT_AVAILABLE = "可接任務", OPT_TRIVIAL = "低等級任務", OPT_OBJECTIVES = "任務目標",
+    OPT_AVAILABLE = "可接任務", OPT_TRIVIAL = "低等級任務", OPT_OBJECTIVES = "任務目標", OPT_OBJECTIVE_AREAS = "目標區域",
     NEEDS_SKILL = "需要 %d %s", HERBALISM = "草藥學", MINING = "採礦",
     FOLK_anvil = "鐵砧", FOLK_forge = "熔爐", FOLK_stone = "集合石",
     ONLY_ZONE = "沒有 Zmap：只知道區域（%s）", OPT_MINIMAP_PINS = "小地圖上的標記",

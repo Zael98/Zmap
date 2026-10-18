@@ -81,7 +81,7 @@ ns.LOCALES.IT = {
     NPC = "PNG", RARE = "Raro", RARE_ELITE = "Élite raro", ELITE = "Élite", OPT_RARES = "Rari",
     FOUND_HINT = "Clic: vai lì · Clic destro: cancella i segni",
     QUEST = "Missione", QUESTS_HERE = "Missioni da prendere", TURN_IN = "Consegna: %s", CLICK_NAVIGATE = "Clic: vai lì",
-    OPT_AVAILABLE = "Missioni da prendere", OPT_TRIVIAL = "Missioni di basso livello", OPT_OBJECTIVES = "Obiettivi delle missioni",
+    OPT_AVAILABLE = "Missioni da prendere", OPT_TRIVIAL = "Missioni di basso livello", OPT_OBJECTIVES = "Obiettivi delle missioni", OPT_OBJECTIVE_AREAS = "Aree degli obiettivi",
     NEEDS_SKILL = "Richiede %d in %s", HERBALISM = "Erbalismo", MINING = "Estrazione",
     FOLK_anvil = "Incudine", FOLK_forge = "Forgia", FOLK_stone = "Pietra dell'Incontro",
     ONLY_ZONE = "Senza Zmap: si conosce solo la zona (%s)", OPT_MINIMAP_PINS = "Segni sulla minimappa",

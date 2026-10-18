@@ -81,7 +81,7 @@ ns.LOCALES.FR = {
     NPC = "PNJ", RARE = "Rare", RARE_ELITE = "Élite rare", ELITE = "Élite", OPT_RARES = "Rares",
     FOUND_HINT = "Clic : y aller · Clic droit : effacer les marques",
     QUEST = "Quête", QUESTS_HERE = "Quêtes à prendre", TURN_IN = "À rendre : %s", CLICK_NAVIGATE = "Clic : y aller",
-    OPT_AVAILABLE = "Quêtes à prendre", OPT_TRIVIAL = "Quêtes de bas niveau", OPT_OBJECTIVES = "Objectifs de quête",
+    OPT_AVAILABLE = "Quêtes à prendre", OPT_TRIVIAL = "Quêtes de bas niveau", OPT_OBJECTIVES = "Objectifs de quête", OPT_OBJECTIVE_AREAS = "Zones d'objectif",
     NEEDS_SKILL = "Requiert %d en %s", HERBALISM = "Herboristerie", MINING = "Minage",
     FOLK_anvil = "Enclume", FOLK_forge = "Forge", FOLK_stone = "Pierre de rencontre",
     ONLY_ZONE = "Sans Zmap : seule sa zone est connue (%s)", OPT_MINIMAP_PINS = "Marques sur la minicarte",

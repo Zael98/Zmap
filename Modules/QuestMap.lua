@@ -100,9 +100,12 @@ local function Marks(spawns, mark, cap, out)
     end
 end
 
+local objectiveAreas   -- built from the objective marks; nil: to build again
+
 local function Build()
     Scan()
     dirty = false
+    objectiveAreas = nil
     local level, race, class = UnitLevel("player") or 1, RaceBit(), ClassBit()
     local N = ns.Npcs
     -- quest givers: one mark per place, with every quest given there
@@ -230,14 +233,178 @@ function givers:OnClick(pin, button)
     if button == "LeftButton" then Navigate(pin.mark) end
 end
 
+--------------------------------------------------------------------------------------------------------------
+-- Objective areas: a quest's mobs and objects as the area round each group of them (the way Questie shows
+-- them), filled in the quest's colour and outlined, with one mark in its middle for what it is. Worked out on
+-- the canvas (its units are the same yards across and down), drawn as bands across, the outline over them.
+--------------------------------------------------------------------------------------------------------------
+
+local W, H = Geo.W, Geo.H
+local AREA_GAP = 3       -- canvas units (about 135 yards): spawns nearer than this to one of a group are in it
+local AREA_PAD = 1.2     -- canvas units round each spawn
+local AREA_FILL, AREA_EDGE = 0.2, 0.8
+
+-- the convex hull of points { x1, y1, x2, y2, ... } (Andrew's monotone chain), as such a list
+local function Hull(pts)
+    local p = {}
+    for i = 1, #pts - 1, 2 do p[#p + 1] = { pts[i], pts[i + 1] } end
+    table.sort(p, function(a, b) return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2]) end)
+    local function Cross(o, a, b) return (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) end
+    local h = {}
+    for _, q in ipairs(p) do
+        while #h >= 2 and Cross(h[#h - 1], h[#h], q) <= 0 do h[#h] = nil end
+        h[#h + 1] = q
+    end
+    local lower = #h + 1
+    for i = #p - 1, 1, -1 do
+        while #h >= lower and Cross(h[#h - 1], h[#h], p[i]) <= 0 do h[#h] = nil end
+        h[#h + 1] = p[i]
+    end
+    h[#h] = nil
+    local out = {}
+    for _, q in ipairs(h) do out[#out + 1], out[#out + 2] = q[1], q[2] end
+    return out
+end
+
+-- { hull, mark (the spawn nearest its middle: its tooltip, where a click leads), color, u, v, u0, v0, u1, v1 }
+function QM.Areas()
+    if objectiveAreas and not dirty then return objectiveAreas end
+    local byQuest = {}
+    for _, m in ipairs(QM.Objectives()) do
+        if not (m.turnIn or m.buy or m.reach) then
+            byQuest[m.quest] = byQuest[m.quest] or {}
+            table.insert(byQuest[m.quest], m)
+        end
+    end
+    objectiveAreas = {}
+    for _, marks in pairs(byQuest) do
+        -- the groups (union-find over the spawns near each other)
+        local parent = {}
+        local function Root(i)
+            while parent[i] ~= i do
+                parent[i] = parent[parent[i]]
+                i = parent[i]
+            end
+            return i
+        end
+        for i = 1, #marks do parent[i] = i end
+        for i = 1, #marks do
+            for j = i + 1, #marks do
+                local dx, dy = (marks[i].u - marks[j].u) * W, (marks[i].v - marks[j].v) * H
+                if dx * dx + dy * dy < AREA_GAP * AREA_GAP then parent[Root(i)] = Root(j) end
+            end
+        end
+        local groups = {}
+        for i, m in ipairs(marks) do
+            local r = Root(i)
+            groups[r] = groups[r] or {}
+            table.insert(groups[r], m)
+        end
+        for _, group in pairs(groups) do
+            local pts, cx, cy = {}, 0, 0
+            for _, m in ipairs(group) do
+                local x, y = m.u * W, m.v * H
+                cx, cy = cx + x / #group, cy + y / #group
+                for k = 0, 7 do
+                    pts[#pts + 1] = x + math.cos(k * math.pi / 4) * AREA_PAD
+                    pts[#pts + 1] = y + math.sin(k * math.pi / 4) * AREA_PAD
+                end
+            end
+            local best, bd
+            for _, m in ipairs(group) do
+                local d = (m.u * W - cx) ^ 2 + (m.v * H - cy) ^ 2
+                if not bd or d < bd then best, bd = m, d end
+            end
+            local hull = Hull(pts)
+            local x0, y0, x1, y1 = math.huge, math.huge, -math.huge, -math.huge
+            for i = 1, #hull - 1, 2 do
+                x0, x1 = math.min(x0, hull[i]), math.max(x1, hull[i])
+                y0, y1 = math.min(y0, hull[i + 1]), math.max(y1, hull[i + 1])
+            end
+            objectiveAreas[#objectiveAreas + 1] = { hull = hull, mark = best, color = best.color, u = cx / W, v = cy / H,
+                u0 = x0 / W, v0 = y0 / H, u1 = x1 / W, v1 = y1 / H }
+        end
+    end
+    return objectiveAreas
+end
+
+local areaFrame, areaBands, areaUsed = nil, {}, 0
+local areaLines = ns.Pins.Lines()
+
+local function ClearAreas()
+    for i = 1, areaUsed do areaBands[i]:Hide() end
+    areaUsed = 0
+    areaLines:Clear()
+end
+
+local function DrawArea(a)
+    if not areaFrame then
+        areaFrame = CreateFrame("Frame", nil, ns.Map.Canvas())
+        areaFrame:SetAllPoints()
+        areaFrame:SetFrameLevel(ns.Art.levelTop - 2)   -- (under the outlines and the pins)
+    end
+    local c, hull = a.color, a.hull
+    local ymin, ymax = a.v0 * H, a.v1 * H
+    local band = math.max(3 / ns.Map.K(), (ymax - ymin) / 48)   -- (about 3 pixels on screen; 48 at most)
+    local y = ymin
+    while y < ymax do
+        local yc, xmin, xmax = y + band / 2, math.huge, -math.huge
+        for i = 1, #hull - 1, 2 do
+            local j = i + 2 > #hull and 1 or i + 2
+            local x1, y1, x2, y2 = hull[i], hull[i + 1], hull[j], hull[j + 1]
+            if (y1 <= yc and y2 > yc) or (y2 <= yc and y1 > yc) then
+                local x = x1 + (yc - y1) * (x2 - x1) / (y2 - y1)
+                xmin, xmax = math.min(xmin, x), math.max(xmax, x)
+            end
+        end
+        if xmax > xmin then
+            areaUsed = areaUsed + 1
+            local tex = areaBands[areaUsed]
+            if not tex then
+                tex = areaFrame:CreateTexture(nil, "ARTWORK")
+                areaBands[areaUsed] = tex
+            end
+            tex:SetColorTexture(c[1], c[2], c[3], AREA_FILL)
+            tex:ClearAllPoints()
+            tex:SetPoint("TOPLEFT", areaFrame, "TOPLEFT", xmin, -y)
+            tex:SetSize(xmax - xmin, math.min(band, ymax - y))
+            tex:Show()
+        end
+        y = y + band
+    end
+    for i = 1, #hull - 1, 2 do
+        local j = i + 2 > #hull and 1 or i + 2
+        areaLines:Add(hull[i] / W, hull[i + 1] / H, hull[j] / W, hull[j + 1] / H, c[1], c[2], c[3], AREA_EDGE, 2)
+    end
+end
+
+-- for the tests: the outline's pieces and the bands drawn
+function QM.AreasShown()
+    return #areaLines.active, areaUsed
+end
+
 local BUY_ICON = "Interface\\Icons\\INV_Misc_Coin_01"
 local objectives = ns.Pins.New("objectives", { level = 47, size = 14, option = "objectives", minZoom = 3, cull = true })
 
 function objectives:Refresh()
     self:ReleaseAll()
+    ClearAreas()
     local u0, v0, u1, v1 = ns.Pins.ViewBox()
+    local areas = ns.Opt("objectiveAreas")
+    if areas then
+        for _, a in ipairs(QM.Areas()) do
+            if a.u1 > u0 and a.u0 < u1 and a.v1 > v0 and a.v0 < v1 then
+                DrawArea(a)
+                local pin = self:Acquire()
+                pin.icon:SetAtlas("WhiteCircle-RaidBlips")
+                pin.icon:SetVertexColor(a.color[1], a.color[2], a.color[3])
+                pin.mark = a.mark
+                self:Place(pin, a.u, a.v, 1.4)
+            end
+        end
+    end
     for _, mark in ipairs(QM.Objectives()) do
-        if InBox(mark, u0, v0, u1, v1) then
+        if InBox(mark, u0, v0, u1, v1) and not (areas and not (mark.turnIn or mark.buy or mark.reach)) then
             local pin = self:Acquire()
             if mark.turnIn then
                 pin.icon:SetAtlas("QuestTurnin")
@@ -260,6 +427,8 @@ function objectives:Refresh()
         end
     end
 end
+
+function objectives:OnHidden() ClearAreas() end
 
 function objectives:Tooltip(pin, tip)
     local mark = pin.mark
@@ -293,5 +462,8 @@ ns.On("QUEST_TURNED_IN", later)
 ns.On("QUEST_ACCEPTED", later)
 ns.On("QUEST_REMOVED", later)
 ns.On("PLAYER_LEVEL_UP", later)
-ns.On("ZMAP_OPTION", function(key) if key == "trivial" then givers:Update() end end)
+ns.On("ZMAP_OPTION", function(key)
+    if key == "trivial" then givers:Update() end
+    if key == "objectiveAreas" then objectives:Update() end
+end)
 ns.On("ZMAP_SHOW", function() dirty = true end)

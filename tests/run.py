@@ -77,6 +77,7 @@ CHECKS = {
                      r"^far away not remembered: true$", r"^from guild: Guardia Kerr", r"^errors 0$"]),
     "extras": (False, [r"^givers: [1-9]\d*, dughan .*", r"^completed gone: true$", r"^above level offered: 0$",
                        r"^objectives: wolves [1-9]\d*, turn-in true, tooltip .*Wolves Across the Border.*",
+                       r"^objective areas: [1-9]\d* areas, outline true, bands true; off: [1-9]\d* dots, outline 0$",
                        r"^no profession: herbs 0, ore 0, offered herbs false, ore false$",
                        r"^herbalism 50: herbs [1-9]\d*, above skill greyed true, ore 0, offered herbs true, ore false$",
                        r"^with mining: ore true$",

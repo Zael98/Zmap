@@ -49,6 +49,18 @@ local wolves, turnIn, tip = 0, false, ""
 for _, pin in ipairs(PINS("objectives")) do
     if pin.mark.turnIn then turnIn = true elseif pin.mark.quest == 33 then wolves = wolves + 1; tip = tip ~= "" and tip or HOVER(pin) end
 end
+-- as areas (the option, on by default): the wolves' groups outlined and filled; off, a dot for each spawn
+local edges, bands = ZNS.QuestMap.AreasShown()
+local areas = wolves
+ZNS.SetOpt("objectiveAreas", false)
+FRAMES(2)
+local dots = 0
+for _, pin in ipairs(PINS("objectives")) do if pin.mark.quest == 33 and not pin.mark.turnIn then dots = dots + 1 end end
+local offEdges = ZNS.QuestMap.AreasShown()
+OUT(("objective areas: %d areas, outline %s, bands %s; off: %d dots, outline %d"):format(areas, tostring(edges > 0),
+    tostring(bands > 0), dots, offEdges))
+ZNS.SetOpt("objectiveAreas", true)
+FRAMES(2)
 STATE.finished = { [33] = true }
 EVENT("QUEST_LOG_UPDATE")
 ADVANCE(2)

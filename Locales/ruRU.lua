@@ -81,7 +81,7 @@ ns.LOCALES.RU = {
     NPC = "НИП", RARE = "Редкий", RARE_ELITE = "Редкий элитный", ELITE = "Элитный", OPT_RARES = "Редкие",
     FOUND_HINT = "Щелчок: идти туда · Правый щелчок: убрать отметки",
     QUEST = "Задание", QUESTS_HERE = "Доступные задания", TURN_IN = "Сдать: %s", CLICK_NAVIGATE = "Щелчок: идти туда",
-    OPT_AVAILABLE = "Доступные задания", OPT_TRIVIAL = "Низкоуровневые задания", OPT_OBJECTIVES = "Цели заданий",
+    OPT_AVAILABLE = "Доступные задания", OPT_TRIVIAL = "Низкоуровневые задания", OPT_OBJECTIVES = "Цели заданий", OPT_OBJECTIVE_AREAS = "Области целей",
     NEEDS_SKILL = "Требуется %d (%s)", HERBALISM = "Травничество", MINING = "Горное дело",
     FOLK_anvil = "Наковальня", FOLK_forge = "Кузня", FOLK_stone = "Камень встреч",
     ONLY_ZONE = "Без Zmap: известна только зона (%s)", OPT_MINIMAP_PINS = "Отметки на миникарте",
