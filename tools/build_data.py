@@ -27,7 +27,7 @@ from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = Path(__file__).resolve().parent / "cache"
-BUILD = "1.60.1.70450"
+BUILD = "1.60.1.70658"
 LOCALES = ["enUS", "esES", "esMX", "deDE", "frFR", "ptBR", "itIT", "ruRU", "koKR", "zhCN", "zhTW"]
 WORLD = 947
 CONTINENT_MAPS = {0: 1415, 1: 1414}       # instance map -> its continent uiMap
