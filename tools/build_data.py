@@ -50,10 +50,10 @@ def fetch(url, path):
             data = urllib.request.urlopen(req, timeout=90).read()
             path.write_bytes(data)
             return data
-        except Exception as e:  # wago.tools throttles bursts: retry
+        except Exception as e:  # wago.tools throttles bursts, and is slow for minutes right after a new build: retry
             if attempt == 3:
                 raise RuntimeError(f"{url}: {e}") from e
-            time.sleep(2 + attempt * 3)
+            time.sleep((10, 30, 90)[attempt])
 
 
 def table(name, locale="enUS", build=None):
