@@ -1,5 +1,14 @@
 # Zmap
 
+## 1.4.2 — One icon for each thing, your corpse found, fixes from the game
+
+- **One icon for one thing in one place**: the data lists some vendors, trainers, quest givers and rares at many points side by side (a patrol, the same spot seen again), a smithy's anvils one by one, and some mailboxes and herbs under both their old and their Forever IDs, so they were drawn again and again on top of each other. Each is drawn once for a place now (40 yards; a herb or vein of the same kind, 8). A rare's icons that would still overlap at the zoom you look at become one, and part again as you zoom in.
+- **Your corpse is marked**: Zmap asked for it only the moment you released, before the game knows where it is, so it was often never marked. It now asks every second while you are dead or a ghost, and marks it with the game's own tombstone.
+- **The minimap leaves herbs and ore to the game**: Zmap drew every place one can grow, most of them empty at any time. The game's own tracking (Find Herbs, Find Minerals) shows the ones there to gather now. The map still shows every place.
+- **The search** shows a result's name and, under it, what it is and where, each on its own line (long ones ran into each other).
+- **The options scroll** inside the game's settings window (the last ones were outside it), and what comes after the layers' grid moves down with it.
+- Data from the client's build 1.60.1.70755 (Questie bundle v12.4.0).
+
 ## 1.4.1 — The quest log on the map, new buttons, a smooth arrow, quests reviewed
 
 - **The quest log is part of the map**: a panel down its right side from the moment it opens, in the layers panel's style, folding away to a tab. Its zones' + / - fold their quests (they did nothing).
