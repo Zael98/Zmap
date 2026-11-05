@@ -246,6 +246,21 @@ function N.ObjectSpawns(id)
     return d and SpawnsOf(d, 5) or {}
 end
 
+-- where to mark an NPC on the map: its spawns, one mark for those a few yards apart (Geo.PLACE); the data lists
+-- some at many points side by side (a patrol, the same spot seen again), each drawn its own icon otherwise
+local places = {}
+function N.Places(id)
+    local p = places[id]
+    if not p then
+        p = Geo.Thin(N.Spawns(id), Geo.PLACE)
+        if NPCS[id] then places[id] = p end   -- (one only seen in game may be seen elsewhere: not kept)
+    end
+    return p
+end
+
+-- the same for an object (a quest's chest or poster)
+function N.ObjectPlaces(id) return Geo.Thin(N.ObjectSpawns(id), Geo.PLACE) end
+
 -- the nearest to you on your continent of some spawns (else the first): mapID, x, y
 function N.NearestOf(spawns)
     local pu, pv, pm = Geo.UnitPosition("player")
@@ -304,7 +319,7 @@ function N.Townsfolk()
     for id in pairs(NPCS) do
         local kind = N.Kind(id)
         if kind and N.Friendly(id) then
-            for _, s in ipairs(N.Spawns(id)) do folk[#folk + 1] = { id = id, kind = kind, m = s[1], x = s[2], y = s[3] } end
+            for _, s in ipairs(N.Places(id)) do folk[#folk + 1] = { id = id, kind = kind, m = s[1], x = s[2], y = s[3] } end
         end
     end
     return folk
@@ -330,14 +345,28 @@ function rares:Refresh()
         rareList = {}
         for id in pairs(NPCS) do
             if N.Rare(id) then
-                for _, s in ipairs(N.Spawns(id)) do rareList[#rareList + 1] = { id = id, m = s[1], x = s[2], y = s[3] } end
+                for _, s in ipairs(N.Places(id)) do rareList[#rareList + 1] = { id = id, m = s[1], x = s[2], y = s[3] } end
             end
         end
     end
     local u0, v0, u1, v1 = ns.Pins.ViewBox()
+    -- one icon for a rare's places that would lie on top of each other at this zoom (closer in, they part):
+    -- some roam a long way and the data has them all along it
+    local apart = (self.size * (ns.Opt("iconScale") or 1) / ns.Map.K()) ^ 2   -- (squared, in world units)
+    local placed = {}   -- [id] = { x, y, x, y, ... } its icons so far
     for _, r in ipairs(rareList) do
         local u, v = Geo.ToWorld(r.m, r.x, r.y)
-        if u > u0 and u < u1 and v > v0 and v < v1 then
+        local clear = u > u0 and u < u1 and v > v0 and v < v1
+        local list = clear and placed[r.id]
+        if clear and not list then
+            list = {}
+            placed[r.id] = list
+        end
+        for i = 1, clear and #list or 0, 2 do
+            if (list[i] - u * Geo.W) ^ 2 + (list[i + 1] - v * Geo.H) ^ 2 < apart then clear = false end
+        end
+        if clear then
+            list[#list + 1], list[#list + 2] = u * Geo.W, v * Geo.H
             local pin = self:Acquire()
             pin.icon:SetAtlas(N.Elite(r.id) and "VignetteKillElite" or "VignetteKill")
             pin.icon:SetDesaturated(ns.RareDead ~= nil and ns.RareDead(r.id))   -- (dead, not back yet)
@@ -393,7 +422,7 @@ end
 function found:Refresh()
     self:ReleaseAll()
     if not shown then return end
-    for _, s in ipairs(N.Spawns(shown)) do
+    for _, s in ipairs(N.Places(shown)) do
         local u, v = Geo.ToWorld(s[1], s[2], s[3])
         local pin = self:Acquire()
         pin.icon:SetAtlas("Waypoint-MapPin-Tracked")

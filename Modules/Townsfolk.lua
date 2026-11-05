@@ -204,17 +204,26 @@ function ns.FolkLook(id)
     return kind and Look(kind, ns.NPCS[id][2])
 end
 
--- the data's mailboxes, anvils, forges and meeting stones (Data/Objects.lua): { { kind, m, x, y }, ... }
+-- the data's mailboxes, anvils, forges and meeting stones (Data/Objects.lua): { { kind, m, x, y }, ... }; one of
+-- each kind for a place (Geo.PLACE): a smithy's anvils, a mailbox the data has under two IDs
 local utilities
 local function Utilities()
     if utilities then return utilities end
-    utilities = {}
+    local ids = {}
     for id, o in pairs(ns.OBJECTS or {}) do
-        if ICONS[o[2]] then
-            for _, s in ipairs(ns.Npcs.ObjectSpawns(id)) do
-                utilities[#utilities + 1] = { kind = o[2], m = s[1], x = s[2], y = s[3] }
-            end
+        if ICONS[o[2]] then ids[#ids + 1] = id end
+    end
+    table.sort(ids)   -- (the same ones kept every time)
+    local spots = {}
+    for _, id in ipairs(ids) do
+        for _, s in ipairs(ns.Npcs.ObjectSpawns(id)) do
+            s.kind = ns.OBJECTS[id][2]
+            spots[#spots + 1] = s
         end
+    end
+    utilities = {}
+    for _, s in ipairs(Geo.Thin(spots, Geo.PLACE, function(s) return s.kind end)) do
+        utilities[#utilities + 1] = { kind = s.kind, m = s[1], x = s[2], y = s[3] }
     end
     return utilities
 end

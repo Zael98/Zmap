@@ -1,5 +1,6 @@
 -- Zmap on the minimap: the destination (at the edge while it is farther than the minimap shows), your pins,
--- and near you the herbs and ore of your professions, the quest givers and your quests' objectives.
+-- the quest givers and your quests' objectives. Herbs and ore are the game's own tracking's (Find Herbs, Find
+-- Minerals): it shows those there to gather now, the data only every place where one can grow.
 local _, ns = ...
 local Geo = ns.Geo
 local MM = {}
@@ -104,9 +105,6 @@ local function Update()
                 Show(mark.u, mark.v, "WhiteCircle-RaidBlips", nil, mark.color[1], mark.color[2], mark.color[3], 8)
             end
         end
-    end
-    for _, n in ipairs(ns.GatherNear and ns.GatherNear(pm) or {}) do
-        Show(n.u, n.v, nil, n.icon, 1, 1, 1, 12)
     end
 end
 

@@ -1,5 +1,6 @@
-"""Copies the addon into the game's AddOns folder (WoW Forever), to test it in game:
-    python tools/install.py [--dest "D:/World of Warcraft/_classic_beta_/Interface/AddOns"]"""
+"""Copies the addon into the game's AddOns folder (WoW Forever, in its own _forever_ folder since it left the
+beta's), to test it in game:
+    python tools/install.py [--dest "D:/World of Warcraft/_forever_/Interface/AddOns"]"""
 import argparse
 import shutil
 from pathlib import Path
@@ -10,7 +11,7 @@ FILES = ["Zmap.toc", "Bindings.xml", "*.lua", "Locales", "Data", "Modules", "Med
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dest", default="D:/World of Warcraft/_classic_beta_/Interface/AddOns")
+    ap.add_argument("--dest", default="D:/World of Warcraft/_forever_/Interface/AddOns")
     dest = Path(ap.parse_args().dest) / "Zmap"
     if dest.exists():
         shutil.rmtree(dest)

@@ -91,6 +91,10 @@ end)
 --------------------------------------------------------------------------------------------------------------
 
 local PROFESSION = { herb = 182, ore = 186 }   -- skill lines: Herbalism, Mining
+local NODE = 8   -- yards: the same kind of node listed this close is one (under two IDs, or the same spot twice)
+
+-- a node's kind: the item it gives (its name if none)
+local function TypeKey(o) return o[3] and o[3] > 0 and o[3] or o[1] end
 
 -- There are ~25,000 of them: a zone's are worked out the first time it is looked at, five numbers a node in
 -- one flat list (a table per node took ~17 MB); a node's table is made only for what is drawn.
@@ -109,20 +113,26 @@ local function NodeZones()
             end
         end
     end
+    for _, list in pairs(zones) do table.sort(list) end   -- (the same node kept every time: the oldest ID)
     return zones
 end
 
 local function Nodes(mapID)
     local p = packed[mapID]
     if p then return p end
-    p = {}
+    local spots = {}
     for _, id in ipairs(NodeZones()[mapID] or {}) do
         for _, s in ipairs(ns.Npcs.ObjectSpawns(id)) do
             if s[1] == mapID then
-                local u, v = Geo.ToWorld(mapID, s[2], s[3])
-                p[#p + 1], p[#p + 2], p[#p + 3], p[#p + 4], p[#p + 5] = u, v, s[2], s[3], id
+                s[4] = id
+                spots[#spots + 1] = s
             end
         end
+    end
+    p = {}
+    for _, s in ipairs(Geo.Thin(spots, NODE, function(s) return TypeKey(ns.OBJECTS[s[4]]) end)) do
+        local u, v = Geo.ToWorld(mapID, s[2], s[3])
+        p[#p + 1], p[#p + 2], p[#p + 3], p[#p + 4], p[#p + 5] = u, v, s[2], s[3], s[4]
     end
     packed[mapID] = p
     return p
@@ -164,9 +174,6 @@ end
 -- them the map shows: by default those you can gather now; each one turned on or off by itself
 -- (ns.db.nodeShown[key]). The layers panel lists them.
 local types, typeOf = {}, {}   -- [kind] = { { key, item, name, kind, skill }, ... } by skill; [key] = that type
-local typesVersion = 0         -- (what the map shows changed)
-
-local function TypeKey(o) return o[3] and o[3] > 0 and o[3] or o[1] end
 
 local function Types(kind)
     if types[kind] then return types[kind] end
@@ -204,7 +211,6 @@ function ns.SetGatherTypeShown(t, shown)
     else
         for _, each in ipairs(Types(t.kind)) do ns.db.nodeShown[each.key] = shown end
     end
-    typesVersion = typesVersion + 1
     ns.Fire("ZMAP_OPTION", OPTION[t.kind])
 end
 
@@ -330,23 +336,8 @@ function P:OnClick(pin, button)
     end
 end
 
--- the data's herbs and ore of a zone that the map shows and you can gather now (for the minimap): { { u, v, icon } }
-local near, nearKey = {}, nil
-function ns.GatherNear(mapID)
-    local key = ("%s:%s:%s:%s:%s:%d"):format(mapID, tostring(Skill("herb")), tostring(Skill("ore")),
-        tostring(ns.Opt("herbs")), tostring(ns.Opt("ore")), typesVersion)
-    if key == nearKey then return near end
-    nearKey, near = key, {}
-    if not (Wanted("herb") or Wanted("ore")) then return near end
-    local p = Nodes(mapID)
-    for i = 1, #p, 5 do
-        local o = ns.OBJECTS[p[i + 4]]
-        if Shown(o) and Skill(o[2]) >= o[4] then
-            near[#near + 1] = { u = p[i], v = p[i + 1], icon = ItemIcon(o[3], o[2]) }
-        end
-    end
-    return near
-end
+-- (none on the minimap: the data knows every place a herb or vein can grow, most of them empty at any time, and
+-- only the game's own tracking, Find Herbs and Find Minerals, shows the ones there to gather now)
 
 -- the types of a zone you can gather now, the most there first (for the gathering route): { { type, count } }
 function ns.GatherZoneTypes(mapID)
@@ -382,7 +373,7 @@ function ns.NodeKinds()
     return out
 end
 
--- every spawn of a kind of node (the same item: Peacebloom, Copper...): { { mapID, x, y }, ... }
+-- every spawn of a kind of node (the same item: Peacebloom, Copper...): { { mapID, x, y }, ... }, each once
 function ns.NodeSpawns(item, name)
     local out = {}
     for id, o in pairs(ns.OBJECTS or {}) do
@@ -390,7 +381,7 @@ function ns.NodeSpawns(item, name)
             for _, s in ipairs(ns.Npcs.ObjectSpawns(id)) do out[#out + 1] = s end
         end
     end
-    return out
+    return Geo.Thin(out, NODE)
 end
 
 -- for a gathering route: the nodes of a zone you can gather now ({ u, v } each), of some types ([key] = true) or
@@ -424,8 +415,7 @@ ns.On("ZMAP_OPTION", function(key)
 end)
 ns.On("SKILL_LINES_CHANGED", function()
     skillsAt = 0
-    typesVersion = typesVersion + 1   -- (types you could not gather may be shown now)
-    P:Update()
+    P:Update()   -- (types you could not gather may be shown now)
 end)
 
 ns.commands.borrarnodos = function()

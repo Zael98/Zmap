@@ -134,8 +134,9 @@ local function Build()
         mark.quests, mark.trivial = quests, trivial
         Marks(spawns, mark, 6, giverMarks)
     end
-    for npc, quests in pairs(byNpc) do Giver(quests, { npc = npc }, N.Spawns(npc)) end
-    for obj, quests in pairs(byObject) do Giver(quests, { object = obj }, N.ObjectSpawns(obj)) end
+    -- (one mark for each place of who gives them, not each spawn: Npcs.Places)
+    for npc, quests in pairs(byNpc) do Giver(quests, { npc = npc }, N.Places(npc)) end
+    for obj, quests in pairs(byObject) do Giver(quests, { object = obj }, N.ObjectPlaces(obj)) end
     -- the quests you carry: their objectives, or who takes them once done
     objectiveMarks = {}
     for i, id in ipairs(logList) do
@@ -144,8 +145,8 @@ local function Build()
             local color = COLORS[(i - 1) % #COLORS + 1]
             if finished[id] then
                 if not (ns.BlizzardQuestPins and ns.BlizzardQuestPins[id]) then
-                    for _, npc in ipairs(q[8]) do Marks(N.Spawns(npc), { quest = id, npc = npc, turnIn = true }, 6, objectiveMarks) end
-                    for _, obj in ipairs(q[9]) do Marks(N.ObjectSpawns(obj), { quest = id, object = obj, turnIn = true }, 6, objectiveMarks) end
+                    for _, npc in ipairs(q[8]) do Marks(N.Places(npc), { quest = id, npc = npc, turnIn = true }, 6, objectiveMarks) end
+                    for _, obj in ipairs(q[9]) do Marks(N.ObjectPlaces(obj), { quest = id, object = obj, turnIn = true }, 6, objectiveMarks) end
                 end
             else
                 local before = #objectiveMarks
@@ -157,7 +158,7 @@ local function Build()
                 end
                 -- what it asks for that is bought, and where to get to
                 for _, npc in ipairs(q[17] or {}) do
-                    Marks(N.Spawns(npc), { quest = id, npc = npc, color = color, buy = true }, 4, objectiveMarks)
+                    Marks(N.Places(npc), { quest = id, npc = npc, color = color, buy = true }, 4, objectiveMarks)
                 end
                 local places = {}
                 for k = 1, #(q[18] or {}) - 1, 2 do

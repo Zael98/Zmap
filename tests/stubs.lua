@@ -309,7 +309,11 @@ function IsShiftKeyDown() return STATE.shift end
 function IsPlayerMoving() return STATE.moving end
 function UnitOnTaxi() return STATE.onTaxi end
 function UnitIsGhost(u) return u == "player" and STATE.ghost end
-function UnitIsDeadOrGhost(u) local m = STATE.group[tonumber((u or ""):match("%d+") or 0)] return m and m.dead or false end
+function UnitIsDeadOrGhost(u)
+    if u == "player" then return STATE.dead == true or STATE.ghost == true end
+    local m = STATE.group[tonumber((u or ""):match("%d+") or 0)]
+    return m and m.dead or false
+end
 -- other units the scenarios put around: STATE.units[token] = { id = npcID, name = "...", class } (nameplates,
 -- mouseover, arena1...)
 STATE.units = {}

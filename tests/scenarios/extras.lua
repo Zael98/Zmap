@@ -151,11 +151,17 @@ OUT("apart: " .. tostring(#mates == 2 and (mates[1].u ~= mates[2].u or mates[1].
 -- the minimap: the destination at its edge while far
 ZNS.Waypoints.Add(1429, 0.90, 0.80, "Lejos", { navigate = true })
 FRAMES(3)
-local minimapPins = 0
+local minimapPins, minimapNodes = 0, 0
 for _, w in ipairs(ALL_WIDGETS) do
-    if w.parent == ZmapMinimapPins and w.shown then minimapPins = minimapPins + 1 end
+    if w.parent == ZmapMinimapPins and w.shown then
+        minimapPins = minimapPins + 1
+        if w.icon and type(w.icon.file) == "number" then minimapNodes = minimapNodes + 1 end   -- (an item's icon)
+    end
 end
 OUT("minimap pins: " .. minimapPins)
+-- herbs and ore are not Zmap's on the minimap, with their layers on (as here): the data only knows where they can
+-- grow; the game's own tracking (Find Herbs, Find Minerals) shows the ones there now
+OUT("minimap herbs and ore: " .. minimapNodes)
 
 -- a dungeon: its own map inside, and from its entrance
 ZNS.Map.Close()

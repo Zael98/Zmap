@@ -8,6 +8,7 @@ local Search = {}
 ns.Search = Search
 
 local MAX = 12
+local ROW = 30   -- a result's height: its name, and under it what it is and where
 local FULL = { 0, 1, 0, 1 }
 local NPC_ICON = "Interface\\GossipFrame\\GossipGossipIcon"
 local box, list, buttons = nil, nil, {}
@@ -308,8 +309,14 @@ local function ShowResults()
         local b = buttons[i]
         local c = found[i]
         if c then
+            local sub = c.zone and ((c.sub or "") .. " · " .. c.zone) or c.sub or ""
             b.text:SetText(c.text)
-            b.sub:SetText(c.zone and ((c.sub or "") .. " · " .. c.zone) or c.sub or "")
+            b.sub:SetText(sub)
+            -- the name over what it is (alone, in the middle), each on its own line and cut short with "..."
+            local up = sub ~= "" and 6 or 0
+            b.text:ClearAllPoints()
+            b.text:SetPoint("LEFT", b.icon, "RIGHT", 6, up)
+            b.text:SetPoint("RIGHT", -4, up)
             local tc = c.coords or FULL
             b.icon:SetTexCoord(tc[1], tc[2], tc[3], tc[4])
             if c.atlas then b.icon:SetAtlas(c.atlas) elseif c.icon then b.icon:SetTexture(c.icon) else b.icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01") end
@@ -319,7 +326,7 @@ local function ShowResults()
             b:Hide()
         end
     end
-    list:SetHeight(math.max(1, #found) * 22 + 8)
+    list:SetHeight(math.max(1, #found) * ROW + 8)
     list:SetShown(#found > 0 and box:HasFocus())
 end
 
@@ -340,18 +347,20 @@ ns.On("ZMAP_CREATED", function(frame)
     list:Hide()
     for i = 1, MAX do
         local b = CreateFrame("Button", nil, list)
-        b:SetSize(310, 22)
-        b:SetPoint("TOPLEFT", 5, -4 - (i - 1) * 22)
+        b:SetSize(310, ROW)
+        b:SetPoint("TOPLEFT", 5, -4 - (i - 1) * ROW)
         b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
         b.icon = b:CreateTexture(nil, "ARTWORK")
-        b.icon:SetSize(18, 18)
+        b.icon:SetSize(22, 22)
         b.icon:SetPoint("LEFT", 2, 0)
-        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        b.text:SetPoint("LEFT", b.icon, "RIGHT", 6, 0)
+        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")   -- (placed by ShowResults)
         b.text:SetJustifyH("LEFT")
+        b.text:SetWordWrap(false)
         b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-        b.sub:SetPoint("RIGHT", -4, 0)
-        b.sub:SetJustifyH("RIGHT")
+        b.sub:SetPoint("TOPLEFT", b.text, "BOTTOMLEFT", 0, -2)
+        b.sub:SetPoint("TOPRIGHT", b.text, "BOTTOMRIGHT", 0, -2)
+        b.sub:SetJustifyH("LEFT")
+        b.sub:SetWordWrap(false)
         b:SetScript("OnClick", function(self) Search.Go(self.result) end)
         buttons[i] = b
     end

@@ -90,6 +90,52 @@ function Geo.Yards(instance, u1, v1, u2, v2)
     return math.sqrt(dx * dx + dy * dy)
 end
 
+-- Two marks of the same thing closer than this (yards) are one place: an NPC the data has at several spots a few
+-- yards apart (a patrol, the same spot seen twice), the anvils of one smithy, the mailbox it lists twice
+Geo.PLACE = 40
+
+-- Of some points ({ mapID, x, y, ... }), those not closer than `yards` to one kept before them on the same continent
+-- (with `kind`, kind(point): only to one of the same kind). Points off the stitched map stay.
+local NONE = {}
+function Geo.Thin(points, yards, kind)
+    local out, grid, r2 = {}, {}, yards * yards
+    for _, p in ipairs(points) do
+        local u, v = Geo.ToWorld(p[1], p[2], p[3])
+        local inst = u and Geo.Instance(p[1])
+        local wx, wy
+        if inst then wx, wy = Geo.ToYards(inst, u, v) end
+        local cells, cx, cy, near
+        if wx then   -- (a grid of `yards` cells: only the 9 round a point can hold one that close)
+            local key = tostring(kind and kind(p) or "") .. "|" .. inst
+            cells = grid[key]
+            if not cells then
+                cells = {}
+                grid[key] = cells
+            end
+            cx, cy = math.floor(wx / yards), math.floor(wy / yards)
+            for gx = cx - 1, cx + 1 do
+                for gy = cy - 1, cy + 1 do
+                    for _, q in ipairs(cells[gx * 65536 + gy] or NONE) do
+                        if (q[1] - wx) ^ 2 + (q[2] - wy) ^ 2 < r2 then near = true end
+                    end
+                end
+            end
+        end
+        if not near then
+            out[#out + 1] = p
+            if cells then
+                local cell = cells[cx * 65536 + cy]
+                if not cell then
+                    cell = {}
+                    cells[cx * 65536 + cy] = cell
+                end
+                cell[#cell + 1] = { wx, wy }
+            end
+        end
+    end
+    return out
+end
+
 -- the size of a terrain tile on that continent, in (u, v), and the tile under a world point
 function Geo.TileSize(instance)
     local T = TRANSFORM[instance]

@@ -34,4 +34,18 @@ ZNS.Search.Go(dm)
 local listed = ZNS.Dungeon.Shown()
 OUT(("dungeon: %s, map shown %s, bosses %d"):format(dm.text, tostring(ZNS.Dungeon.IsShown()), #listed))
 ZNS.Dungeon.Close()
+-- a result's name and, under it, what it is and where: each on its own line, held by both edges (cut short,
+-- never running into the other)
+box:SetFocus()
+TYPE(box, "instructor de")
+local rows, apart = 0, true
+for _, w in ipairs(ALL_WIDGETS) do
+    if w.shown and w.result and w.sub then
+        rows = rows + 1
+        local t, s = w.text.points, w.sub.points
+        apart = apart and t.LEFT ~= nil and t.RIGHT ~= nil and s.TOPLEFT ~= nil and s.TOPLEFT.rel == w.text
+            and s.TOPRIGHT ~= nil and s.TOPRIGHT.rel == w.text and (w.sub:GetText() == "" or t.LEFT.y > 0)
+    end
+end
+OUT(("rows: %d, name over what it is %s"):format(rows, tostring(apart)))
 OUT("errors " .. #STATE.errors)

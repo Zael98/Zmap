@@ -458,30 +458,52 @@ end
 local function Build()
     panel = CreateFrame("Frame")
     panel:Hide()
-    local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    -- the options scroll inside the game's settings window: they are longer than it
+    local scroll = CreateFrame("ScrollFrame", nil, panel, "ScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT", 0, -4)
+    scroll:SetPoint("BOTTOMRIGHT", -28, 4)   -- (its bar goes on its right)
+    local content = CreateFrame("Frame", nil, scroll)
+    content:SetSize(600, 700)
+    scroll:SetScrollChild(content)
+    scroll:HookScript("OnSizeChanged", function(_, width) if width and width > 0 then content:SetWidth(width) end end)
+
+    local title = content:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText("|cff4fc3f7Z|rmap  |cff888888" .. (C_AddOns and C_AddOns.GetAddOnMetadata("Zmap", "Version") or "") .. "|r")
-    local hint = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    local hint = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
     hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
     hint:SetPoint("RIGHT", -16, 0)
     hint:SetJustifyH("LEFT")
     hint:SetText(L.OPTIONS_HINT)
 
     local y = -70
-    Header(panel, L.OPT_SECTION_MAP, 16, y)
-    Check(panel, "replaceMap", L.OPT_REPLACE, 16, y - 20, L.OPT_REPLACE_TIP)
-    Check(panel, "fadeMoving", L.OPT_FADE, 16, y - 46, L.OPT_FADE_TIP)
-    Cycle(panel, "openOn", L.OPT_OPEN_ON, { "player", "last" }, { L.OPEN_PLAYER, L.OPEN_LAST }, 20, y - 78)
-    Cycle(panel, "unexplored", L.OPT_UNEXPLORED, UNEXPLORED,
+    Header(content, L.OPT_SECTION_MAP, 16, y)
+    Check(content, "replaceMap", L.OPT_REPLACE, 16, y - 20, L.OPT_REPLACE_TIP)
+    Check(content, "fadeMoving", L.OPT_FADE, 16, y - 46, L.OPT_FADE_TIP)
+    Cycle(content, "openOn", L.OPT_OPEN_ON, { "player", "last" }, { L.OPEN_PLAYER, L.OPEN_LAST }, 20, y - 78)
+    Cycle(content, "unexplored", L.OPT_UNEXPLORED, UNEXPLORED,
         { L.UNEXPLORED_show, L.UNEXPLORED_dim, L.UNEXPLORED_hide }, 20, y - 104)
-    Stepper(panel, "iconScale", L.OPT_ICON_SIZE, 0.6, 2, 0.1, 20, y - 132)
-    Stepper(panel, "fadeAlpha", L.OPT_FADE_ALPHA, 0.2, 1, 0.05, 20, y - 158)
+    Stepper(content, "iconScale", L.OPT_ICON_SIZE, 0.6, 2, 0.1, 20, y - 132)
+    Stepper(content, "fadeAlpha", L.OPT_FADE_ALPHA, 0.2, 1, 0.05, 20, y - 158)
 
-    y = -260
-    Header(panel, L.OPT_SECTION_LAYERS, 16, y)
-    -- (laid out each time the panel opens: herbs and ore come and go with the professions)
+    local GRID = 280   -- where the layers' grid starts (below its header)
+    Header(content, L.OPT_SECTION_LAYERS, 16, -(GRID - 20))
     local layerChecks = {}
-    for i, layer in ipairs(LAYERS) do layerChecks[i] = Check(panel, layer[1], L[layer[2]], 0, 0) end
+    for i, layer in ipairs(LAYERS) do layerChecks[i] = Check(content, layer[1], L[layer[2]], 0, 0) end
+
+    -- what comes after the grid, moved down as far as it reaches
+    local after = CreateFrame("Frame", nil, content)
+    after:SetSize(1, 1)
+    Header(after, L.OPT_SECTION_SHARE, 16, 0)
+    Check(after, "shareGuild", L.OPT_SHARE_GUILD, 16, -20, L.OPT_SHARE_GUILD_TIP)
+    Check(after, "shareFinds", L.OPT_SHARE_FINDS, 16, -46, L.OPT_SHARE_FINDS_TIP)
+    Header(after, L.OPT_SECTION_NAV, 16, -90)
+    Check(after, "arrow", L.OPT_ARROW, 16, -110, L.OPT_ARROW_TIP)
+    Check(after, "corpseArrow", L.OPT_CORPSE, 16, -136)
+    Check(after, "flightTimer", L.OPT_FLIGHT_TIMER, 16, -162)
+    local AFTER = 188   -- (its height, down to the last box)
+
+    -- (laid out each time the panel opens: herbs and ore come and go with the professions)
     refreshers[#refreshers + 1] = function()
         local n = 0
         for i, layer in ipairs(LAYERS) do
@@ -490,22 +512,15 @@ local function Build()
             if Offered(layer) then
                 local col, row = n % 3, math.floor(n / 3)
                 cb:ClearAllPoints()
-                cb:SetPoint("TOPLEFT", 16 + col * 200, -260 - 20 - row * 26)
+                cb:SetPoint("TOPLEFT", 16 + col * 200, -GRID - row * 26)
                 n = n + 1
             end
         end
+        local below = GRID + math.ceil(n / 3) * 26 + 14
+        after:ClearAllPoints()
+        after:SetPoint("TOPLEFT", 0, -below)
+        content:SetHeight(below + AFTER + 16)
     end
-
-    y = -460 - 26
-    Header(panel, L.OPT_SECTION_SHARE, 16, y)
-    Check(panel, "shareGuild", L.OPT_SHARE_GUILD, 16, y - 20, L.OPT_SHARE_GUILD_TIP)
-    Check(panel, "shareFinds", L.OPT_SHARE_FINDS, 16, y - 46, L.OPT_SHARE_FINDS_TIP)
-
-    y = -576
-    Header(panel, L.OPT_SECTION_NAV, 16, y)
-    Check(panel, "arrow", L.OPT_ARROW, 16, y - 20, L.OPT_ARROW_TIP)
-    Check(panel, "corpseArrow", L.OPT_CORPSE, 16, y - 46)
-    Check(panel, "flightTimer", L.OPT_FLIGHT_TIMER, 16, y - 72)
 
     panel:SetScript("OnShow", function()
         for _, fn in ipairs(refreshers) do fn() end

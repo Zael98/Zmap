@@ -19,8 +19,24 @@ for _, w in ipairs(ALL_WIDGETS) do
 end
 ZNS.OpenOptions()
 local panel = replace and replace.parent
+while panel and not panel.scripts.OnShow do panel = panel.parent end   -- (the boxes sit in its scroll frame)
 if panel and panel.scripts.OnShow then panel.scripts.OnShow(panel) end
 OUT(("options panel: checks %d, replace checked %s"):format(checks, tostring(replace and replace.checked)))
+-- longer than the game's settings window: it scrolls, and what follows the layers' grid starts below its last row
+local content = replace and replace.parent
+local deepest, last = 0, nil
+for _, w in ipairs(ALL_WIDGETS) do
+    if w.kind == "CheckButton" and w.shown and w.parent == content and w.points.TOPLEFT then
+        deepest = math.max(deepest, -w.points.TOPLEFT.y + 26)
+    end
+    if w.kind == "CheckButton" and w.Text and w.Text.text == ZNS.L.OPT_FLIGHT_TIMER then last = w end
+end
+local after = last and last.parent
+local start = after and after.points.TOPLEFT and -after.points.TOPLEFT.y or 0
+local bottom = start - (last and last.points.TOPLEFT.y or 0) + 26
+OUT(("options layout: scrolls %s, after the grid %s, all inside %s"):format(
+    tostring(content ~= nil and content.parent ~= nil and content.parent.kind == "ScrollFrame"),
+    tostring(start >= deepest), tostring(content ~= nil and content.h ~= nil and content.h >= bottom)))
 
 STATE.player.wx, STATE.player.wy = -9460, 62
 OPEN()
@@ -45,6 +61,32 @@ OUT("corpse: arrow to corpse " .. tostring(t ~= nil and t.corpse == true))
 STATE.ghost, STATE.corpse = false, nil
 EVENT("PLAYER_UNGHOST")
 OUT("alive: arrow cleared " .. tostring(ZNS.Arrow.Target() == nil))
+-- dead, then released before the game knows where the corpse is: Zmap keeps asking, and marks it once it knows
+STATE.dead = true
+EVENT("PLAYER_DEAD")
+ADVANCE(5)   -- (a few seconds before you release)
+STATE.dead, STATE.ghost = false, true
+EVENT("PLAYER_ALIVE")
+local atRelease = ZNS.Arrow.Target()
+STATE.corpse = { map = 1415, x = 0.4, y = 0.6 }
+ADVANCE(1.1)
+FRAMES(2)
+local later = ZNS.Arrow.Target()
+local grave = PINS("corpse")[1]
+local tombstone = grave ~= nil and grave.icon.file == "Interface\\Minimap\\POIIcons" and grave.icon.tc[1] == 0.56640625
+OUT(("corpse known later: at release %s; a second after: arrow %s, on the map %d, tombstone %s"):format(
+    tostring(atRelease ~= nil), tostring(later ~= nil and later.corpse == true), #PINS("corpse"), tostring(tombstone)))
+STATE.ghost, STATE.corpse = false, nil
+EVENT("PLAYER_UNGHOST")
+FRAMES(2)
+local cleared, mapClear = ZNS.Arrow.Target() == nil, #PINS("corpse") == 0
+-- (alive, it no longer asks: a corpse the game would now report, with no event, is not looked for)
+STATE.ghost, STATE.corpse = true, { map = 1415, x = 0.4, y = 0.6 }
+ADVANCE(3)
+local asked = ZNS.Arrow.Target() ~= nil
+STATE.ghost, STATE.corpse = false, nil
+OUT(("alive again: arrow cleared %s, map clear %s, stopped asking %s"):format(tostring(cleared), tostring(mapClear),
+    tostring(not asked)))
 
 local l, r, tt, b = ZNS.Geo.Rect(1429)
 ZNS.Map.SetView((l + r) / 2 * ZNS.Geo.W, (tt + b) / 2 * ZNS.Geo.H, 4)
