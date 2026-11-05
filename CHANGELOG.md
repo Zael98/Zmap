@@ -1,5 +1,9 @@
 # Zmap
 
+## 1.4.3 — You are no longer your own guildmate
+
+- **Your own dot is gone from the map**: what Zmap sends your guild comes back to you, and on WoW Forever a name carries its surname where the realm used to go ("Name-Surname"), so Zmap did not know it was you and drew you as one more guildmate. It compares the whole name now: someone with your first name and another surname still shows. The guild roster leaves you out the same way.
+
 ## 1.4.2 — One icon for each thing, your corpse found, fixes from the game
 
 - **One icon for one thing in one place**: the data lists some vendors, trainers, quest givers and rares at many points side by side (a patrol, the same spot seen again), a smithy's anvils one by one, and some mailboxes and herbs under both their old and their Forever IDs, so they were drawn again and again on top of each other. Each is drawn once for a place now (40 yards; a herb or vein of the same kind, 8). A rare's icons that would still overlap at the zoom you look at become one, and part again as you zoom in.
