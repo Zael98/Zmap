@@ -349,7 +349,16 @@ C_UnitAuras = { GetAuraDataBySpellName = function(u, name) return (STATE.auras o
 function UnitIsUnit(a, b) return a == b end
 function UnitInParty(name) for _, m in ipairs(STATE.group) do if m.name == name then return true end end return false end
 function UnitInRaid() return nil end
-function Ambiguate(name) return (name:gsub("%-.*", "")) end
+-- names: you are Domi of the realm Forever; on WoW Forever the surname stands where the realm does
+-- (STATE.surname: you are "Domi-<surname>"). "none" keeps a realm (or surname) other than yours, "short" drops it.
+function UnitFullName(u) if u == "player" then return "Domi", STATE.surname or "Forever" end end
+function GetNormalizedRealmName() return "Forever" end
+function Ambiguate(name, context)
+    local base, realm = name:match("^([^-]+)-(.+)$")
+    if not base then return name end
+    if context == "short" or realm == GetNormalizedRealmName() then return base end
+    return name
+end
 function UnitPosition(u)
     if u ~= "player" or STATE.instance then return nil end
     return STATE.player.wx, STATE.player.wy, 0, STATE.player.inst
@@ -688,7 +697,7 @@ C_Item = {
 function GetNumGuildMembers() return #(STATE.roster or {}) end
 function GetGuildRosterInfo(i)
     local r = STATE.roster[i]
-    return r.name .. "-Forever", "Miembro", 2, r.level, "x", r.zone, "", "", r.online, 0, r.class
+    return r.full or (r.name .. "-Forever"), "Miembro", 2, r.level, "x", r.zone, "", "", r.online, 0, r.class
 end
 C_GuildInfo = { GuildRoster = function() STATE.rosterAsked = (STATE.rosterAsked or 0) + 1 end }
 function GetInstanceInfo()

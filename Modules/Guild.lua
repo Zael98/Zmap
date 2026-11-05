@@ -124,13 +124,12 @@ end
 function Z:Refresh()
     self:ReleaseAll()
     if not IsInGuild() or not GetNumGuildMembers then return end
-    local me = UnitName("player")
     local perZone = {}
     for i = 1, GetNumGuildMembers() do
         local full, _, _, level, _, zone, _, _, online, _, class = GetGuildRosterInfo(i)
         local name = full and Ambiguate(full, "none")
         local mapID = online and ZoneOf(zone)
-        if mapID and name ~= me and not members[full] and not members[name] and not UnitInParty(name) and not UnitInRaid(name) then
+        if mapID and not ns.IsMe(full) and not members[full] and not members[name] and not UnitInParty(name) and not UnitInRaid(name) then
             local n = (perZone[mapID] or 0) + 1
             perZone[mapID] = n
             -- around the zone's name, a little apart from each other

@@ -225,6 +225,18 @@ function ns.ClassColor(classFile)
     return 0.8, 0.8, 0.8
 end
 
+-- Is a name yours (an addon message's sender, a guild roster entry)? Names come as "Name-Realm", or "Name" for
+-- your own realm; on WoW Forever the surname stands where the realm does ("Name-Surname"), in UnitFullName too,
+-- so the name is compared whole: someone else with your first name and another surname is not you.
+function ns.IsMe(who)
+    if type(who) ~= "string" or (issecretvalue and issecretvalue(who)) then return false end
+    local name, realm = (UnitFullName or UnitName)("player")
+    if not name then return false end
+    local first, rest = who:gsub(" ", "-"):match("^([^-]+)-(.+)$")
+    if not first then return who == name end
+    return first == name and (realm == nil or realm == "" or rest == (realm:gsub(" ", "")))
+end
+
 --------------------------------------------------------------------------------------------------------------
 -- Slash commands
 --------------------------------------------------------------------------------------------------------------

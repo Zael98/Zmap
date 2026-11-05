@@ -39,7 +39,7 @@ end
 ns.On("CHAT_MSG_ADDON", function(prefix, text, channel, sender)
     if prefix ~= PREFIX or not text or not sender then return end
     if issecretvalue and (issecretvalue(text) or issecretvalue(sender)) then return end
-    if Ambiguate(sender, "none") == UnitName("player") then return end
+    if ns.IsMe(sender) then return end   -- (what you send to the guild comes back to you)
     local fields = Split(text)
     local fn = handlers[fields[1]]
     if fn then fn(sender, channel, unpack(fields, 2)) end
