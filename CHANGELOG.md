@@ -1,5 +1,10 @@
 # Zmap
 
+## 1.4.4 — On the Deeprun Tram
+
+- **The Deeprun Tram has you on the map**: the tram is a world of its own with no map, so the game gives no place on any map there, and Zmap said so in the chat each time the map opened. Now it puts you on the line between its Stormwind and Ironforge doors, as far along it as you are, your arrow turned the way you face and the tram's name below. The map opens on the whole ride, and Center works there too.
+- **Nothing in the chat when the map opens where the game gives no position** (in an instance...): the map's bottom bar says it. Only Center, when you ask for it, says why in the chat.
+
 ## 1.4.3 — You are no longer your own guildmate
 
 - **Your own dot is gone from the map**: what Zmap sends your guild comes back to you, and on WoW Forever a name carries its surname where the realm used to go ("Name-Surname"), so Zmap did not know it was you and drew you as one more guildmate. It compares the whole name now: someone with your first name and another surname still shows. The guild roster leaves you out the same way.
