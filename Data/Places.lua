@@ -19,8 +19,9 @@ ns.TRANSPORTS = {
     { "airship", "N", "Mulgore - Valanaar Skydocks", { { 1, { -1724, -804, -1114, -856, -778, -528, -705, 98, -802, 367, -1034, 518, -1786, -70 } }, { 2991, { 1123, 536, 1332, 593, 1757, 823, 1903, 943, 1982, 1132, 2086, 1189, 2185, 1142, 2226, 986, 2126, 852, 1780, 718, 1143, 392, 1117, -147 } } }, { { 1, -802, 367 }, { 2991, 1953, 1019 } }, { "Mulgore - Valanaar Skydocks", "Mulgore - Muelles Aéreos de Valanaar", "Mulgore - Muelles Celestiales de Valanaar", "Mulgore - Himmelsdocks von Valanaar", "Mulgore - Quais aériens de Valanaar", "Mulgore - Aerodocas de Valanaar", nil, "Мулгор - Валанаарские небесные доки", "멀고어 - 발라나르 하늘부두", "莫高雷 - 瓦拉纳尔天港", "莫高雷 - 瓦拉納爾空港" } },
 }
 
--- the Deeprun Tram: its doors in Stormwind and in Ironforge ({ instance, x, y }), and its name
-ns.TRAM = { { 0, -8346, 514 }, { 0, -4840, -1330 }, names = { "Deeprun Tram", "Tranvía Subterráneo", "Tranvía Subterráneo", "Die Tiefenbahn", "Tram des profondeurs", "Metrô Correfundo", nil, "Подземный поезд", "깊은굴 지하철", "矿道地铁", "礦道地鐵" } }
+-- the Deeprun Tram: its doors in Stormwind and in Ironforge ({ instance, x, y }), the same doors from inside
+-- it (a world of its own with no map of it) and its name
+ns.TRAM = { { 0, -8346, 514 }, { 0, -4840, -1330 }, inside = { { 369, 80, 2491 }, { 369, 76, 11 } }, names = { "Deeprun Tram", "Tranvía Subterráneo", "Tranvía Subterráneo", "Die Tiefenbahn", "Tram des profondeurs", "Metrô Correfundo", nil, "Подземный поезд", "깊은굴 지하철", "矿道地铁", "礦道地鐵" } }
 
 -- where the teleports land: spell -> { instance, x, y } (the server's, as classic servers have it)
 ns.TELEPORTS = {

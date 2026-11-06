@@ -132,6 +132,10 @@ CHECKS = {
                        r"^great forge: utilities [1-9]\d*, the same kind twice in a place 0$",
                        r"^elwynn nodes: [1-9]\d*, the same kind twice within 8 yd 0$",
                        r"^elwynn rares: [1-9]\d*, a rare on top of itself 0$", r"^errors 0$"]),
+    "tram": (False, [r"^map position: nil$", r"^halfway: pin shown true, between the doors true$",
+                     r"^opened on the ride: both doors in view true; chat 0; below true$", r"^arrow along the line: true$",
+                     r"^at the ironforge end: true$", r"^center: true, chat 0$",
+                     r"^in an instance: opening chat 0; center false, chat 1$", r"^errors 0$"]),
     "locales": (False, [r"^languages: DE EN ES FR IT KO PT RU TW ZH$", r"^DE: missing none; format mismatch none$", r"^EN: missing none; format mismatch none$", r"^ES: missing none; format mismatch none$", r"^FR: missing none; format mismatch none$", r"^IT: missing none; format mismatch none$", r"^KO: missing none; format mismatch none$", r"^PT: missing none; format mismatch none$", r"^RU: missing none; format mismatch none$", r"^TW: missing none; format mismatch none$", r"^ZH: missing none; format mismatch none$"]),
 }
 

@@ -31,6 +31,11 @@ local function Update()
         pin = P:Acquire()
     end
     local u, v, mapID, x, y = Geo.UnitPosition("player")
+    local text, turn = u and L.PLAYER_AT:format(Geo.Name(mapID), ns.Coords(x, y)), 0
+    if not u then   -- the Deeprun Tram has no map, but you are on its line, as far along it as you are
+        u, v, turn = Geo.OnTram()
+        text = u and ns.Name(ns.TRAM.names)
+    end
     if not u then
         pin:Hide()
         ns.Map.SetPlayerText(L.NO_POSITION_SHORT)
@@ -40,8 +45,8 @@ local function Update()
     pin.mapID, pin.x, pin.y = mapID, x, y
     P:Place(pin, u, v)
     local facing = GetPlayerFacing()
-    if facing and not (issecretvalue and issecretvalue(facing)) then pin.icon:SetRotation(facing) end
-    ns.Map.SetPlayerText(L.PLAYER_AT:format(Geo.Name(mapID), ns.Coords(x, y)))
+    if facing and not (issecretvalue and issecretvalue(facing)) then pin.icon:SetRotation(facing + turn) end
+    ns.Map.SetPlayerText(text)
     ns.Map.Follow(u, v)
 end
 
@@ -57,12 +62,14 @@ glider:SetScript("OnUpdate", function()
     if not (pin and pin:IsShown() and ns.Map.IsShown()) then return end
     local wx, wy, _, instance = UnitPosition("player")
     if not wx or IsSecret(wx) or IsSecret(wy) then return end
+    local turn = 0
     local u, v = Geo.FromYards(instance, wx, wy)
+    if not u then u, v, turn = Geo.FromTram(instance, wx, wy) end
     if not u then return end
     P:Place(pin, u, v)
     ns.Map.Follow(u, v)   -- (the view with it, when it follows you)
     local facing = GetPlayerFacing()
-    if facing and not IsSecret(facing) then pin.icon:SetRotation(facing) end
+    if facing and not IsSecret(facing) then pin.icon:SetRotation(facing + turn) end
 end)
 -- the ping: a ring that grows and fades for two seconds after the map opens
 local animator = CreateFrame("Frame")

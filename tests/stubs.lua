@@ -518,9 +518,11 @@ Settings = {
 local TYPES = { world = 1, continent = 2, zone = 3, city = 3 }
 local CONT_OF = { [0] = 1415, [1] = 1414 }
 
--- the player's (u, v) on Azeroth's map
+-- the player's (u, v) on Azeroth's map; nothing in a world with no map of it (the Deeprun Tram: like the game, no
+-- map for it, so no place on any map)
 function PLAYER_UV()
     local T = ZNS.WORLD_TRANSFORM[STATE.player.inst]
+    if not T then return end
     return T[1] + T[2] * STATE.player.wy, T[3] + T[4] * STATE.player.wx
 end
 
@@ -551,7 +553,7 @@ function C_Map.GetBestMapForUnit(unit)
     if unit == "player" then
         if STATE.instance then return 9999 end
         local u, v = PLAYER_UV()
-        return ZoneHolding(u, v)
+        return u and ZoneHolding(u, v)
     end
     local m = STATE.group[tonumber((unit or ""):match("%d+") or 0)]
     return m and m.map
@@ -563,6 +565,7 @@ function C_Map.GetPlayerMapPosition(mapID, unit)
     if unit == "player" then
         if STATE.instance then return nil end
         local u, v = PLAYER_UV()
+        if not u then return nil end
         return { x = (u - r[1]) / (r[2] - r[1]), y = (v - r[3]) / (r[4] - r[3]) }
     end
     local m = STATE.group[tonumber((unit or ""):match("%d+") or 0)]

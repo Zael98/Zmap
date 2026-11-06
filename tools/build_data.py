@@ -416,6 +416,9 @@ TRANSPORTS = {   # path: kind, faction, name (the key), the areas at its ends (t
 
 
 TRAM = (2173, 2175)   # the Deeprun Tram's doors (AreaTrigger): in Stormwind, in Ironforge
+# the same doors from inside the tram, a world of its own (369) with no map of it: to Stormwind (its end where the
+# Stormwind door lands you), to Ironforge
+TRAM_INSIDE = (2171, 2166)
 TRAM_AREA = 2257      # (its name)
 # where the teleports land is the server's (spell_target_position), not in the client's tables: as classic servers
 # have it (a leg of the way ends near enough to it). spell -> instance, x, y
@@ -432,8 +435,10 @@ TELEPORTS = {
 
 def build_tram():
     triggers = {int(r["ID"]): r for r in table("AreaTrigger")}
-    ends = [(int(triggers[t]["ContinentID"]), float(triggers[t]["Pos_0"]), float(triggers[t]["Pos_1"])) for t in TRAM]
-    return {"ends": ends, "names": names_by_locale("AreaTable", "AreaName_lang")[str(TRAM_AREA)]}
+    def where(ids):
+        return [(int(triggers[t]["ContinentID"]), float(triggers[t]["Pos_0"]), float(triggers[t]["Pos_1"])) for t in ids]
+    return {"ends": where(TRAM), "inside": where(TRAM_INSIDE),
+            "names": names_by_locale("AreaTable", "AreaName_lang")[str(TRAM_AREA)]}
 
 
 def build_transports():
@@ -596,9 +601,13 @@ def write_places(transports, entrances, levels, tram):
         L.append(f'    {{ "{t["kind"]}", "{t["fac"]}", {lua_str(t["name"])}, {{ {pieces} }}, {{ {docks} }}, {loc_names(t["names"])} }},')
     L.append("}")
     L.append("")
-    L.append("-- the Deeprun Tram: its doors in Stormwind and in Ironforge ({ instance, x, y }), and its name")
-    ends = ", ".join(f"{{ {inst}, {num(round(x))}, {num(round(y))} }}" for inst, x, y in tram["ends"])
-    L.append(f"ns.TRAM = {{ {ends}, names = {loc_names(tram['names'])} }}")
+    L.append("-- the Deeprun Tram: its doors in Stormwind and in Ironforge ({ instance, x, y }), the same doors from inside")
+    L.append("-- it (a world of its own with no map of it) and its name")
+
+    def doors(ends):
+        return ", ".join(f"{{ {inst}, {num(round(x))}, {num(round(y))} }}" for inst, x, y in ends)
+    L.append(f"ns.TRAM = {{ {doors(tram['ends'])}, inside = {{ {doors(tram['inside'])} }}, "
+             f"names = {loc_names(tram['names'])} }}")
     L.append("")
     L.append("-- where the teleports land: spell -> { instance, x, y } (the server's, as classic servers have it)")
     L.append("ns.TELEPORTS = {")

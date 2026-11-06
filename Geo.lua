@@ -8,7 +8,7 @@ ns.Geo = Geo
 local W, H = 1002, 668   -- Azeroth's map art, in pixels: the canvas's size in world units
 Geo.W, Geo.H = W, H
 
-local MAPS, TRANSFORM = ns.MAPS, ns.WORLD_TRANSFORM
+local MAPS, TRANSFORM, TRAM = ns.MAPS, ns.WORLD_TRANSFORM, ns.TRAM
 local IsSecret = issecretvalue or function() return false end
 local CONTINENTS = { 1415, 1414 }
 local ADT = 533 + 1 / 3  -- the world's terrain tiles, in yards
@@ -73,6 +73,18 @@ function Geo.FromYards(instance, wx, wy)
     local T = TRANSFORM[instance]
     if not T or not wx then return end
     return T[1] + T[2] * wy, T[3] + T[4] * wx
+end
+
+-- The Deeprun Tram is a world of its own with no map of it: its yards -> (u, v) on the line between its doors, as far
+-- along it as they are, and how much the tram is turned from that line (to turn a facing with it)
+function Geo.FromTram(instance, wx, wy)
+    local inside = TRAM and TRAM.inside
+    if not (wx and inside and instance == inside[1][1]) then return end
+    local a, b, p, q = inside[1], inside[2], TRAM[1], TRAM[2]
+    local dx, dy = b[2] - a[2], b[3] - a[3]
+    local f = math.max(0, math.min(1, ((wx - a[2]) * dx + (wy - a[3]) * dy) / (dx * dx + dy * dy)))
+    local u, v = Geo.FromYards(p[1], p[2] + (q[2] - p[2]) * f, p[3] + (q[3] - p[3]) * f)
+    return u, v, math.atan2(q[3] - p[3], q[2] - p[2]) - math.atan2(dy, dx)   -- (a facing: from north, towards west)
 end
 
 -- (u, v) -> world yards on that continent
@@ -233,4 +245,10 @@ function Geo.PlayerYards()
     local x, y, _, instance = UnitPosition("player")
     if not x or IsSecret(x) or IsSecret(y) then return end
     return x, y, instance
+end
+
+-- On the Deeprun Tram: where you are on the line between its doors and its turn (Geo.FromTram); nothing elsewhere
+function Geo.OnTram()
+    local x, y, instance = Geo.PlayerYards()
+    return Geo.FromTram(instance, x, y)
 end

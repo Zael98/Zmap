@@ -140,15 +140,28 @@ end
 -- center on the player (fitting their zone, when opening) and keep following them until the map is dragged
 function Map.CenterOnPlayer(fitZone)
     local u, v, mapID = Geo.UnitPosition("player")
-    if not u then
-        ns.Print(L.NO_POSITION)
-        return false
+    local z = math.max(view.z, 2.5)
+    if u then
+        if fitZone then z = Map.ZoomFor(mapID, 0.85) end
+        -- underground (indoors, in a cave's box): the cave's own map, surfaced
+        local cave, l, r, t, b = nil
+        if fitZone and IsIndoors and IsIndoors() and ns.Opt("caves") then cave, l, r, t, b = ns.Art.CaveAt(u, v) end
+        if cave then z = ZoomForRect(l, r, t, b, 1) end
+    else
+        u, v = Geo.OnTram()   -- the Deeprun Tram has no map, but you are on its line: the whole ride in view
+        if not u then
+            -- (asked for with Center: say why; opening the map, its bottom bar says it)
+            if not fitZone then ns.Print(L.NO_POSITION) end
+            return false
+        end
+        if fitZone then
+            local a, b = ns.TRAM[1], ns.TRAM[2]
+            local u1, v1 = Geo.FromYards(a[1], a[2], a[3])
+            local u2, v2 = Geo.FromYards(b[1], b[2], b[3])
+            -- (half the window: you are at the middle of it, anywhere along the line)
+            z = ZoomForRect(math.min(u1, u2), math.max(u1, u2), math.min(v1, v2), math.max(v1, v2), 0.45)
+        end
     end
-    local z = fitZone and Map.ZoomFor(mapID, 0.85) or math.max(view.z, 2.5)
-    -- underground (indoors, in a cave's box): the cave's own map, surfaced
-    local cave, l, r, t, b = nil
-    if fitZone and IsIndoors and IsIndoors() and ns.Opt("caves") then cave, l, r, t, b = ns.Art.CaveAt(u, v) end
-    if cave then z = ZoomForRect(l, r, t, b, 1) end
     Map.SetView(u * W, v * H, z)
     following = true
     return true
