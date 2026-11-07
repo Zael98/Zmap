@@ -5,6 +5,8 @@ local _, ns = ...
 
 -- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW },
 --   overlays (drawn whole) = { { w, h, x, y, fileIDs... }, ... } or nil }, ... },
+--   or a dungeon no game has a map of, its minimap: { { minimap tiles row by row (0: none) }, { names },
+--   crop = { top, left, bottom, right } } (the part of them shown, in tiles of the 64 x 64 terrain grid)
 --   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)
 --   map: a battleground's uiMap (where the game places your group, its objectives and flags); capture: the
 --   seconds an assaulted objective takes to fall; conflicts: [the point of interest of an objective in
@@ -233,6 +235,20 @@ ns.DUNGEON_MAPS = {
         { { "Lady Illucia Barov", nil, nil, nil, "Dame Illucia Barov", "Lady Ilúcia Barov", nil, "Леди Иллюсия Барова", "여군주 일루시아 바로브", "伊露希亚·巴罗夫", "伊露希亞·巴羅夫女士" }, 0, 0.000, 0.000 },
         { { "Darkmaster Gandling", "Maestro oscuro Gandling", "Maestro oscuro Gandling", "Dunkelmeister Gandling", "Sombre Maître Gandling", "Umbromestre Gandling", nil, "Темный магистр Гандлинг", "암흑스승 간들링", "黑暗院长加丁", "黑暗院長加丁" }, 0, 0.000, 0.000 },
     } },
+    [309] = { floors = {
+        { { 250216, 250221, 250217, 250222, 250218, 250223 }, { "" }, crop = { 53.4062, 34.2188, 55.3438, 35.9062 } },
+    }, bosses = {
+        { { "High Priestess Jeklik", "Suma Sacerdotisa Jeklik", "Suma sacerdotisa Jeklik", "Hohepriesterin Jeklik", "Grande prêtresse Jeklik", "Alta-sacerdotisa Jeklik", nil, "Верховная жрица Джеклик", "대여사제 제클릭", "高阶祭司耶克里克", "高階祭司耶克里克" }, 0, 0.000, 0.000 },
+        { { "High Priest Venoxis", "Sumo Sacerdote Venoxis", "Sumo sacerdote Venoxis", "Hohepriester Venoxis", "Grand prêtre Venoxis", "Sumo Sacerdote Venoxis", nil, "Верховный жрец Веноксис", "대사제 베녹시스", "高阶祭司温诺希斯", "高階祭司溫諾希斯" }, 0, 0.000, 0.000 },
+        { { "High Priestess Mar'li", "Suma Sacerdotisa Mar'li", "Suma sacerdotisa Mar'li", "Hohepriesterin Mar'li", "Grande prêtresse Mar'li", "Alta-sacerdotisa Mar'li", nil, "Верховная жрица Мар'ли", "대여사제 말리", "高阶祭司玛尔里", "高階祭司瑪俐" }, 0, 0.000, 0.000 },
+        { { "Bloodlord Mandokir", "Señor sangriento Mandokir", "Señor sangriento Mandokir", "Blutfürst Mandokir", "Seigneur sanglant Mandokir", "Sangrelorde Mandokir", nil, "Мандокир Повелитель Крови", "혈군주 만도키르", "血领主曼多基尔", "血領主曼多基爾" }, 0, 0.000, 0.000 },
+        { { "Edge of Madness", "Extremo de la Locura", "Cabo de la Locura", "Rand des Wahnsinns", "Frontière de la folie", "Beira da Loucura", nil, "Грань Безумия", "광란의 경계", "疯狂之缘", "瘋狂之緣" }, 0, 0.000, 0.000 },
+        { { "High Priest Thekal", "Sumo Sacerdote Thekal", "Sumo sacerdote Thekal", "Hohepriester Thekal", "Grand prêtre Thekal", "Sumo Sacerdote Thekal", nil, "Верховный жрец Текал", "대사제 데칼", "高阶祭司塞卡尔", "高階祭司塞卡爾" }, 0, 0.000, 0.000 },
+        { { "Gahz'ranka", nil, nil, nil, nil, nil, nil, "Газ'ранка", "가즈란카", "加兹兰卡", "加茲蘭卡" }, 0, 0.000, 0.000 },
+        { { "High Priestess Arlokk", "Suma Sacerdotisa Arlokk", "Suma sacerdotisa Arlokk", "Hohepriesterin Arlokk", "Grande prêtresse Arlokk", "Alta-sacerdotisa Arlokk", nil, "Верховная жрица Арлокк", "대여사제 알로크", "高阶祭司娅尔罗", "高階祭司阿洛克" }, 0, 0.000, 0.000 },
+        { { "Jin'do the Hexxer", "Jin'do el Malhechor", "Jin'do el Aojador", "Jin'do der Verhexer", "Jin'do le Maléficieur", "Jin'do, o Bagateiro", nil, "Джин'до Проклинатель", "주술사 진도", "妖术师金度", "妖術師金度" }, 0, 0.000, 0.000 },
+        { { "Hakkar", nil, nil, nil, nil, nil, nil, "Хаккар", "학카르", "哈卡", "哈卡" }, 0, 0.000, 0.000 },
+    } },
     [329] = { floors = {
         { { 448322, 448326, 448327, 448328, 448329, 448330, 448331, 448332, 448333, 448323, 448324, 448325 }, { "Crusader's Square", "Plaza de los Cruzados", "Plaza de los Cruzados", "Kreuzzüglerplatz", "Place des Croisés", "Quadra do Cruzado", nil, "Площадь рыцарей", "십자군 광장", "十字军广场", "十字軍廣場" } },
         { { 448334, 448338, 448339, 448340, 448341, 448342, 448343, 448344, 448345, 448335, 448336, 448337 }, { "The Gauntlet", "El Guantelete", "El Guantelete", "Der Spießrutenlauf", "Le Défi", "Forquilha", nil, "Улица Испытаний", "투쟁의 거리", "街巷", "街巷" } },
@@ -383,8 +399,48 @@ ns.DUNGEON_MAPS = {
         { { "Sapphiron", "Safirón", nil, "Saphiron", "Saphiron", nil, nil, "Сапфирон", "사피론", "萨菲隆", "薩菲隆" }, 0, 0.000, 0.000 },
         { { "Kel'Thuzad", nil, nil, nil, nil, nil, nil, "Кел'Тузад", "켈투자드", "克尔苏加德", "科爾蘇加德" }, 0, 0.000, 0.000 },
     } },
+    [2959] = { floors = {
+        { { 6982326, 6982322, 6982391, 6982332, 6982328, 6982395, 6982439, 6982441, 6982489, 6982445, 6982447, 6982485 }, { "" }, crop = { 30.9062, 30.5938, 33.1562, 32.3438 } },
+    }, bosses = {
+        { { "Arcane Anomaly", "Anomalía Arcana", "Anomalía Arcana", "Arkananomalie", "Anomalie arcanique", "Anomalia Arcana", nil, "Волшебная аномалия", "비전 변형물", "奥术畸体", "秘法異象" }, 0, 0.000, 0.000 },
+        { { "Fel Ancient", "Anciano vil", "Anciano vil", "Teufelsurtum", "Ancien gangrené", "Anciente Vil", nil, "Древень Скверны", "지옥의 고대정령", "邪能古树", "魔化古樹" }, 0, 0.000, 0.000 },
+        { { "Mana Devourer", "Devorador de maná", "Devorador de maná", "Manaschlinger", "Dévoreur de mana", "Devorador de Mana", nil, "Пожиратель маны", "마나 포식자", "法力吞噬者", "法力吞噬者" }, 0, 0.000, 0.000 },
+        { { "Mana Elemental", "Elemental de maná", "Elemental de maná", "Manaelementar", "Élémentaire de mana", "Elemental de Mana", nil, "Элементаль маны", "마나 정령", "法力元素", "法力元素" }, 0, 0.000, 0.000 },
+        { { "Unstable Sentinel", "Centinela inestable", "Centinela inestable", "Instabile Schildwache", "Sentinelle instable", "Sentinela Oscilante", nil, "Нестабильный часовой", "불안정한 파수꾼", "不稳定的哨兵", "不穩定的哨兵" }, 0, 0.000, 0.000 },
+        { { "Lyn the Ignored", "Lyn el Ignorado", "Lyn, el Ignorado", "Lyn der Ignorierte", "Lyn l’Ignoré", "Lyn, o Ignorado", nil, "Лин Забытый", "외면받는 린", "被无视的琳恩", "『忽視者』林恩" }, 0, 0.000, 0.000 },
+        { { "Atrexis the Grave Knight", "Atrexis el Caballero de la Tumba", "Atrexis, el Caballero de la tumba", "Atrexis der Grabritter", "Atrexis le Chevalier de la tombe", "Atrexis, o Cavaleiro da Sepultura", nil, "Атрексий Могильный Рыцарь", "무덤 기사 아트렉시스", "墓穴骑士阿特雷克斯", "『墓地騎士』亞崔希斯" }, 0, 0.000, 0.000 },
+        { { "Mana Wraith", "Ánima de maná", "Ánima de maná", "Managespenst", "Âme en peine de mana", "Aparição de Mana", nil, "Призрак магии", "마나 망령", "法力怨魂", "法力怨靈" }, 0, 0.000, 0.000 },
+        { { "Shade of the Archmage", "Sombra del archimago", "Sombra del archimago", "Schemen des Erzmagiers", "Ombre de l’archimage", "Vulto do Arquimago", nil, "Тень верховного мага", "대마법사의 망령", "大法师之影", "大法師之影" }, 0, 0.000, 0.000 },
+    } },
     [2997] = { map = 2524, floors = {
         { { 7745821, 7745825, 7745826, 7745827, 7745828, 7745829, 7745830, 7745831, 7745832, 7745822, 7745823, 7745824 }, { "Darkspear Islands", "Islas Lanza Negra", "Islas Lanza Negra", "Darkspear-Inseln", "Îles des Sombrelances", "Ilhas Lançanegra", nil, "Острова Черного Копья", "검은창 군도", "暗矛群岛", "暗矛島嶼" } },
     }, bosses = {
+    } },
+    [2998] = { floors = {
+        { { 7287260, 7287262, 7287264, 7287266, 7287268, 7287270 }, { "" }, crop = { 38.5938, 34.7188, 39.9062, 36.7188 } },
+    }, bosses = {
+        { { "Saltspine", "Espinasal", "Salespina", "Salzrücken", "Seléchine", "Salespino", nil, "Солеспин", "소금가시", "盐脊", "鹽脊" }, 0, 0.000, 0.000 },
+        { { "Shadetooth", "Sombradiente", "Dentumbra", "Schemenzahn", "Dent-Sombre", "Caninumbra", nil, "Тенезуб", "그늘이빨", "暗齿", "蔭牙" }, 0, 0.000, 0.000 },
+        { { "Highland Horror", "Horror de las Tierras Altas", "Horror de las Tierras Altas", "Hochlandschrecken", "Horreur des hautes-terres", "Horror do Planalto", nil, "Ужас нагорья", "고원 공포", "高地恐魔", "高地之懼" }, 0, 0.000, 0.000 },
+        { { "Relic Guardian", "Guardián de reliquias", "Guardián de reliquias", "Reliktwächter", "Gardien des reliques", "Guardião da Relíquia", nil, "Страж реликвий", "유물 수호자", "遗迹守卫者", "聖物守護者" }, 0, 0.000, 0.000 },
+    } },
+    [2999] = { floors = {
+        { { 7255736, 7255742, 7255754, 7255760 }, { "" }, crop = { 28.4688, 31.0938, 29.5312, 32.0312 } },
+    }, bosses = {
+        { { "Witherfang", "Colmimarchito", "Marchitacolmillos", "Welkzahn", "Croc-Flétri", "Sugapresa", nil, "Сухожвал", "쇠퇴송곳니", "枯牙", "枯萎之牙" }, 0, 0.000, 0.000 },
+        { { "The Abandoned", "El Abandonado", "El Abandonado", "Der Verlassene", "L’Abandonné", "O Abandonado", nil, "Покинутый", "버려진 자", "被遗弃者", "被棄者" }, 0, 0.000, 0.000 },
+        { { "The Butcher", "El Carnicero", "El Carnicero", "Der Schlächter", "Le Boucher", "O Carniceiro", nil, "Мясник", "도살자", "屠夫", "屠夫" }, 0, 0.000, 0.000 },
+        { { "Lordaeron Captain", "Capitán de Lordaeron", "Capitán de Lordaeron", "Hauptmann von Lordaeron", "Capitaine de Lordaeron", "Capitão de Lordaeron", nil, "Лордеронский капитан", "로데론 부대장", "洛丹伦上尉", "羅德隆隊長" }, 0, 0.000, 0.000 },
+        { { "Viktor the Vile", "Viktor el Abyecto", "Viktor, el Vil", "Viktor der Üble", "Viktor le Vil", "Viktor, o Vil", nil, "Виктор Вероломный", "비열한 빅토르", "邪恶的维克多", "邪惡的維多" }, 0, 0.000, 0.000 },
+        { { "Bjork", nil, nil, nil, nil, nil, nil, "Бьорк", "비요크", "比约克", "布喬克" }, 0, 0.000, 0.000 },
+        { { "Rath'mael", nil, nil, nil, "Rath’mael", nil, nil, "Рат'маэль", "라스마엘", "拉斯玛尔", "拉斯梅爾" }, 0, 0.000, 0.000 },
+    } },
+    [3065] = { floors = {
+        { { 7726086, 7726092, 7726140, 7726146, 7726194, 7726200 }, { "" }, crop = { 30.8125, 31.5020, 32.2422, 32.5332 } },
+    }, bosses = {
+        { { "Faldrim Anvilmar", "Faldrim Yunquemar", "Faldrim Yunquemar", nil, "Faldrim Courbenclume", "Faldrim Sidermar", nil, "Фалдрим Старая Наковальня", "팔드림 앤빌마", "法德林·安威玛尔", "法爾椎‧安威瑪" }, 0, 0.000, 0.000 },
+        { { "Infurnus", nil, nil, nil, nil, nil, nil, "Инфурий", "인퍼르누스", "茵弗努斯", "英弗努斯" }, 0, 0.000, 0.000 },
+        { { "Plunder", "Saqueo", "Saqueador", "Plünderung", "Pillage", "Butim", nil, "Крад", "약탈골렘", "劫掠者", "掠奪者" }, 0, 0.000, 0.000 },
+        { { "Durgen Dirgehammer", "Durgen Martillo Funesto", "Durgen Martillo de Endecha", nil, "Durgen Mornemartel", "Durgen Martelúgubre", nil, "Дарген Сокрушающий Молот", "드루겐 더지해머", "杜根·挽锤", "杜爾根‧戴格哈默" }, 0, 0.000, 0.000 },
     } },
 }

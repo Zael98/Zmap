@@ -1,7 +1,8 @@
 -- A dungeon's or a battleground's own map, over the world map: inside an instance when you open the map, or with
 -- a click on a dungeon's entrance. The game's pictures of it a floor at a time (Data/DungeonMaps.lua: Forever's
--- tables have none of the dungeons', its install has the pictures), a dungeon's bosses in order beside it
--- (numbered on the map where their place is known), and back to the world map (the button, or a right-click).
+-- tables have none of the dungeons', its install has the pictures; Forever's new dungeons, that no game has a map
+-- of, by the game's minimap of them), a dungeon's bosses in order beside it (numbered on the map where their place
+-- is known), and back to the world map (the button, or a right-click).
 -- On a battleground, what the game says moves on it: your group (drawn by the game's own frame, which knows where
 -- they are even where Lua is not told), its objectives (bases, towers, graveyards, in their owner's colours) and
 -- the flags.
@@ -11,10 +12,13 @@ local D = {}
 ns.Dungeon = D
 
 local ART_W, ART_H, TILE = 1002, 668, 256
+local MINIMAP = 512   -- a minimap tile's side
 local LIST_W = 190
 local IsSecret = issecretvalue or function() return false end
 local view, art, title, back, list
 local tiles, overlayTex, floorButtons, bossPins, bossRows = {}, {}, {}, {}, {}
+local cuts = {}       -- the floor shown's tiles: { x, y, w, h (on its picture), left, right, top, bottom (of the tile) }
+local pictureW, pictureH = ART_W, ART_H
 local current   -- { inst, floor, name }
 local units     -- the game's group frame (false: this client has none)
 local poiPins, flagPins = {}, {}
@@ -39,18 +43,17 @@ local function Layout()
     if not (view and current) then return end
     local listW = #Data(current.inst).bosses > 0 and LIST_W or 0
     local vw, vh = view:GetSize()
-    local s = math.min((vw - listW - 16) / ART_W, (vh - 34) / ART_H)
+    local s = math.min((vw - listW - 16) / pictureW, (vh - 34) / pictureH)
     if not (s > 0) then return end
     art:ClearAllPoints()
     art:SetPoint("CENTER", -listW / 2, -14)
-    art:SetSize(ART_W * s, ART_H * s)
-    for i, tex in ipairs(tiles) do
-        local row, col = math.floor((i - 1) / 4), (i - 1) % 4
-        local w, h = math.min(TILE, ART_W - col * TILE), math.min(TILE, ART_H - row * TILE)
-        tex:SetSize(w * s, h * s)
-        tex:SetTexCoord(0, w / TILE, 0, h / TILE)
+    art:SetSize(pictureW * s, pictureH * s)
+    for i, c in ipairs(cuts) do
+        local tex = tiles[i]
+        tex:SetSize(c[3] * s, c[4] * s)
+        tex:SetTexCoord(c[5], c[6], c[7], c[8])
         tex:ClearAllPoints()
-        tex:SetPoint("TOPLEFT", art, "TOPLEFT", col * TILE * s, -row * TILE * s)
+        tex:SetPoint("TOPLEFT", art, "TOPLEFT", c[1] * s, -c[2] * s)
     end
     for _, tex in ipairs(overlayTex) do
         if tex:IsShown() then
@@ -117,13 +120,42 @@ local function PaintList()
     end
 end
 
+-- where a floor's tiles go on its picture and what of each shows: Blizzard's 4 x 3 (1002 x 668 of them), or the
+-- part of the game's minimap tiles its crop says (top, left, bottom, right, in those tiles)
+local function Cut(floor)
+    wipe(cuts)
+    local crop = floor.crop
+    if not crop then
+        pictureW, pictureH = ART_W, ART_H
+        for i = 1, #floor[1] do
+            local row, col = math.floor((i - 1) / 4), (i - 1) % 4
+            local w, h = math.min(TILE, ART_W - col * TILE), math.min(TILE, ART_H - row * TILE)
+            cuts[i] = { col * TILE, row * TILE, w, h, 0, w / TILE, 0, h / TILE }
+        end
+        return
+    end
+    local top, left, bottom, right = crop[1], crop[2], crop[3], crop[4]
+    local row0, col0 = math.floor(top), math.floor(left)
+    local cols = math.ceil(right) - col0
+    pictureW, pictureH = (right - left) * MINIMAP, (bottom - top) * MINIMAP
+    for i = 1, #floor[1] do
+        local ty, tx = row0 + math.floor((i - 1) / cols), col0 + (i - 1) % cols
+        local l, r = math.max(tx, left), math.min(tx + 1, right)
+        local t, b = math.max(ty, top), math.min(ty + 1, bottom)
+        cuts[i] = { (l - left) * MINIMAP, (t - top) * MINIMAP, (r - l) * MINIMAP, (b - t) * MINIMAP, l - tx, r - tx, t - ty, b - ty }
+    end
+end
+
 local function ShowFloor(index)
     local d = Data(current.inst)
     local floor = d.floors[index]
     current.floor = index
-    for i, fileID in ipairs(floor[1]) do
-        tiles[i]:SetTexture(fileID, nil, nil, "TRILINEAR")
-        tiles[i]:Show()
+    Cut(floor)
+    for i = 1, math.max(#tiles, #cuts) do
+        local fileID = floor[1][i]
+        tiles[i] = tiles[i] or art:CreateTexture(nil, "ARTWORK")
+        if fileID and fileID ~= 0 then tiles[i]:SetTexture(fileID, nil, nil, "TRILINEAR") end
+        tiles[i]:SetShown(fileID ~= nil and fileID ~= 0)
     end
     ShowOverlays(floor[3])
     for _, pin in ipairs(bossPins) do pin:Hide() end
@@ -433,9 +465,6 @@ local function Create(viewport)
     bg:SetColorTexture(0.05, 0.05, 0.06, 1)
     art = CreateFrame("Frame", nil, view)
     art:SetPoint("CENTER", -LIST_W / 2, -14)
-    for i = 1, 12 do
-        tiles[i] = art:CreateTexture(nil, "ARTWORK")
-    end
     title = view:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 10, -8)
     back = ns.Button(view, L.BACK_TO_WORLD, 130, function() D.Close() end)

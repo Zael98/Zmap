@@ -15,6 +15,7 @@ import argparse
 import csv
 import io
 import math
+import re
 import struct
 import sys
 import time
@@ -331,22 +332,32 @@ def build_masks(maps, write=True):
 # Minimap tiles (the close-up terrain): the continents' WDT lists each ADT tile's minimap texture
 # --------------------------------------------------------------------------------------------------------------
 
+def chunks(data):
+    """A WDT's or an ADT's chunks: (tag, body)"""
+    i = 0
+    while i + 8 <= len(data):
+        size = struct.unpack("<I", data[i + 4:i + 8])[0]
+        yield data[i:i + 4][::-1], data[i + 8:i + 8 + size]
+        i += 8 + size
+
+
+def adt_files(wdt):
+    """An instance's terrain tiles, from its WDT (the MAID chunk): [row * 64 + col] = (root ADT, minimap texture);
+    empty for an instance that is only a building (no terrain)"""
+    for tag, body in chunks(casc(wdt)):
+        if tag == b"MAID":
+            ids = struct.unpack(f"<{len(body) // 4}I", body)
+            per = len(body) // (64 * 64 * 4)
+            return {k: (ids[k * per], ids[k * per + 7]) for k in range(64 * 64) if ids[k * per + 7]}
+    return {}
+
+
 def build_minimap():
     wdt_of = {int(r["ID"]): int(r["WdtFileDataID"]) for r in table("Map")}
-    out = {}
-    for inst in [*CONTINENT_MAPS, *ISLES]:
-        data = casc(wdt_of[inst])
-        i = 0
-        while i + 8 <= len(data):
-            tag = data[i:i + 4][::-1]
-            size = struct.unpack("<I", data[i + 4:i + 8])[0]
-            if tag == b"MAID":
-                ids = struct.unpack(f"<{size // 4}I", data[i + 8:i + 8 + size])
-                per = size // (64 * 64 * 4)
-                out[inst] = {k: ids[k * per + 7] for k in range(64 * 64) if ids[k * per + 7]}
-            i += 8 + size
-        if inst not in out:
-            raise RuntimeError(f"WDT {wdt_of[inst]} has no MAID chunk")
+    out = {inst: {k: mini for k, (_, mini) in adt_files(wdt_of[inst]).items()} for inst in [*CONTINENT_MAPS, *ISLES]}
+    for inst, tiles in out.items():
+        if not tiles:
+            raise RuntimeError(f"WDT {wdt_of[inst]} has no minimap tiles")
     return out
 
 
@@ -634,10 +645,64 @@ def write_places(transports, entrances, levels, tram):
 # Dungeon maps: Forever's tables have none, but its install has the pictures. Mists Classic's tables say which
 # pictures make each instance's floors and where its bosses are. Left out: the dungeons Pandaria rebuilt
 # (their maps are not Forever's), and bosses that are not NPCs of Forever (Cataclysm's, in the Deadmines).
+# Forever's new dungeons have no map in any game: their picture is the game's minimap of them.
 # --------------------------------------------------------------------------------------------------------------
 
 MISTS = "5.5.4.70449"
 REBUILT = {311, 316, 246}   # journal instances: Scarlet Halls, Scarlet Monastery, Scholomance (Pandaria's)
+MINIMAP_PX = 512            # a minimap texture's side
+
+
+def minimap_floor(wdt, areas):
+    """A dungeon from its minimap: the minimap tiles of its terrain, cropped to the chunks of its own subzones
+    (areas: their IDs; the land copied round it is in none; one spread over nearly all of it, as Zul'Gurub's own
+    over old filler land, says nothing when there are others) and, for a hall in the void (tiles of one flat colour
+    round it), to what is drawn of it. None if it has no terrain of its own."""
+    files = adt_files(wdt)
+    pictures, void = {}, None
+    for k, (_, mini) in files.items():
+        img = np.asarray(Image.open(io.BytesIO(casc(mini))).convert("RGB"), dtype=np.int16)
+        if img.std() < 2:
+            void = img[0, 0]
+        else:
+            pictures[k] = img
+    area_at = {}   # (row, col) of each chunk (16 a tile) -> its area
+    for k in pictures:
+        root = files[k][0]
+        for tag, body in chunks(casc(root)) if root else ():
+            if tag == b"MCNK":
+                col, row = struct.unpack("<II", body[4:12])
+                area_at[k // 64 * 16 + row, k % 64 * 16 + col] = struct.unpack("<I", body[0x34:0x38])[0]
+    count = {}
+    for a in area_at.values():
+        if a in areas:
+            count[a] = count.get(a, 0) + 1
+    shown = {a for a, n in count.items() if n <= len(area_at) / 2} if len(count) > 1 else set(count)
+    where = [rc for rc, a in area_at.items() if a in shown]
+    if not where:
+        return None
+    box = (min(r for r, _ in where), min(c for _, c in where), max(r for r, _ in where) + 1, max(c for _, c in where) + 1)
+    top, left, bottom, right = (v / 16 for v in box)
+    if void is not None:
+        # in that box, what is drawn (not the void's colour)
+        r0, c0 = int(top), int(left)
+        drawn = np.zeros(((math.ceil(bottom) - r0) * MINIMAP_PX, (math.ceil(right) - c0) * MINIMAP_PX), bool)
+        for k, img in pictures.items():
+            y, x = (k // 64 - r0) * MINIMAP_PX, (k % 64 - c0) * MINIMAP_PX
+            if 0 <= y < drawn.shape[0] and 0 <= x < drawn.shape[1]:
+                drawn[y:y + MINIMAP_PX, x:x + MINIMAP_PX] = np.abs(img - void).sum(axis=2) > 12
+        y0, x0 = round((top - r0) * MINIMAP_PX), round((left - c0) * MINIMAP_PX)
+        ys, xs = np.nonzero(drawn[y0:round((bottom - r0) * MINIMAP_PX), x0:round((right - c0) * MINIMAP_PX)])
+        if len(ys):
+            top, bottom = r0 + (y0 + ys.min()) / MINIMAP_PX, r0 + (y0 + ys.max() + 1) / MINIMAP_PX
+            left, right = c0 + (x0 + xs.min()) / MINIMAP_PX, c0 + (x0 + xs.max() + 1) / MINIMAP_PX
+    pad = 1 / 32   # (within the terrain there is)
+    rows, cols = [k // 64 for k in files], [k % 64 for k in files]
+    top, left = max(top - pad, min(rows)), max(left - pad, min(cols))
+    bottom, right = min(bottom + pad, max(rows) + 1), min(right + pad, max(cols) + 1)
+    tiles = [files.get(r * 64 + c, (0, 0))[1] for r in range(math.floor(top), math.ceil(bottom))
+             for c in range(math.floor(left), math.ceil(right))]
+    return {"ui": None, "order": 0, "tiles": tiles, "names": {loc: "" for loc in LOCALES}, "crop": (top, left, bottom, right)}
 
 
 def build_dungeon_maps():
@@ -673,6 +738,23 @@ def build_dungeon_maps():
         out[inst] = [f for f in out[inst] if casc(f["tiles"][0])]
         if not out[inst]:
             del out[inst]
+    # The group finder's dungeons that no game has a map of (Forever's new ones: the Hall of Thanes, the Ruins of
+    # Lordaeron...; Zul'Gurub's is not left either): their picture is the game's minimap of them. By name in the
+    # finder, so no test or unused map comes in.
+    def plain(name):
+        return re.sub(r"^the", "", re.sub(r"[^a-z]", "", fold(name)))
+    finder = {plain(r["Name_lang"]) for r in table("LFGDungeons") if r["TypeID"] == "0"}
+    areas = {}
+    for r in table("AreaTable"):
+        areas.setdefault(int(r["ContinentID"]), set()).add(int(r["ID"]))
+    for r in table("Map"):
+        inst = int(r["ID"])
+        if r["InstanceType"] in ("1", "2") and inst not in out and plain(r["MapName_lang"]) in finder:
+            floor = minimap_floor(int(r["WdtFileDataID"]), areas.get(inst, set()))
+            if floor:
+                out[inst] = [floor]
+            else:
+                print(f"  {r['MapName_lang']} ({inst}): no map and no minimap of it, left out")
     # The bosses: Forever's own encounters (every one, in order, in each language). Where they stand, from Mists'
     # journal: by the encounter's ID, else by its English name; Mists has the Cataclysm versions of some dungeons
     # (the Deadmines, Shadowfang Keep, the Stockade...), so their bosses stay without a place.
@@ -806,6 +888,8 @@ def write_dungeon_maps(dmaps):
     L = [HEADER.format(build=BUILD + " / Mists Classic " + MISTS), "local _, ns = ...", "",
          "-- [instance map] = { floors = { { tiles (12 file IDs, row by row), { floor names enUS, esES, esMX, deDE, frFR, ptBR, itIT, ruRU, koKR, zhCN, zhTW },",
          "--   overlays (drawn whole) = { { w, h, x, y, fileIDs... }, ... } or nil }, ... },",
+         "--   or a dungeon no game has a map of, its minimap: { { minimap tiles row by row (0: none) }, { names },",
+         "--   crop = { top, left, bottom, right } } (the part of them shown, in tiles of the 64 x 64 terrain grid)",
          "--   bosses = { { { names }, floor (0: its place is not known), x, y }, ... } } (floors and bosses in order)",
          "--   map: a battleground's uiMap (where the game places your group, its objectives and flags); capture: the",
          "--   seconds an assaulted objective takes to fall; conflicts: [the point of interest of an objective in",
@@ -825,7 +909,8 @@ def write_dungeon_maps(dmaps):
             if f.get("overlays"):
                 ovs = ", { " + ", ".join(f"{{ {o['w']}, {o['h']}, {o['x']}, {o['y']}, {', '.join(str(x) for x in o['fdids'])} }}"
                                          for o in f["overlays"]) + " }"
-            L.append(f"        {{ {{ {', '.join(str(t) for t in f['tiles'])} }}, {loc_names(f['names'])}{ovs} }},")
+            crop = f", crop = {{ {', '.join(f'{v:.4f}' for v in f['crop'])} }}" if f.get("crop") else ""
+            L.append(f"        {{ {{ {', '.join(str(t) for t in f['tiles'])} }}, {loc_names(f['names'])}{ovs}{crop} }},")
         L.append("    }, bosses = {")
         for b in d["bosses"]:
             L.append(f"        {{ {loc_names(b['names'])}, {b['floor']}, {b['x']:.3f}, {b['y']:.3f} }},")

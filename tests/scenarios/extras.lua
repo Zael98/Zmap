@@ -186,6 +186,35 @@ for _, text in ipairs(placed) do if text:find("^" .. target .. "%. ") then numbe
 OUT(("brd: to floor %s, numbered on it %s"):format(tostring(floor), tostring(numbered)))
 ZNS.Dungeon.Close()
 ZNS.Map.Close()
+-- the Hall of Thanes, one of Forever's new dungeons: no game has a map of it, so its picture is the game's minimap
+-- of it (the part of its tiles the data crops), with its bosses beside it
+STATE.instanceID, STATE.instanceName = 3065, "El Salón de los Feudales"
+OPEN()
+local thanes, thanesPlaced = ZNS.Dungeon.Shown()
+-- a floor's tiles shown (and the frame they are on)
+local function Picture(floor)
+    local files, shown, on = {}, 0, nil
+    for _, id in ipairs(floor[1]) do if id ~= 0 then files[id] = true end end
+    for _, w in ipairs(ALL_WIDGETS) do
+        if w.kind == "Texture" and files[w.file] and w:IsVisible() then shown, on = shown + 1, w.parent end
+    end
+    return shown, on
+end
+local function Shape(frame, w, h)
+    return frame ~= nil and frame:GetHeight() > 0 and math.abs(frame:GetWidth() / frame:GetHeight() - w / h) < 0.01
+end
+local thanesFloor = ZNS.DUNGEON_MAPS[3065].floors[1]
+local crop = thanesFloor.crop
+local thanesTiles, thanesArt = Picture(thanesFloor)
+OUT(("hall of thanes: shown %s, bosses %d (%s), placed %d, minimap tiles %d of %d, its shape %s"):format(
+    tostring(ZNS.Dungeon.IsShown()), #thanes, tostring(thanes[1]), #thanesPlaced, thanesTiles, #thanesFloor[1],
+    tostring(Shape(thanesArt, crop[4] - crop[2], crop[3] - crop[1]))))
+ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
+local brdTiles, brdArt = Picture(ZNS.DUNGEON_MAPS[230].floors[1])
+OUT(("a dungeon with its own map after it: tiles %d, its shape %s, minimap tiles left %d"):format(brdTiles,
+    tostring(Shape(brdArt, 1002, 668)), (Picture(thanesFloor))))
+ZNS.Dungeon.Close()
+ZNS.Map.Close()
 STATE.instance = false
 OPEN()
 OUT("outside: dungeon map shown " .. tostring(ZNS.Dungeon.IsShown()))
