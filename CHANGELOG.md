@@ -1,5 +1,10 @@
 # Zmap
 
+## 1.4.5 — Forever's new dungeons on the map
+
+- **Forever's new dungeons have their map**: the Hall of Thanes, the Ruins of Lordaeron, the City of Dalaran and the Excavation Site in the Wetlands have no map in any game, so inside them the map stayed on the world. Now it opens on the dungeon, drawn from the game's own minimap of it and cut to the dungeon itself (its own areas, not the land around it), with its bosses beside it. Zul'Gurub too.
+- Inside a dungeon there is still no arrow for you on these: the game tells addons nowhere where you are in an instance.
+
 ## 1.4.4 — On the Deeprun Tram
 
 - **The Deeprun Tram has you on the map**: the tram is a world of its own with no map, so the game gives no place on any map there, and Zmap said so in the chat each time the map opened. Now it puts you on the line between its Stormwind and Ironforge doors, as far along it as you are, your arrow turned the way you face and the tram's name below. The map opens on the whole ride, and Center works there too.
