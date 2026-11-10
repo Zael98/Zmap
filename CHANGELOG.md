@@ -1,6 +1,6 @@
 # Zmap
 
-## Unreleased — Only the tracked quests, and L opens Zmap's quest log
+## 1.4.6 — Only the tracked quests, and L opens Zmap's quest log
 
 - **Only tracked quests** (a new layer, under Quests): turned on, the map and the minimap mark only the quests you track — their objectives, objective areas and where to hand them in — so a zone full of quests is no longer full of marks. The quest givers ("!") keep their own layer.
 - **L opens Zmap's quest log**: the quest log's key opens Zmap with its quest log shown (even when you had folded it away); pressed again, it closes. An option gives L back to Blizzard's map, and the key bindings (AddOns) have a key of its own for it.
