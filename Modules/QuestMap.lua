@@ -13,6 +13,8 @@ local COLORS = { { 1, 0.82, 0.1 }, { 0.3, 0.8, 1 }, { 1, 0.4, 0.4 }, { 0.5, 1, 0
     { 0.4, 1, 0.9 }, { 1, 1, 1 } }
 
 local completed, inLog, finished, logList = {}, {}, {}, {}
+local untracked = {}   -- the quests of your log you do not track (the option to show only the tracked ones)
+local Untracked
 local giverMarks, objectiveMarks   -- built from the quest log; nil: to build again
 local dirty = true
 
@@ -36,6 +38,21 @@ local function Scan()
             if C_QuestLog.IsComplete(info.questID) then finished[info.questID] = true end
         end
     end
+    Untracked()
+end
+
+function Untracked()
+    wipe(untracked)
+    if not C_QuestLog.GetQuestWatchType then return end
+    for _, id in ipairs(logList) do
+        if C_QuestLog.GetQuestWatchType(id) == nil then untracked[id] = true end
+    end
+end
+
+-- whether a quest of your log is shown on the map and the minimap: all of them, or with "only tracked
+-- quests", the ones you track
+function QM.Shown(id)
+    return not (untracked[id] and ns.Opt("trackedOnly"))
 end
 
 local function Has(mask, bit) return mask == 0 or math.floor(mask / bit) % 2 == 1 end
@@ -454,7 +471,7 @@ function objectives:Refresh()
     local areas = ns.Opt("objectiveAreas")
     if areas then
         for _, a in ipairs(QM.Areas()) do
-            if a.u1 > u0 and a.u0 < u1 and a.v1 > v0 and a.v0 < v1 then
+            if QM.Shown(a.mark.quest) and a.u1 > u0 and a.u0 < u1 and a.v1 > v0 and a.v0 < v1 then
                 DrawArea(a)
                 local pin = self:Acquire()
                 pin.icon:SetAtlas("WhiteCircle-RaidBlips")
@@ -465,7 +482,7 @@ function objectives:Refresh()
         end
     end
     for _, mark in ipairs(QM.Objectives()) do
-        if InBox(mark, u0, v0, u1, v1) and not (areas and not (mark.turnIn or mark.buy or mark.reach)) then
+        if InBox(mark, u0, v0, u1, v1) and QM.Shown(mark.quest) and not (areas and not (mark.turnIn or mark.buy or mark.reach)) then
             local pin = self:Acquire()
             if mark.turnIn then
                 pin.icon:SetAtlas("QuestTurnin")
@@ -576,6 +593,11 @@ ns.On("ZMAP_OPTION", function(key)
         dirty = true
         givers:Update()
     end
-    if key == "objectiveAreas" then objectives:Update() end
+    if key == "objectiveAreas" or key == "trackedOnly" then objectives:Update() end
 end)
 ns.On("ZMAP_SHOW", function() dirty = true end)
+-- tracking a quest or not: only what is shown changes
+ns.On("QUEST_WATCH_UPDATE", ns.Debounce(0.2, function()
+    Untracked()
+    if ns.Opt("trackedOnly") then objectives:Update() end
+end))

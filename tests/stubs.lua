@@ -366,7 +366,7 @@ end
 function GetPlayerFacing() return STATE.player.facing end
 function CanMerchantRepair() return STATE.npc and STATE.npc.repair end
 function IsTradeskillTrainer() return STATE.npc and STATE.npc.profession end
-function GetBindingKey(action) if action == "TOGGLEWORLDMAP" then return "M" end end
+function GetBindingKey(action) if action == "TOGGLEWORLDMAP" then return "M" elseif action == "TOGGLEQUESTLOG" then return "L" end end
 function SetOverrideBindingClick(owner, prio, key, button) STATE.bindings[key] = button end
 function ClearOverrideBindings() wipe(STATE.bindings) end
 function ToggleWorldMap() STATE.blizzardMap = true end

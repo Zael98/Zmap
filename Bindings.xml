@@ -2,4 +2,7 @@
 	<Binding name="ZMAP_TOGGLE" header="ZMAP" category="ADDONS">
 		Zmap_Toggle()
 	</Binding>
+	<Binding name="ZMAP_QUESTS" category="ADDONS">
+		Zmap_ToggleQuests()
+	</Binding>
 </Bindings>

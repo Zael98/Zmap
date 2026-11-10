@@ -27,7 +27,7 @@ function P:Refresh()
         end
         for _, q in ipairs(ok and list or {}) do
             local key = q.questID .. ":" .. math.floor(q.x * 200) .. ":" .. math.floor(q.y * 200)
-            if not seen[key] and q.x and q.y then
+            if not seen[key] and q.x and q.y and ns.QuestMap.Shown(q.questID) then
                 seen[key] = true
                 local u, v = Geo.ToWorld(mapID, q.x, q.y)
                 local pin = self:Acquire()
@@ -75,3 +75,4 @@ local refresh = ns.Debounce(0.5, function() P:Update() end)
 ns.On("QUEST_LOG_UPDATE", refresh)
 ns.On("QUEST_POI_UPDATE", refresh)
 ns.On("QUEST_WATCH_UPDATE", refresh)
+ns.On("ZMAP_OPTION", function(key) if key == "trackedOnly" then P:Update() end end)

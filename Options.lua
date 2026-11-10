@@ -21,6 +21,7 @@ local LAYERS = {
     { "trivial", "OPT_TRIVIAL", "TrivialQuests", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "repeatable", "OPT_REPEATABLE", "QuestDaily", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "objectives", "OPT_OBJECTIVES", "WhiteCircle-RaidBlips", atlas = true, color = { 1, 0.35, 0.3 }, group = "LAYER_GROUP_QUESTS" },
+    { "trackedOnly", "OPT_TRACKED_ONLY", "Waypoint-MapPin-Tracked", atlas = true, group = "LAYER_GROUP_QUESTS" },
     { "objectiveAreas", "OPT_OBJECTIVE_AREAS", "WhiteCircle-RaidBlips", atlas = true, color = { 1, 0.82, 0.1 }, group = "LAYER_GROUP_QUESTS" },
     { "townsfolk", "OPT_TOWNSFOLK", I .. "INV_Misc_Coin_01", types = true, group = "LAYER_GROUP_PEOPLE" },
     { "rares", "OPT_RARES", "VignetteKill", atlas = true, group = "LAYER_GROUP_PEOPLE" },
@@ -479,14 +480,15 @@ local function Build()
     local y = -70
     Header(content, L.OPT_SECTION_MAP, 16, y)
     Check(content, "replaceMap", L.OPT_REPLACE, 16, y - 20, L.OPT_REPLACE_TIP)
-    Check(content, "fadeMoving", L.OPT_FADE, 16, y - 46, L.OPT_FADE_TIP)
-    Cycle(content, "openOn", L.OPT_OPEN_ON, { "player", "last" }, { L.OPEN_PLAYER, L.OPEN_LAST }, 20, y - 78)
+    Check(content, "replaceQuestLog", L.OPT_REPLACE_LOG, 16, y - 46, L.OPT_REPLACE_LOG_TIP)
+    Check(content, "fadeMoving", L.OPT_FADE, 16, y - 72, L.OPT_FADE_TIP)
+    Cycle(content, "openOn", L.OPT_OPEN_ON, { "player", "last" }, { L.OPEN_PLAYER, L.OPEN_LAST }, 20, y - 104)
     Cycle(content, "unexplored", L.OPT_UNEXPLORED, UNEXPLORED,
-        { L.UNEXPLORED_show, L.UNEXPLORED_dim, L.UNEXPLORED_hide }, 20, y - 104)
-    Stepper(content, "iconScale", L.OPT_ICON_SIZE, 0.6, 2, 0.1, 20, y - 132)
-    Stepper(content, "fadeAlpha", L.OPT_FADE_ALPHA, 0.2, 1, 0.05, 20, y - 158)
+        { L.UNEXPLORED_show, L.UNEXPLORED_dim, L.UNEXPLORED_hide }, 20, y - 130)
+    Stepper(content, "iconScale", L.OPT_ICON_SIZE, 0.6, 2, 0.1, 20, y - 158)
+    Stepper(content, "fadeAlpha", L.OPT_FADE_ALPHA, 0.2, 1, 0.05, 20, y - 184)
 
-    local GRID = 280   -- where the layers' grid starts (below its header)
+    local GRID = 306   -- where the layers' grid starts (below its header)
     Header(content, L.OPT_SECTION_LAYERS, 16, -(GRID - 20))
     local layerChecks = {}
     for i, layer in ipairs(LAYERS) do layerChecks[i] = Check(content, layer[1], L[layer[2]], 0, 0) end

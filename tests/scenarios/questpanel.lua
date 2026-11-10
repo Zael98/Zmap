@@ -93,4 +93,41 @@ for _, m in ipairs(ZNS.QuestMap.Givers()) do
 end
 OUT(("not offered: still marked %s; after a level up %s"):format(tostring(still), tostring(again)))
 STATE.npc, STATE.offered = nil, nil
+
+-- only the tracked quests: 33 is tracked, 102 is not; its marks go from the map and the minimap
+OPEN()
+ZNS.Map.SetView(ZNS.Geo.W * 0.735, ZNS.Geo.H * 0.64, 3)
+FRAMES(5)
+local function Marks(id)
+    local n = 0
+    for _, p in ipairs(PINS("objectives")) do if p.mark.quest == id then n = n + 1 end end
+    for _, p in ipairs(PINS("quests")) do if p.questID == id then n = n + 1 end end
+    return n
+end
+local before102, before33 = Marks(102), Marks(33)
+ZNS.SetOpt("trackedOnly", true)
+ADVANCE(1)
+FRAMES(3)
+OUT(("tracked only: 102 %d -> %d, 33 %d -> %d, shown 102 %s"):format(before102, Marks(102), before33, Marks(33),
+    tostring(ZNS.QuestMap.Shown(102))))
+STATE.watched[102] = true
+EVENT("QUEST_WATCH_UPDATE")
+ADVANCE(1)
+FRAMES(3)
+OUT(("tracked it: 102 %d"):format(Marks(102)))
+STATE.watched[102] = nil
+ZNS.SetOpt("trackedOnly", false)
+ADVANCE(1)
+
+-- L: the map with its quest log, even when the log was folded; again, closed
+ZNS.Map.Close()
+ZNS.db.questPanel = false
+OUT("binding: L -> " .. tostring(STATE.bindings.L))
+ZmapQuestsButton:Click()
+local opened, logShown = ZNS.Map.IsShown(), ZNS.QuestPanel.Shown()
+ZmapQuestsButton:Click()
+OUT(("L: map %s, log %s; again: map %s"):format(tostring(opened), tostring(logShown), tostring(ZNS.Map.IsShown())))
+ZNS.SetOpt("replaceQuestLog", false)
+OUT("L given back: " .. tostring(STATE.bindings.L) .. ", M " .. tostring(STATE.bindings.M))
+ZNS.SetOpt("replaceQuestLog", true)
 OUT("errors " .. #STATE.errors)

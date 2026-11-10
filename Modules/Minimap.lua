@@ -99,7 +99,8 @@ local function Update()
     end
     if ns.Opt("objectives") then
         for _, mark in ipairs(ns.QuestMap.Objectives()) do
-            if mark.turnIn then
+            if not ns.QuestMap.Shown(mark.quest) then   -- (only the tracked ones, when so chosen)
+            elseif mark.turnIn then
                 Show(mark.u, mark.v, "QuestTurnin", nil, 1, 1, 1, 14)
             else
                 Show(mark.u, mark.v, "WhiteCircle-RaidBlips", nil, mark.color[1], mark.color[2], mark.color[3], 8)

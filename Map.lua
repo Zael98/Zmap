@@ -497,7 +497,14 @@ function Map.Toggle()
     if frame and frame:IsShown() then Map.Close() else Map.Open() end
 end
 
--- Blizzard's own map (its quest log lives there)
+-- L: the map with its quest log; again, or with the map open on the log, closed
+function Map.ToggleQuests()
+    if frame and frame:IsShown() and ns.QuestPanel.Shown() then return Map.Close() end
+    Map.Open()
+    ns.QuestPanel.Toggle(true)
+end
+
+-- Blizzard's own map (and its quest log)
 function Map.OpenBlizzard()
     Map.Close()
     if ToggleWorldMap then ToggleWorldMap() end

@@ -87,6 +87,7 @@ end
 
 ns.DEFAULTS = {
     replaceMap = true,        -- M opens Zmap instead of Blizzard's map
+    replaceQuestLog = true,   -- L opens Zmap's quest log instead of Blizzard's map
     openOn = "player",        -- "player": on your zone; "last": where you left it
     unexplored = "dim",       -- areas you have not explored: "show", "dim" or "hide"
     minimap = true,           -- the minimap's terrain when zoomed in close
@@ -96,7 +97,7 @@ ns.DEFAULTS = {
     -- layers
     labels = true, levels = true, flights = true, dungeons = true, transports = true,
     quests = true, group = true, guild = true, pins = true, herbs = false, ore = false, townsfolk = true, rares = true,
-    available = true, trivial = false, repeatable = false, objectives = true, objectiveAreas = true, minimapPins = true, harmonize = false, folkMine = true, rareAlert = true, caves = true,
+    available = true, trivial = false, repeatable = false, trackedOnly = false, objectives = true, objectiveAreas = true, minimapPins = true, harmonize = false, folkMine = true, rareAlert = true, caves = true,
     -- sharing (only with Zmap users of your guild or group)
     shareGuild = true,        -- your position on their map
     shareFinds = true,        -- herbs, ore and townsfolk you find
