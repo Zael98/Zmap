@@ -92,6 +92,7 @@ ns.DEFAULTS = {
     unexplored = "dim",       -- areas you have not explored: "show", "dim" or "hide"
     minimap = true,           -- the minimap's terrain when zoomed in close
     iconScale = 1,
+    questScale = 1,           -- size of the quest log on the map (text, icons and buttons)
     fadeMoving = true,        -- the window fades while you move
     fadeAlpha = 0.55,
     -- layers

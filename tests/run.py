@@ -106,6 +106,7 @@ CHECKS = {
                            r"^tracked only: 102 [1-9]\d* -> 0, 33 ([1-9]\d*) -> \1, shown 102 false$", r"^tracked it: 102 [1-9]\d*$",
                            r"^binding: L -> ZmapQuestsButton$", r"^L: map true, log true; again: map false$",
                            r"^L given back: nil, M ZmapToggleButton$",
+                           r"^size: panel 1\.5, tab 1\.5, width 450(\.0)?$",
                            r"^errors 0$"]),
     "gatherroute": (False, [r"^route: true, stops [1-9]\d*, each once true, arrow Siguiente nodo \(1/\d+\)$",
                             r"^said: .*Ruta de recolección: \d+ paradas en Bosque de Elwynn, unos [\d:]+ por vuelta$",

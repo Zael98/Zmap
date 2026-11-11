@@ -65,6 +65,7 @@ ns.LOCALES.KO = {
     OPT_TRACKED_ONLY = "추적 중인 퀘스트만",
     OPT_FADE = "이동 중 창 흐리게", OPT_FADE_TIP = "창 모드에서만, 커서가 위에 없을 때.",
     OPT_FADE_ALPHA = "이동 중 불투명도", OPT_ICON_SIZE = "아이콘 크기",
+    OPT_QUEST_SIZE = "퀘스트 목록 크기",
     OPT_OPEN_ON = "지도 열기", OPEN_PLAYER = "내 지역에서", OPEN_LAST = "마지막 위치에서",
     OPT_UNEXPLORED = "탐험하지 않은 지역", UNEXPLORED_show = "표시", UNEXPLORED_dim = "어둡게", UNEXPLORED_hide = "숨기기",
     OPT_LABELS = "지역 이름", OPT_LEVELS = "지역 레벨", OPT_FLIGHTS = "비행 조련사",

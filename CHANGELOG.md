@@ -1,5 +1,10 @@
 # Zmap
 
+## Unreleased
+
+- **Quest log size** (Options, under the icon size): makes Zmap's quest log bigger or smaller, from 80% to 200%. Its text, icons and buttons grow together, which makes it easier to read on big screens such as 4K.
+- Data from Forever build 1.60.1.70888 and Questie bundle v12.6.5+v1.0.13.
+
 ## 1.4.6 — Only the tracked quests, and L opens Zmap's quest log
 
 - **Only tracked quests** (a new layer, under Quests): turned on, the map and the minimap mark only the quests you track — their objectives, objective areas and where to hand them in — so a zone full of quests is no longer full of marks. The quest givers ("!") keep their own layer.

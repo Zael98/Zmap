@@ -487,8 +487,9 @@ local function Build()
         { L.UNEXPLORED_show, L.UNEXPLORED_dim, L.UNEXPLORED_hide }, 20, y - 130)
     Stepper(content, "iconScale", L.OPT_ICON_SIZE, 0.6, 2, 0.1, 20, y - 158)
     Stepper(content, "fadeAlpha", L.OPT_FADE_ALPHA, 0.2, 1, 0.05, 20, y - 184)
+    Stepper(content, "questScale", L.OPT_QUEST_SIZE, 0.8, 2, 0.1, 20, y - 210)
 
-    local GRID = 306   -- where the layers' grid starts (below its header)
+    local GRID = 332   -- where the layers' grid starts (below its header)
     Header(content, L.OPT_SECTION_LAYERS, 16, -(GRID - 20))
     local layerChecks = {}
     for i, layer in ipairs(LAYERS) do layerChecks[i] = Check(content, layer[1], L[layer[2]], 0, 0) end

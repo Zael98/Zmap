@@ -65,6 +65,7 @@ ns.LOCALES.RU = {
     OPT_TRACKED_ONLY = "Только отслеживаемые задания",
     OPT_FADE = "Затемнять окно при движении", OPT_FADE_TIP = "Только в оконном режиме и не с курсором над ним.",
     OPT_FADE_ALPHA = "Непрозрачность при движении", OPT_ICON_SIZE = "Размер значков",
+    OPT_QUEST_SIZE = "Размер журнала заданий",
     OPT_OPEN_ON = "Открывать карту", OPEN_PLAYER = "на моей зоне", OPEN_LAST = "там, где оставил",
     OPT_UNEXPLORED = "Неисследованные места", UNEXPLORED_show = "показывать", UNEXPLORED_dim = "затемнять", UNEXPLORED_hide = "скрывать",
     OPT_LABELS = "Названия зон", OPT_LEVELS = "Уровни зон", OPT_FLIGHTS = "Распорядители полётов",

@@ -65,6 +65,7 @@ ns.LOCALES.FR = {
     OPT_TRACKED_ONLY = "Quêtes suivies seulement",
     OPT_FADE = "Estomper la fenêtre en déplacement", OPT_FADE_TIP = "Seulement en fenêtre, et pas avec le curseur dessus.",
     OPT_FADE_ALPHA = "Opacité en déplacement", OPT_ICON_SIZE = "Taille des icônes",
+    OPT_QUEST_SIZE = "Taille du journal de quêtes",
     OPT_OPEN_ON = "Ouvrir la carte", OPEN_PLAYER = "sur ma zone", OPEN_LAST = "là où je l'ai laissée",
     OPT_UNEXPLORED = "Zones inexplorées", UNEXPLORED_show = "les montrer", UNEXPLORED_dim = "assombries", UNEXPLORED_hide = "les cacher",
     OPT_LABELS = "Noms des zones", OPT_LEVELS = "Niveaux des zones", OPT_FLIGHTS = "Maîtres de vol",

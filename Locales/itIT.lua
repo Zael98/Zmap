@@ -65,6 +65,7 @@ ns.LOCALES.IT = {
     OPT_TRACKED_ONLY = "Solo missioni seguite",
     OPT_FADE = "Sfuma la finestra mentre ti muovi", OPT_FADE_TIP = "Solo in finestra, e non con il cursore sopra.",
     OPT_FADE_ALPHA = "Opacità in movimento", OPT_ICON_SIZE = "Dimensione delle icone",
+    OPT_QUEST_SIZE = "Dimensione del registro missioni",
     OPT_OPEN_ON = "Apri la mappa", OPEN_PLAYER = "sulla mia zona", OPEN_LAST = "dove l'ho lasciata",
     OPT_UNEXPLORED = "Aree inesplorate", UNEXPLORED_show = "mostrarle", UNEXPLORED_dim = "scurite", UNEXPLORED_hide = "nasconderle",
     OPT_LABELS = "Nomi delle zone", OPT_LEVELS = "Livelli delle zone", OPT_FLIGHTS = "Maestri di volo",

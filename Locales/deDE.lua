@@ -65,6 +65,7 @@ ns.LOCALES.DE = {
     OPT_TRACKED_ONLY = "Nur verfolgte Quests",
     OPT_FADE = "Fenster beim Laufen ausblenden", OPT_FADE_TIP = "Nur als Fenster, und nicht mit dem Zeiger darauf.",
     OPT_FADE_ALPHA = "Deckkraft beim Laufen", OPT_ICON_SIZE = "Symbolgröße",
+    OPT_QUEST_SIZE = "Größe des Questlogs",
     OPT_OPEN_ON = "Karte öffnen", OPEN_PLAYER = "in meiner Zone", OPEN_LAST = "wo ich sie gelassen habe",
     OPT_UNEXPLORED = "Unerforschte Gebiete", UNEXPLORED_show = "zeigen", UNEXPLORED_dim = "abgedunkelt", UNEXPLORED_hide = "ausblenden",
     OPT_LABELS = "Zonennamen", OPT_LEVELS = "Zonenstufen", OPT_FLIGHTS = "Flugmeister",

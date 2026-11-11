@@ -65,6 +65,7 @@ ns.LOCALES.PT = {
     OPT_TRACKED_ONLY = "Só missões rastreadas",
     OPT_FADE = "Esmaecer a janela enquanto se move", OPT_FADE_TIP = "Só em modo janela, e não com o cursor sobre ela.",
     OPT_FADE_ALPHA = "Opacidade ao se mover", OPT_ICON_SIZE = "Tamanho dos ícones",
+    OPT_QUEST_SIZE = "Tamanho do registro de missões",
     OPT_OPEN_ON = "Abrir o mapa", OPEN_PLAYER = "na minha zona", OPEN_LAST = "onde o deixei",
     OPT_UNEXPLORED = "Áreas inexploradas", UNEXPLORED_show = "mostrar", UNEXPLORED_dim = "escurecidas", UNEXPLORED_hide = "ocultar",
     OPT_LABELS = "Nomes das zonas", OPT_LEVELS = "Níveis das zonas", OPT_FLIGHTS = "Mestres de voo",

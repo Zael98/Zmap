@@ -65,6 +65,7 @@ ns.LOCALES.ZH = {
     OPT_TRACKED_ONLY = "仅显示追踪的任务",
     OPT_FADE = "移动时淡化窗口", OPT_FADE_TIP = "仅限窗口模式，且光标不在窗口上时。",
     OPT_FADE_ALPHA = "移动时的不透明度", OPT_ICON_SIZE = "图标大小",
+    OPT_QUEST_SIZE = "任务日志大小",
     OPT_OPEN_ON = "打开地图时", OPEN_PLAYER = "显示我所在的区域", OPEN_LAST = "显示上次的位置",
     OPT_UNEXPLORED = "未探索区域", UNEXPLORED_show = "显示", UNEXPLORED_dim = "变暗", UNEXPLORED_hide = "隐藏",
     OPT_LABELS = "区域名称", OPT_LEVELS = "区域等级", OPT_FLIGHTS = "飞行管理员",

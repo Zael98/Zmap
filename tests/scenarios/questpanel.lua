@@ -130,4 +130,11 @@ OUT(("L: map %s, log %s; again: map %s"):format(tostring(opened), tostring(logSh
 ZNS.SetOpt("replaceQuestLog", false)
 OUT("L given back: " .. tostring(STATE.bindings.L) .. ", M " .. tostring(STATE.bindings.M))
 ZNS.SetOpt("replaceQuestLog", true)
+
+-- its size (an option, for big screens): the whole log, its tab too; the route panel keeps to its left
+OPEN()
+ZNS.SetOpt("questScale", 1.5)
+OUT(("size: panel %s, tab %s, width %s"):format(tostring(ZmapFrame.questsPanel:GetScale()),
+    tostring(ZmapFrame.questsTab:GetScale()), tostring(ZNS.QuestPanel.Width())))
+ZNS.SetOpt("questScale", 1)
 OUT("errors " .. #STATE.errors)

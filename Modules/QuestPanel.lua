@@ -389,7 +389,26 @@ local function Create()
         x = x + w + 3
     end
     panel:Hide()
+    QP.ApplyScale()
 end
+
+-- its size (the option): the whole panel and its tab, text, icons and buttons alike
+function QP.ApplyScale()
+    if not panel then return end
+    local s = ns.Opt("questScale")
+    panel:SetScale(s)
+    panel.tab:SetScale(s)
+    Paint()
+end
+
+-- how wide it is on the map (the route panel goes on its left)
+function QP.Width() return WIDTH * ns.Opt("questScale") end
+
+ns.On("ZMAP_OPTION", function(key)
+    if key ~= "questScale" then return end
+    QP.ApplyScale()
+    ns.Fire("ZMAP_PANELS")
+end)
 
 -- shown or hidden (nil: the other way round); remembered
 function QP.Toggle(show)

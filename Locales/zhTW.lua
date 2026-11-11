@@ -65,6 +65,7 @@ ns.LOCALES.TW = {
     OPT_TRACKED_ONLY = "僅顯示追蹤的任務",
     OPT_FADE = "移動時淡化視窗", OPT_FADE_TIP = "僅限視窗模式，且游標不在視窗上時。",
     OPT_FADE_ALPHA = "移動時的不透明度", OPT_ICON_SIZE = "圖示大小",
+    OPT_QUEST_SIZE = "任務日誌大小",
     OPT_OPEN_ON = "開啟地圖時", OPEN_PLAYER = "顯示我所在的區域", OPEN_LAST = "顯示上次的位置",
     OPT_UNEXPLORED = "未探索區域", UNEXPLORED_show = "顯示", UNEXPLORED_dim = "變暗", UNEXPLORED_hide = "隱藏",
     OPT_LABELS = "區域名稱", OPT_LEVELS = "區域等級", OPT_FLIGHTS = "飛行管理員",
