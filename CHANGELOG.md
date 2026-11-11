@@ -1,6 +1,6 @@
 # Zmap
 
-## Unreleased
+## 1.4.7 — Quest log size
 
 - **Quest log size** (Options, under the icon size): makes Zmap's quest log bigger or smaller, from 80% to 200%. Its text, icons and buttons grow together, which makes it easier to read on big screens such as 4K.
 - Data from Forever build 1.60.1.70888 and Questie bundle v12.6.5+v1.0.13.
