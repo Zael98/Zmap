@@ -273,6 +273,46 @@ function QM.Next(id)
     return best
 end
 
+-- who takes a quest (the data's): { name, m, x, y, u, v, npc | object } of the place nearest to you; nil when the
+-- data does not say
+function QM.TurnIn(id)
+    local q = QUESTS[id]
+    if not q then return end
+    local pu, pv = Geo.UnitPosition("player")
+    local best, bd
+    local function Try(places, who)
+        for _, s in ipairs(places) do
+            local u, v = Geo.ToWorld(s[1], s[2], s[3])
+            local d = u and (pu and (u - pu) ^ 2 + (v - pv) ^ 2 or 0)
+            if d and (not bd or d < bd) then
+                best, bd = { m = s[1], x = s[2], y = s[3], u = u, v = v, npc = who.npc, object = who.object }, d
+            end
+        end
+    end
+    for _, npc in ipairs(q[8]) do Try(ns.Npcs.Places(npc), { npc = npc }) end
+    for _, obj in ipairs(q[9]) do Try(ns.Npcs.ObjectPlaces(obj), { object = obj }) end
+    if best then best.name = WhoName(best) end
+    return best
+end
+
+-- the arrow and the map to who takes it
+function QM.GoToTurnIn(id)
+    local t = QM.TurnIn(id)
+    if not t then return false end
+    ns.Map.GoTo(t.u, t.v, math.max(ns.Map.Zoom(), 6))
+    Navigate(t)
+    return true
+end
+
+-- one quest of your log stands out on the map (its marks and areas; the others dim), nil: none
+local highlight
+function QM.Highlight(id)
+    if highlight == id then return end
+    highlight = id
+    if QM.objectivesLayer then QM.objectivesLayer:Update() end
+end
+function QM.Highlighted() return highlight end
+
 -- the map there, and the arrow
 function QM.GoTo(id)
     local mark = QM.Next(id)
@@ -415,7 +455,8 @@ local function ClearAreas()
     areaLines:Clear()
 end
 
-local function DrawArea(a)
+local function DrawArea(a, dim)   -- (dim: how much of its colour is left when another quest stands out)
+    dim = dim or 1
     if not areaFrame then
         areaFrame = CreateFrame("Frame", nil, ns.Map.Canvas())
         areaFrame:SetAllPoints()
@@ -442,7 +483,7 @@ local function DrawArea(a)
                 tex = areaFrame:CreateTexture(nil, "ARTWORK")
                 areaBands[areaUsed] = tex
             end
-            tex:SetColorTexture(c[1], c[2], c[3], AREA_FILL)
+            tex:SetColorTexture(c[1], c[2], c[3], AREA_FILL * dim)
             tex:ClearAllPoints()
             tex:SetPoint("TOPLEFT", areaFrame, "TOPLEFT", xmin, -y)
             tex:SetSize(xmax - xmin, math.min(band, ymax - y))
@@ -452,7 +493,7 @@ local function DrawArea(a)
     end
     for i = 1, #hull - 1, 2 do
         local j = i + 2 > #hull and 1 or i + 2
-        areaLines:Add(hull[i] / W, hull[i + 1] / H, hull[j] / W, hull[j + 1] / H, c[1], c[2], c[3], AREA_EDGE, 2)
+        areaLines:Add(hull[i] / W, hull[i + 1] / H, hull[j] / W, hull[j + 1] / H, c[1], c[2], c[3], AREA_EDGE * dim, 2)
     end
 end
 
@@ -463,43 +504,51 @@ end
 
 local BUY_ICON = "Interface\\Icons\\INV_Misc_Coin_01"
 local objectives = ns.Pins.New("objectives", { level = 47, size = 14, option = "objectives", minZoom = 3, cull = true })
+QM.objectivesLayer = objectives
+local DIM = 0.25   -- (the other quests, while one stands out)
 
 function objectives:Refresh()
     self:ReleaseAll()
     ClearAreas()
     local u0, v0, u1, v1 = ns.Pins.ViewBox()
     local areas = ns.Opt("objectiveAreas")
+    local hi = highlight
+    local function Fade(quest) return hi and quest ~= hi and DIM or 1 end
+    local function Grow(quest) return hi and quest == hi and 1.4 or 1 end
     if areas then
         for _, a in ipairs(QM.Areas()) do
             if QM.Shown(a.mark.quest) and a.u1 > u0 and a.u0 < u1 and a.v1 > v0 and a.v0 < v1 then
-                DrawArea(a)
+                DrawArea(a, Fade(a.mark.quest))
                 local pin = self:Acquire()
                 pin.icon:SetAtlas("WhiteCircle-RaidBlips")
                 pin.icon:SetVertexColor(a.color[1], a.color[2], a.color[3])
+                pin:SetAlpha(Fade(a.mark.quest))
                 pin.mark = a.mark
-                self:Place(pin, a.u, a.v, 1.4)
+                self:Place(pin, a.u, a.v, 1.4 * Grow(a.mark.quest))
             end
         end
     end
     for _, mark in ipairs(QM.Objectives()) do
         if InBox(mark, u0, v0, u1, v1) and QM.Shown(mark.quest) and not (areas and not (mark.turnIn or mark.buy or mark.reach)) then
             local pin = self:Acquire()
+            local grow = Grow(mark.quest)
+            pin:SetAlpha(Fade(mark.quest))
             if mark.turnIn then
                 pin.icon:SetAtlas("QuestTurnin")
                 pin.icon:SetVertexColor(1, 1, 1)
-                self:Place(pin, mark.u, mark.v, 1.5)
+                self:Place(pin, mark.u, mark.v, 1.5 * grow)
             elseif mark.buy then
                 pin.icon:SetTexture(BUY_ICON)
                 pin.icon:SetVertexColor(1, 1, 1)
-                self:Place(pin, mark.u, mark.v, 1.3)
+                self:Place(pin, mark.u, mark.v, 1.3 * grow)
             elseif mark.reach then
                 pin.icon:SetAtlas("Waypoint-MapPin-Untracked")
                 pin.icon:SetVertexColor(mark.color[1], mark.color[2], mark.color[3])
-                self:Place(pin, mark.u, mark.v, 1.8)
+                self:Place(pin, mark.u, mark.v, 1.8 * grow)
             else
                 pin.icon:SetAtlas("WhiteCircle-RaidBlips")
                 pin.icon:SetVertexColor(mark.color[1], mark.color[2], mark.color[3])
-                self:Place(pin, mark.u, mark.v)
+                self:Place(pin, mark.u, mark.v, grow)
             end
             pin.mark = mark
         end

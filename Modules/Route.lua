@@ -286,7 +286,8 @@ local function Panel()
         return
     end
     panel:ClearAllPoints()   -- (left of the quest log, when it is open)
-    panel:SetPoint("TOPRIGHT", ns.QuestPanel.Shown() and -(ns.QuestPanel.Width() + 12) or -6, -6)
+    local right = ns.QuestPanel.Shown() and ns.QuestPanel.Width() or 0   -- (0: the log is on the left side)
+    panel:SetPoint("TOPRIGHT", right > 0 and -(right + 12) or -6, -6)
     panel.title:SetText(L.WAY_TITLE:format(route.dest.name or "?", ns.Duration(route.seconds)))
     for _, row in ipairs(panel.rows) do row:Hide() end
     local y = -30

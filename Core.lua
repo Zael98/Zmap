@@ -93,6 +93,10 @@ ns.DEFAULTS = {
     minimap = true,           -- the minimap's terrain when zoomed in close
     iconScale = 1,
     questScale = 1,           -- size of the quest log on the map (text, icons and buttons)
+    questSide = "right",      -- the quest log on the map's "right" or "left" side
+    questAlpha = 0.9,         -- its background
+    autoTrack = false,        -- quests you take are tracked
+    autoUntrack = false,      -- quests ready to turn in are no longer tracked
     fadeMoving = true,        -- the window fades while you move
     fadeAlpha = 0.55,
     -- layers

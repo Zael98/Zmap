@@ -204,6 +204,7 @@ local function SetOpen(open)
     side:SetShown(open)
     side.tab:SetShown(not open)
     if open then Layout() end
+    ns.Fire("ZMAP_PANELS")   -- (a quest log on the left side moves beside it)
 end
 
 local function CreateSide(frame)
@@ -504,7 +505,12 @@ local function Build()
     Check(after, "arrow", L.OPT_ARROW, 16, -110, L.OPT_ARROW_TIP)
     Check(after, "corpseArrow", L.OPT_CORPSE, 16, -136)
     Check(after, "flightTimer", L.OPT_FLIGHT_TIMER, 16, -162)
-    local AFTER = 188   -- (its height, down to the last box)
+    Header(after, L.OPT_SECTION_QUESTLOG, 16, -206)
+    Check(after, "autoTrack", L.OPT_AUTO_TRACK, 16, -226)
+    Check(after, "autoUntrack", L.OPT_AUTO_UNTRACK, 16, -252)
+    Cycle(after, "questSide", L.OPT_QUEST_SIDE, { "right", "left" }, { L.QUEST_SIDE_RIGHT, L.QUEST_SIDE_LEFT }, 20, -284)
+    Stepper(after, "questAlpha", L.OPT_QUEST_ALPHA, 0.3, 1, 0.05, 20, -312)
+    local AFTER = 340   -- (its height, down to the last box)
 
     -- (laid out each time the panel opens: herbs and ore come and go with the professions)
     refreshers[#refreshers + 1] = function()

@@ -1,18 +1,23 @@
--- Your quest log on the map's right side, as Blizzard's map has it: the quests under their zone (the headers
--- fold), each with its icon (in progress, or ready to turn in), its colour on Zmap's map, a box to track it and
--- what is left of it. A click on one shows its details (what it is about, what it asks, its rewards) with Back,
--- Go there, Track, Share and Abandon; so does a click on its marks on the map. The top bar's Quests button shows
--- and hides it; the wheel scrolls it. The game's own words where it has them.
+-- Your quest log on the map's side, as Blizzard's map has it: the quests under their zone (the headers fold; a
+-- right-click on one tracks or untracks all its quests), each with its icon (in progress, or ready to turn in),
+-- its level in the colour of how hard it is for you, its tags (elite, group, dungeon), who of your group has it
+-- too, its colour on Zmap's map, a box to track it and what is left of it. On top: how full the log is, a search
+-- box, the order (by zone, by level, nearest first) and folding every zone at once. Hovering a quest makes its
+-- marks stand out on the map; Shift-click links it in the chat. A click shows its details (what it is about,
+-- what it asks, who takes it, your group's progress, its rewards with their tooltips) with Back, Go there,
+-- Track, Share and Abandon; so does a click on its marks on the map. The top bar's Quests button shows and hides
+-- it; the wheel scrolls it. Its size, side, background and the automatic tracking are options.
 local _, ns = ...
-local L = ns.L
+local L, Geo = ns.L, ns.Geo
 local QP = {}
 ns.QuestPanel = QP
 
-local WIDTH, TOP, BOTTOM, PAD = 300, 30, 34, 8
+local WIDTH, TOP, BOTTOM, PAD = 300, 58, 34, 8
 QP.WIDTH = WIDTH
 local GOLD = { 1, 0.82, 0 }
-local panel, view, content, buttons
-local pools = { header = {}, quest = {}, line = {}, text = {}, reward = {} }
+local SORTS = { "zone", "level", "near" }
+local panel, view, content, buttons, toolbar
+local pools = { header = {}, quest = {}, line = {}, text = {}, reward = {}, link = {} }
 local used = {}       -- [kind] = how many of the pool are in use
 local scroll = 0      -- pixels scrolled
 local shownQuest      -- the quest whose details are shown (nil: the list)
@@ -27,6 +32,98 @@ local function Height(fs) return fs:GetStringHeight() or 12 end
 -- the map to its nearest objective (or who takes it), and the arrow
 local function GoTo(id)
     if not ns.QuestMap.GoTo(id) then ns.Print(L.QUEST_NOWHERE) end
+end
+
+-- the quest's link in the chat (Shift-click)
+local function LinkQuest(id)
+    local link = GetQuestLink and GetQuestLink(id)
+    if not link then return false end
+    if not (ChatEdit_InsertLink and ChatEdit_InsertLink(link)) and ChatFrame_OpenChat then ChatFrame_OpenChat(link) end
+    return true
+end
+
+local function SortName(mode)
+    if mode == "level" then return L.QUEST_SORT_LEVEL elseif mode == "near" then return L.QUEST_SORT_NEAR end
+    return L.QUEST_SORT_ZONE
+end
+
+--------------------------------------------------------------------------------------------------------------
+-- What the log holds
+--------------------------------------------------------------------------------------------------------------
+
+-- the quests of your log in its order: { id, info, header }
+local function LogEntries()
+    local out, header = {}, ""
+    for i = 1, C_QuestLog.GetNumQuestLogEntries() do
+        local info = C_QuestLog.GetInfo(i)
+        if info and info.isHeader then
+            header = info.title or ""
+        elseif info and info.questID and info.questID > 0 and not info.isHidden then
+            out[#out + 1] = { id = info.questID, info = info, header = header }
+        end
+    end
+    return out
+end
+
+local function MaxQuests()
+    local max = C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()
+    return (type(max) == "number" and max > 0) and max or (type(MAX_QUESTS) == "number" and MAX_QUESTS) or 25
+end
+
+local function LevelOf(id, info)
+    local level = info and info.level
+    if not level or level == 0 then level = ns.QUESTS and ns.QUESTS[id] and ns.QUESTS[id][2] end
+    return level and level > 0 and level or nil
+end
+
+local function Level(id, info)
+    local level = LevelOf(id, info)
+    return level and ("[" .. level .. "] ") or ""
+end
+
+-- the colour of how hard it is for you (grey, green, yellow, orange, red), as the map's levels
+local function Difficulty(id, info)
+    local level = LevelOf(id, info)
+    if not level then return GOLD end
+    return { ns.LevelColor(level) }
+end
+
+-- its tags in the game's words: elite, group, dungeon, raid...
+local function Tags(id, info)
+    local tag = C_QuestLog.GetQuestTagInfo and C_QuestLog.GetQuestTagInfo(id)
+    local name = tag and tag.tagName ~= "" and tag.tagName
+    if not name and info and info.suggestedGroup and info.suggestedGroup > 1 then
+        name = L.QUEST_GROUP_TAG:format(info.suggestedGroup)
+    end
+    return name and (" |cff9fd0ff(" .. name .. ")|r") or ""
+end
+
+-- who of your group has it too
+local function Mates(id)
+    local n = ns.QuestGroup and #ns.QuestGroup.For(id) or 0
+    return n > 0 and (" |cff66ccff[+" .. n .. "]|r") or ""
+end
+
+-- yards to its next mark (nil: not on your continent, or nowhere known)
+local function Yards(id)
+    local mark = ns.QuestMap.Next(id)
+    local u, v, m = Geo.UnitPosition("player")
+    if not (mark and u and mark.m) or Geo.Instance(m) ~= Geo.Instance(mark.m) then return end
+    return Geo.Yards(Geo.Instance(m), u, v, mark.u, mark.v)
+end
+
+local function Matches(e, query)
+    if query == "" then return true end
+    if ns.QuestMap.Title(e.id):lower():find(query, 1, true) then return true end
+    for _, o in ipairs(C_QuestLog.GetQuestObjectives(e.id) or {}) do
+        if o.text and o.text:lower():find(query, 1, true) then return true end
+    end
+    return false
+end
+
+local function Query()
+    local text = toolbar and toolbar.search:GetText() or ""
+    return (text:gsub("^%s+", ""):gsub("%s+$", "")):lower()
 end
 
 --------------------------------------------------------------------------------------------------------------
@@ -71,15 +168,41 @@ local function Text(y, text, font, color, indent, gap)
     return y + Height(fs) + (gap or 4)
 end
 
+-- a line you click (who takes the quest: the arrow there)
+local function LinkRow()
+    local b = CreateFrame("Button", nil, content)
+    b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    b.text:SetPoint("TOPLEFT", 0, 0)
+    b.text:SetWidth(WIDTH - 2 * PAD - 8)
+    b.text:SetJustifyH("LEFT")
+    b.text:SetWordWrap(true)
+    b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+    b:SetScript("OnClick", function(self) if self.onClick then self.onClick() end end)
+    return b
+end
+
+local function Link(y, text, onClick)
+    local b = Take("link", LinkRow)
+    b.text:SetText(text)
+    b.text:SetTextColor(0.55, 0.85, 1)
+    b:SetPoint("TOPLEFT", content, "TOPLEFT", PAD, -y)
+    b:SetPoint("RIGHT", content, "RIGHT", -PAD, 0)
+    local h = Height(b.text)
+    b:SetHeight(h)
+    b.y, b.onClick = y, onClick
+    return y + h + 6
+end
+
 --------------------------------------------------------------------------------------------------------------
 -- The list
 --------------------------------------------------------------------------------------------------------------
 
 -- a zone's header, as the layers panel's: its name in gold, a line under it, the + / - that folds its quests
--- (Zmap's own: Blizzard's log keeps listing a folded header's quests)
+-- (Zmap's own: Blizzard's log keeps listing a folded header's quests); right-click: track or untrack them all
 local function HeaderRow()
     local b = CreateFrame("Button", nil, content)
     b:SetHeight(20)
+    b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     b.text:SetPoint("LEFT", 6, 1)
     b.line = b:CreateTexture(nil, "ARTWORK")
@@ -91,7 +214,8 @@ local function HeaderRow()
     b.fold:SetSize(14, 14)
     b.fold:SetPoint("RIGHT", -6, 1)
     b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-    b:SetScript("OnClick", function(self)
+    b:SetScript("OnClick", function(self, button)
+        if button == "RightButton" then return QP.HeaderMenu(self, self.title, self.quests) end
         ns.db.questFolded = ns.db.questFolded or {}
         ns.db.questFolded[self.title] = not ns.db.questFolded[self.title] or nil
         QP.Refresh()
@@ -128,8 +252,12 @@ local function QuestRow()
     b.check:SetScript("OnClick", function(self) QP.ToggleWatch(self:GetParent().quest) end)
     b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     b:SetScript("OnClick", function(self, button)
+        if button == "LeftButton" and IsShiftKeyDown() and LinkQuest(self.quest) then return end
         if button == "RightButton" then QP.Menu(self, self.quest) else QP.Show(self.quest) end
     end)
+    -- its marks stand out on the map while the mouse is on it
+    b:SetScript("OnEnter", function(self) ns.QuestMap.Highlight(self.quest) end)
+    b:SetScript("OnLeave", function() ns.QuestMap.Highlight(nil) end)
     return b
 end
 
@@ -146,63 +274,81 @@ local function SetIcon(row, id)
     end
 end
 
-local function Level(id, info)
-    local level = info and info.level
-    if not level or level == 0 then level = ns.QUESTS and ns.QUESTS[id] and ns.QUESTS[id][2] end
-    return level and level > 0 and ("[" .. level .. "] ") or ""
+local function Quest(y, e, mode)
+    local id, info = e.id, e.info
+    local q = Take("quest", QuestRow)
+    q:SetPoint("TOPLEFT", content, "TOPLEFT", PAD - 4, -y)
+    q.y = y
+    q:SetPoint("RIGHT", content, "RIGHT", -PAD, 0)
+    q.quest = id
+    local away = mode == "near" and e.yards and (" |cff999999" .. L.YARDS:format(math.floor(e.yards + 0.5)) .. "|r") or ""
+    q.text:SetText(Level(id, info) .. ns.QuestMap.Title(id) .. Tags(id, info) .. Mates(id) .. away)
+    local c = Difficulty(id, info)
+    q.text:SetTextColor(c[1], c[2], c[3])
+    SetIcon(q, id)
+    local color = ns.QuestMap.Color(id)
+    q.stripe:SetColorTexture(color and color[1] or 0.5, color and color[2] or 0.5, color and color[3] or 0.5, color and 1 or 0)
+    q.check.mark:SetShown(C_QuestLog.GetQuestWatchType and C_QuestLog.GetQuestWatchType(id) ~= nil)
+    local h = math.max(20, Height(q.text) + 6)
+    q:SetHeight(h)
+    y = y + h
+    -- what is left of it
+    if C_QuestLog.IsComplete(id) then
+        y = Text(y, "- " .. G("QUEST_WATCH_QUEST_READY", L.QUEST_READY), "GameFontHighlightSmall", { 0.4, 1, 0.4 }, 26)
+    else
+        for _, o in ipairs(C_QuestLog.GetQuestObjectives(id) or {}) do
+            if o.text and o.text ~= "" and not o.finished then
+                y = Text(y, "- " .. o.text, "GameFontHighlightSmall", { 0.85, 0.85, 0.85 }, 26, 2)
+            end
+        end
+    end
+    return y + 6
 end
 
 local function ShowList()
     local y = 4
-    local count, folded = 0, false
-    local foldedSet = ns.db.questFolded or {}
-    for i = 1, C_QuestLog.GetNumQuestLogEntries() do
-        local info = C_QuestLog.GetInfo(i)
-        if info and info.isHeader then
-            local h = Take("header", HeaderRow)
-            h:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -y)
-            h.y = y
-            h:SetPoint("RIGHT", content, "RIGHT", -2, 0)
-            h.title = info.title or ""
-            h.text:SetText(h.title)
-            folded = foldedSet[h.title] == true
-            h.folded = folded
-            h.fold:SetTexture(folded and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
-            y = y + 24
-        elseif info and info.questID and info.questID > 0 and not info.isHidden and folded then
-            count = count + 1
-        elseif info and info.questID and info.questID > 0 and not info.isHidden then
-            local id = info.questID
-            count = count + 1
-            local q = Take("quest", QuestRow)
-            q:SetPoint("TOPLEFT", content, "TOPLEFT", PAD - 4, -y)
-            q.y = y
-            q:SetPoint("RIGHT", content, "RIGHT", -PAD, 0)
-            q.quest = id
-            q.text:SetText(Level(id, info) .. ns.QuestMap.Title(id))
-            q.text:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
-            SetIcon(q, id)
-            local c = ns.QuestMap.Color(id)
-            q.stripe:SetColorTexture(c and c[1] or 0.5, c and c[2] or 0.5, c and c[3] or 0.5, c and 1 or 0)
-            q.check.mark:SetShown(C_QuestLog.GetQuestWatchType and C_QuestLog.GetQuestWatchType(id) ~= nil)
-            local h = math.max(20, Height(q.text) + 6)
-            q:SetHeight(h)
-            y = y + h
-            -- what is left of it
-            if C_QuestLog.IsComplete(id) then
-                y = Text(y, "- " .. G("QUEST_WATCH_QUEST_READY", L.QUEST_READY), "GameFontHighlightSmall", { 0.4, 1, 0.4 }, 26)
-            else
-                for _, o in ipairs(C_QuestLog.GetQuestObjectives(id) or {}) do
-                    if o.text and o.text ~= "" and not o.finished then
-                        y = Text(y, "- " .. o.text, "GameFontHighlightSmall", { 0.85, 0.85, 0.85 }, 26, 2)
-                    end
-                end
-            end
-            y = y + 6
-        end
+    local query, mode = Query(), ns.db.questSort or "zone"
+    local entries = LogEntries()
+    local shown = {}
+    for _, e in ipairs(entries) do
+        if Matches(e, query) then shown[#shown + 1] = e end
     end
-    if count == 0 then y = Text(y, L.QUEST_PANEL_EMPTY, "GameFontDisable") end
-    panel.title:SetText(L.QUEST_PANEL:format(count))
+    if mode == "level" then
+        for _, e in ipairs(shown) do e.level = LevelOf(e.id, e.info) or 0 end
+        table.sort(shown, function(a, b)
+            if a.level ~= b.level then return a.level < b.level end
+            return ns.QuestMap.Title(a.id) < ns.QuestMap.Title(b.id)
+        end)
+    elseif mode == "near" then
+        for _, e in ipairs(shown) do e.yards = Yards(e.id) end
+        table.sort(shown, function(a, b)
+            if (a.yards ~= nil) ~= (b.yards ~= nil) then return a.yards ~= nil end
+            if a.yards and a.yards ~= b.yards then return a.yards < b.yards end
+            return ns.QuestMap.Title(a.id) < ns.QuestMap.Title(b.id)
+        end)
+    end
+    local foldedSet = ns.db.questFolded or {}
+    local header, folded
+    for _, e in ipairs(shown) do
+        if mode == "zone" and e.header ~= (header and header.title) then
+            header = Take("header", HeaderRow)
+            header:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -y)
+            header.y = y
+            header:SetPoint("RIGHT", content, "RIGHT", -2, 0)
+            header.title, header.quests = e.header, {}
+            header.text:SetText(e.header)
+            folded = foldedSet[e.header] == true and query == ""   -- (a search shows what it finds)
+            header.fold:SetTexture(folded and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up")
+            y = y + 24
+        end
+        if header then table.insert(header.quests, e.id) end
+        if not (mode == "zone" and folded) then y = Quest(y, e, mode) end
+    end
+    if #shown == 0 then y = Text(y, #entries == 0 and L.QUEST_PANEL_EMPTY or L.QUEST_NO_MATCH, "GameFontDisable") end
+    -- how full the log is: orange near the limit, red at it
+    local count, max = #entries, MaxQuests()
+    local color = count >= max and "ff4040" or count >= max - 2 and "ff9933" or "ffd100"
+    panel.title:SetText(("|cff%s%s|r"):format(color, L.QUEST_PANEL_COUNT:format(count, max)))
     return y
 end
 
@@ -213,6 +359,7 @@ end
 local function RewardRow()
     local f = CreateFrame("Frame", nil, content)
     f:SetSize(WIDTH - 2 * PAD - 8, 30)
+    f:EnableMouse(true)
     f.icon = f:CreateTexture(nil, "ARTWORK")
     f.icon:SetSize(28, 28)
     f.icon:SetPoint("LEFT")
@@ -222,16 +369,28 @@ local function RewardRow()
     f.name:SetPoint("LEFT", f.icon, "RIGHT", 6, 0)
     f.name:SetPoint("RIGHT")
     f.name:SetJustifyH("LEFT")
+    -- the item's tooltip (the game compares it with what you wear)
+    f:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        if GameTooltip.SetQuestLogItem then
+            GameTooltip:SetQuestLogItem(self.rewardKind, self.index, self.quest)
+        else
+            GameTooltip:SetText(self.name:GetText() or "")
+        end
+        GameTooltip:Show()
+    end)
+    f:SetScript("OnLeave", function() GameTooltip:Hide() end)
     return f
 end
 
-local function Reward(y, name, texture, count)
+local function Reward(y, r, kind, index, id)
     local f = Take("reward", RewardRow)
     f:SetPoint("TOPLEFT", content, "TOPLEFT", PAD, -y)
     f.y = y
-    f.icon:SetTexture(texture)
-    f.count:SetText(count and count > 1 and count or "")
-    f.name:SetText(name or "")
+    f.icon:SetTexture(r[2])
+    f.count:SetText(r[3] and r[3] > 1 and r[3] or "")
+    f.name:SetText(r[1] or "")
+    f.rewardKind, f.index, f.quest = kind, index, id
     return y + 32
 end
 
@@ -258,7 +417,7 @@ end
 local function ShowDetails(id)
     local description, objectives, rewards, choices, money, xp = QuestText(id)
     local info = C_QuestLog.GetLogIndexForQuestID and C_QuestLog.GetInfo(C_QuestLog.GetLogIndexForQuestID(id) or 0)
-    local y = Text(4, Level(id, info) .. ns.QuestMap.Title(id), "GameFontNormalLarge", GOLD, 0, 10)
+    local y = Text(4, Level(id, info) .. ns.QuestMap.Title(id) .. Tags(id, info), "GameFontNormalLarge", Difficulty(id, info), 0, 10)
     if objectives and objectives ~= "" then y = Text(y, objectives, "GameFontHighlight", nil, 0, 8) end
     for _, o in ipairs(C_QuestLog.GetQuestObjectives(id) or {}) do
         if o.text and o.text ~= "" then
@@ -267,6 +426,25 @@ local function ShowDetails(id)
         end
     end
     if C_QuestLog.IsComplete(id) then y = Text(y, G("QUEST_WATCH_QUEST_READY", L.QUEST_READY), "GameFontNormal", { 0.4, 1, 0.4 }) end
+    -- who takes it (a click: the arrow there)
+    local taker = ns.QuestMap.TurnIn(id)
+    if taker then
+        y = Link(y + 4, L.QUEST_TURN_IN_AT:format(taker.name or "?", Geo.Name(taker.m) or "?"), function()
+            ns.QuestMap.GoToTurnIn(id)
+        end)
+    end
+    -- your group's progress on it
+    local mates = ns.QuestGroup and ns.QuestGroup.For(id) or {}
+    if #mates > 0 then
+        y = Text(y + 4, L.QUEST_PARTY, "GameFontNormal", GOLD)
+        for _, m in ipairs(mates) do
+            if m.ready then
+                y = Text(y, L.QUEST_PARTY_READY:format(m.name), "GameFontHighlightSmall", { 0.4, 1, 0.4 }, 6, 2)
+            else
+                y = Text(y, L.QUEST_PARTY_PROGRESS:format(m.name, m.done or 0, m.total or 0), "GameFontHighlightSmall", nil, 6, 2)
+            end
+        end
+    end
     y = y + 8
     if description and description ~= "" then
         y = Text(y, G("QUEST_DESCRIPTION", "Description"), "GameFontNormal", GOLD)
@@ -276,11 +454,11 @@ local function ShowDetails(id)
         y = Text(y, G("REWARDS", "Rewards"), "GameFontNormal", GOLD)
         if #choices > 0 then
             y = Text(y, G("REWARD_CHOICES", "You will be able to choose one of these rewards:"), "GameFontHighlightSmall")
-            for _, r in ipairs(choices) do y = Reward(y, r[1], r[2], r[3]) end
+            for i, r in ipairs(choices) do y = Reward(y, r, "choice", i, id) end
         end
         if #rewards > 0 then
             y = Text(y, #choices > 0 and G("REWARD_ITEMS", "You will also receive:") or G("REWARD_ITEMS_ONLY", "You will receive:"), "GameFontHighlightSmall")
-            for _, r in ipairs(rewards) do y = Reward(y, r[1], r[2], r[3]) end
+            for i, r in ipairs(rewards) do y = Reward(y, r, "reward", i, id) end
         end
         if money > 0 then y = Text(y, GetMoneyString and GetMoneyString(money) or tostring(money), "GameFontHighlight") end
         if xp > 0 then y = Text(y, G("EXPERIENCE_COLON", "Experience:") .. " " .. xp, "GameFontHighlight") end
@@ -307,6 +485,9 @@ local function Paint()
     end
     local total = shownQuest and ShowDetails(shownQuest) or ShowList()
     for _, b in pairs(buttons) do b:SetShown(shownQuest ~= nil) end
+    toolbar:SetShown(shownQuest == nil)
+    toolbar.sort:SetText(SortName(ns.db.questSort))
+    view:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, shownQuest and -30 or -TOP)
     view:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, shownQuest and BOTTOM or 6)
     local room = view:GetHeight() or 0
     scroll = math.max(0, math.min(scroll, total - room))
@@ -319,11 +500,58 @@ QP.Refresh = Paint
 
 local function Button(text, onClick) return ns.Button(panel, text, 50, onClick) end
 
+-- every zone folded, or (all folded already) every zone open
+function QP.FoldAll()
+    ns.db.questFolded = ns.db.questFolded or {}
+    local zones, open = {}, false
+    for _, e in ipairs(LogEntries()) do
+        if not zones[e.header] then
+            zones[e.header] = true
+            if not ns.db.questFolded[e.header] then open = true end
+        end
+    end
+    for zone in pairs(zones) do ns.db.questFolded[zone] = open or nil end
+    Paint()
+end
+
+-- by zone, by level, nearest first (the next one)
+function QP.CycleSort()
+    local now, nextMode = ns.db.questSort or "zone", SORTS[1]
+    for i, mode in ipairs(SORTS) do
+        if mode == now then nextMode = SORTS[i % #SORTS + 1] end
+    end
+    ns.db.questSort = nextMode
+    scroll = 0
+    Paint()
+end
+
+-- where it goes: the map's right side, or its left one beside the layers panel; its background
+local function Place()
+    if not panel then return end
+    local frame = ns.Map.Frame()
+    local s = ns.Opt("questScale")
+    panel:ClearAllPoints()
+    panel.tab:ClearAllPoints()
+    if ns.Opt("questSide") == "left" then
+        local layers = frame.layersPanel
+        local open = layers and layers:IsShown()
+        local x = open and (layers:GetWidth() + 12) or 6
+        panel:SetPoint("TOPLEFT", frame.viewport, "TOPLEFT", x / s, -6 / s)
+        panel:SetPoint("BOTTOMLEFT", frame.viewport, "BOTTOMLEFT", x / s, 6 / s)
+        panel.tab:SetPoint("TOPLEFT", frame.viewport, "TOPLEFT", (open and x or 96) / s, -6 / s)
+    else
+        panel:SetPoint("TOPRIGHT", frame.viewport, "TOPRIGHT", -6 / s, -6 / s)
+        panel:SetPoint("BOTTOMRIGHT", frame.viewport, "BOTTOMRIGHT", -6 / s, 6 / s)
+        panel.tab:SetPoint("TOPRIGHT", frame.viewport, "TOPRIGHT", -6 / s, -6 / s)
+    end
+    local alpha = ns.Opt("questAlpha")
+    panel:SetBackdropColor(0.05, 0.05, 0.06, alpha)
+    panel.tab:SetBackdropColor(0.05, 0.05, 0.06, alpha)
+end
+
 local function Create()
     local frame = ns.Map.Frame()
     panel = CreateFrame("Frame", nil, frame.viewport, "BackdropTemplate")
-    panel:SetPoint("TOPRIGHT", -6, -6)
-    panel:SetPoint("BOTTOMRIGHT", -6, 6)
     panel:SetWidth(WIDTH)
     panel:SetFrameLevel(frame.viewport:GetFrameLevel() + 200)
     panel:EnableMouse(true)
@@ -334,11 +562,10 @@ local function Create()
     end)
     panel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
         edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-    panel:SetBackdropColor(0.05, 0.05, 0.06, 0.9)
     panel:SetBackdropBorderColor(0.62, 0.55, 0.38, 0.9)
     panel.title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     panel.title:SetPoint("TOPLEFT", 10, -9)
-    -- folded away to a tab at the map's top right corner, as the layers panel to its top left
+    -- folded away to a tab at the map's corner, as the layers panel
     local fold = CreateFrame("Button", nil, panel)
     fold:SetSize(22, 22)
     fold:SetPoint("TOPRIGHT", -4, -4)
@@ -349,11 +576,9 @@ local function Create()
     panel.foldButton = fold
     local tab = CreateFrame("Button", nil, frame.viewport, "BackdropTemplate")
     tab:SetSize(92, 24)
-    tab:SetPoint("TOPRIGHT", -6, -6)
     tab:SetFrameLevel(frame.viewport:GetFrameLevel() + 200)
     tab:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
         edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-    tab:SetBackdropColor(0.05, 0.05, 0.06, 0.9)
     tab:SetBackdropBorderColor(0.62, 0.55, 0.38, 0.9)
     tab.icon = tab:CreateTexture(nil, "ARTWORK")
     tab.icon:SetSize(16, 16)
@@ -368,6 +593,24 @@ local function Create()
     panel.tab = tab
     frame.questsTab = tab
     frame.questsPanel = panel
+    -- the list's bar: search, order, fold every zone
+    toolbar = CreateFrame("Frame", nil, panel)
+    toolbar:SetPoint("TOPLEFT", 8, -28)
+    toolbar:SetPoint("TOPRIGHT", -8, -28)
+    toolbar:SetHeight(22)
+    toolbar.search = CreateFrame("EditBox", nil, toolbar, "SearchBoxTemplate")
+    toolbar.search:SetSize(150, 20)
+    toolbar.search:SetPoint("LEFT", 4, 0)
+    toolbar.search:SetAutoFocus(false)
+    if toolbar.search.Instructions then toolbar.search.Instructions:SetText(L.QUEST_SEARCH) end
+    toolbar.search:HookScript("OnTextChanged", function()
+        scroll = 0
+        Paint()
+    end)
+    toolbar.fold = ns.Button(toolbar, "+/-", 30, QP.FoldAll, L.QUEST_FOLD_ALL)
+    toolbar.fold:SetPoint("RIGHT", 0, 0)
+    toolbar.sort = ns.Button(toolbar, SortName(ns.db.questSort), 76, QP.CycleSort, L.QUEST_SORT_TIP)
+    toolbar.sort:SetPoint("RIGHT", toolbar.fold, "LEFT", -4, 0)
     view = CreateFrame("Frame", nil, panel)
     view:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -TOP)
     view:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 6)
@@ -398,17 +641,26 @@ function QP.ApplyScale()
     local s = ns.Opt("questScale")
     panel:SetScale(s)
     panel.tab:SetScale(s)
+    Place()
     Paint()
 end
 
--- how wide it is on the map (the route panel goes on its left)
-function QP.Width() return WIDTH * ns.Opt("questScale") end
+-- how wide it is on the map's right side (the route panel goes on its left); 0 on the left side
+function QP.Width()
+    if ns.Opt("questSide") == "left" then return 0 end
+    return WIDTH * ns.Opt("questScale")
+end
 
 ns.On("ZMAP_OPTION", function(key)
-    if key ~= "questScale" then return end
-    QP.ApplyScale()
-    ns.Fire("ZMAP_PANELS")
+    if key == "questScale" or key == "questSide" then
+        QP.ApplyScale()
+        ns.Fire("ZMAP_PANELS")
+    elseif key == "questAlpha" then
+        Place()
+    end
 end)
+-- (the layers panel opened or folded: on the left side, the log moves beside it)
+ns.On("ZMAP_PANELS", function() if ns.Opt("questSide") == "left" then Place() end end)
 
 -- shown or hidden (nil: the other way round); remembered
 function QP.Toggle(show)
@@ -435,9 +687,26 @@ function QP.Show(id)
     end
 end
 
+-- the search box's text (the tests)
+function QP.Search(text)
+    if not toolbar then return end
+    toolbar.search:SetText(text or "")
+    scroll = 0
+    Paint()
+end
+
 function QP.ToggleWatch(id)
     if not id then return end
     if C_QuestLog.GetQuestWatchType(id) ~= nil then C_QuestLog.RemoveQuestWatch(id) else C_QuestLog.AddQuestWatch(id) end
+    Paint()
+end
+
+-- every quest of a zone tracked, or untracked
+function QP.WatchAll(quests, on)
+    for _, id in ipairs(quests or {}) do
+        local watched = C_QuestLog.GetQuestWatchType(id) ~= nil
+        if on and not watched then C_QuestLog.AddQuestWatch(id) elseif not on and watched then C_QuestLog.RemoveQuestWatch(id) end
+    end
     Paint()
 end
 
@@ -468,10 +737,22 @@ function QP.Menu(owner, id)
     MenuUtil.CreateContextMenu(owner, function(_, root)
         root:CreateTitle(ns.QuestMap.Title(id))
         root:CreateButton(L.QUEST_GO, function() GoTo(id) end)
+        if ns.QuestMap.TurnIn(id) then root:CreateButton(L.QUEST_GO_TURN_IN, function() ns.QuestMap.GoToTurnIn(id) end) end
         local watched = C_QuestLog.GetQuestWatchType(id) ~= nil
         root:CreateButton(watched and G("UNTRACK_QUEST", "Untrack Quest") or G("TRACK_QUEST", "Track Quest"), function() QP.ToggleWatch(id) end)
+        if GetQuestLink then root:CreateButton(L.QUEST_LINK, function() LinkQuest(id) end) end
         root:CreateButton(G("SHARE_QUEST", "Share Quest"), function() QP.Share(id) end)
         root:CreateButton(G("ABANDON_QUEST_ABBREV", "Abandon"), function() QP.Abandon(id) end)
+    end)
+end
+
+-- right-click on a zone: all its quests tracked or untracked
+function QP.HeaderMenu(owner, title, quests)
+    if not MenuUtil then return end
+    MenuUtil.CreateContextMenu(owner, function(_, root)
+        root:CreateTitle(title)
+        root:CreateButton(L.QUEST_TRACK_ZONE, function() QP.WatchAll(quests, true) end)
+        root:CreateButton(L.QUEST_UNTRACK_ZONE, function() QP.WatchAll(quests, false) end)
     end)
 end
 
@@ -480,7 +761,7 @@ function QP.Lines()
     local out = {}
     if not QP.Shown() then return out, false end
     local items = {}
-    for _, kind in ipairs({ "header", "quest", "text", "reward" }) do
+    for _, kind in ipairs({ "header", "quest", "text", "reward", "link" }) do
         for i = 1, used[kind] or 0 do
             local row = pools[kind][i]
             local fs = kind == "text" and row or kind == "reward" and row.name or row.text
@@ -491,8 +772,33 @@ function QP.Lines()
     for _, item in ipairs(items) do out[#out + 1] = item[2] end
     return out, true, shownQuest
 end
+function QP.Title() return panel and panel.title:GetText() end
 
-ns.On("ZMAP_QUESTS", Paint)   -- (the quest log changed: QuestMap.lua has taken it in)
+--------------------------------------------------------------------------------------------------------------
+-- Tracking by itself (options): a quest you take is tracked; one whose objectives are done is no longer
+--------------------------------------------------------------------------------------------------------------
+
+ns.On("QUEST_ACCEPTED", function(a, b)
+    local id = b or a   -- (Blizzard's mainline: the quest; classic clients: its log index, then the quest)
+    if ns.Opt("autoTrack") and type(id) == "number" and C_QuestLog.AddQuestWatch then C_QuestLog.AddQuestWatch(id) end
+end)
+
+local wasDone   -- the quests ready to turn in last time (nil: not looked yet, nothing untracked the first time)
+local function Untrack()
+    local now = {}
+    for _, e in ipairs(LogEntries()) do
+        if C_QuestLog.IsComplete(e.id) then now[e.id] = true end
+    end
+    if wasDone and ns.Opt("autoUntrack") then
+        for id in pairs(now) do
+            if not wasDone[id] and C_QuestLog.GetQuestWatchType(id) ~= nil then C_QuestLog.RemoveQuestWatch(id) end
+        end
+    end
+    wasDone = now
+end
+ns.On("QUEST_LOG_UPDATE", ns.Debounce(0.3, Untrack))
+
+ns.On("ZMAP_QUESTS", Paint)   -- (the quest log changed: QuestMap.lua has taken it in; or your group's did)
 ns.On("QUEST_WATCH_LIST_CHANGED", Paint)
 -- on the map from its opening (folded only if you fold it)
 ns.On("ZMAP_SHOW", function() QP.Toggle(ns.db.questPanel ~= false) end)

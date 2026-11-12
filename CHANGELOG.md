@@ -1,5 +1,20 @@
 # Zmap
 
+## 1.5.0 — A fuller quest log
+
+- **How hard each quest is**: titles take the level's colour, as on the map (grey too low, green, yellow, orange, red), with their tags in the game's words (elite, group, dungeon…).
+- **How full your log is**: "Quests 18/25" on top, orange when it is nearly full and red when it is full.
+- **Search**: a box on top keeps only the quests whose name or objectives match (folded zones open for it).
+- **Order**: by zone, by level, or nearest first (with how far each one is).
+- **Fold or unfold every zone** at once, and a right-click on a zone tracks or untracks all its quests.
+- **Hovering a quest** makes its marks and areas stand out on the map; the others fade.
+- **Shift-click** a quest to link it in the chat (also in its right-click menu).
+- **Who takes it**: the details say who you turn the quest in to and where; a click puts the arrow there ("Go to turn it in" in the right-click menu too).
+- **Reward tooltips**: hovering a reward shows the item's tooltip, compared with what you wear.
+- **Your group's quests**: with Zmap, your party or raid share their quests. The list shows how many of them have each one ([+2]), and the details show how far each one is or whether it is ready to turn in.
+- **Tracking by itself** (options, off by default): track the quests you take, and stop tracking the ones ready to turn in.
+- **Side and background** (options): the log on the map's right or left side (beside the layers panel), and how see-through its background is.
+
 ## 1.4.7 — Quest log size
 
 - **Quest log size** (Options, under the icon size): makes Zmap's quest log bigger or smaller, from 80% to 200%. Its text, icons and buttons grow together, which makes it easier to read on big screens such as 4K.

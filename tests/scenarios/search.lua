@@ -5,7 +5,7 @@ EVENT("UNIT_SPELLCAST_SENT", "player", "Flor de paz", "Cast-1", 2366)
 EVENT("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 2366)
 OPEN()
 local box
-for _, w in ipairs(ALL_WIDGETS) do if w.Instructions then box = w end end
+for _, w in ipairs(ALL_WIDGETS) do if w.Instructions and w.scripts.OnEnterPressed then box = w end end   -- (the map's, not the quest log's)
 local function First(text)
     local r = ZNS.Search.Find(text)
     return r[1] and (r[1].text .. " (" .. tostring(r[1].sub) .. ")") or "nothing"
