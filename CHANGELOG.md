@@ -1,9 +1,11 @@
 # Zmap
 
-## Unreleased
+## 1.6.0 — Your quests on the NPCs
 
 - **Your quests on the NPCs themselves**: hovering an NPC says which quest of your log it is for, with what is left of it, and which quests it gives or takes. A mark over the nameplates of the NPCs your quests need (to kill, or for what they drop), and of those who take a quest you finished. Both can be turned off in the options (Quest log). In some places the game hides who a unit is during combat; there they show nothing.
 - **NPC names in your language from the start**: names now come from Blizzard's API in every language (631 NPCs so far: the API is still filling in), so the search finds them in your language before you have seen them. The others are still learned in game as before.
+
+- Data from Forever build 1.60.1.70938 and Questie bundle v12.8.0+v1.0.16.
 
 ## 1.5.0 — A fuller quest log
 
