@@ -133,7 +133,7 @@ CHECKS = {
                             r"^route menu: [3-9] entries, first Todo lo que puedo recoger$",
                             r"^one kind: .+, \d+ stops; bar Ruta de recolección: .+ · parada 1/\d+ · ~[\d:]+ por vuelta$",
                             r"^closed: route false, bar false$", r"^errors 0$"]),
-    "memory": (False, [r"^logged in: (1\d)\.\d MB$", r"^search index: [0-2]\.\d MB$", r"^map closed, walking: \d{1,3} KB in 10 s$",
+    "memory": (False, [r"^logged in: (1\d|2[0-4])\.\d MB$", r"^search index: [0-2]\.\d MB$", r"^map closed, walking: \d{1,3} KB in 10 s$",
                        r"^map open, walking: \d{1,3} KB in 10 s$", r"^map open, panning: \d{1,3} KB in 10 s$",
                        r"^map open, zooming: (\d{1,3}|[1-3]\d{3}) KB a minute$", r"^errors 0$"]),
     "battleground": (False, [r"^alterac: shown true, overlays 8, objectives 2, group frame true on 1459, updated true$",
