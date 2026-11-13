@@ -388,6 +388,36 @@ for _, mark in ipairs(ZNS.QuestMap.Objectives()) do
 end
 OUT(("quests to reach and buy: fargodeep offered %s, places %d, sellers %d"):format(tostring(fargodeepOffered), reach, buy))
 
+-- the Alliance's Call of Water meets Classic's water spirits (NPCs 5894/5895, Silverpine in the data, where the
+-- Horde still goes) at Stendel's Pond in Westfall: its objective, its turn-in and the next step's giver are there
+STATE.player.level, STATE.player.class, STATE.player.classID, STATE.player.raceID = 23, "SHAMAN", 7, 3
+STATE.completed = { 94494, 94495, 94497, 94499, 94500, 94501 }
+STATE.log, STATE.finished = { 94502 }, {}
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local QMap = ZNS.QuestMap
+local objective = QMap.Next(94502)
+STATE.completed[#STATE.completed + 1] = 94502
+STATE.log, STATE.finished = { 94503 }, { [94503] = true }
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local turnIn = QMap.TurnIn(94503)
+STATE.completed[#STATE.completed + 1] = 94503
+STATE.log, STATE.finished = {}, {}
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local giverMap
+for _, mark in ipairs(QMap.Givers()) do
+    for _, q in ipairs(mark.quests) do if q == 94505 then giverMap = mark.m end end
+end
+local horde = ZNS.Npcs.Spawns(5894)[1]
+OUT(("call of water: objective %s, turn-in %s, next giver %s; horde's still %s"):format(tostring(objective and objective.m),
+    tostring(turnIn and turnIn.m), tostring(giverMap), tostring(horde and horde[1])))
+STATE.player.class, STATE.player.classID, STATE.player.raceID = "WARRIOR", nil, nil
+STATE.completed, STATE.log, STATE.finished = {}, {}, {}
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+
 -- /zmap check: every feature tried, OK or FAIL each
 SlashCmdList.ZMAP("check")
 local checkText = ZmapDiag.edit:GetText()

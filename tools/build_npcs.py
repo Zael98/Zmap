@@ -45,6 +45,14 @@ MAX_DROPPERS = 12        # mobs (or objects) kept per item a quest asks for
 HOLIDAYS = {-22, -284, -364, -366, -369}   # quest sorts: seasonal, special (Children's Week...), Darkmoon Faire,
                                             # Lunar Festival, Midsummer
 MAX_VENDORS = 8          # an item sold by more (water, thread...) is anyone's: its vendors are not marked
+# NPCs a Forever quest meets somewhere else than the data has them: Questie keeps a reused NPC at its Classic place,
+# which the Horde's version of the quest still uses. {questID: {npcID: (uiMapID, x, y per thousand)}}
+QUEST_NPC_PLACES = {
+    # the Alliance's Call of Water: the Forgotten Shrine at Stendel's Pond in Westfall, not Silverpine
+    94502: {5894: (1436, 456, 599)},   # Corrupt Minor Manifestation of Water, summoned at the shrine
+    94503: {5895: (1436, 466, 605)},   # Minor Manifestation of Water, in the pond
+    94505: {5895: (1436, 466, 605)},
+}
 
 # services, in the order of the flag bits Modules/Npcs.lua reads
 SERVICES = ["Innkeeper", "Vendor", "Repair", "Trainer", "Flight Master", "Banker", "Auctioneer", "Stable Master",
@@ -446,6 +454,7 @@ def build_quests(npcs):
             "vendors": sorted(set(vendors) - set(mobs)), "explore": explore,
             "pre": as_list(row.get(13)), "preAll": as_list(row.get(12)), "excl": as_list(row.get(16)),
             "maxLevel": row.get(32) or 0, "flags": flags,
+            "npcPlaces": [v for npc, place in QUEST_NPC_PLACES.get(qid, {}).items() for v in (npc, *place)],
         }
         quest_objects.update(quest["startObjs"] + quest["endObjs"] + quest["objs"])
         quests[qid] = quest
@@ -516,7 +525,8 @@ def write_quests(quests):
              "--   { all of these done first }, { not if one of these }, highest level it is offered at (0: none),",
              "--   flags (1 repeatable, 2 needs a profession or spell, 4 done by reaching a place or an event, 8 a holiday's),",
              "--   { NPCs who sell what it asks for },",
-             "--   places to reach (uiMapID, { x, y per thousand }, ...) }",
+             "--   places to reach (uiMapID, { x, y per thousand }, ...),",
+             "--   { NPCs it meets elsewhere than their data: npcID, uiMapID, x, y per thousand, ... } }",
              "ns.QUESTS = {"]
     for qid, q in sorted(quests.items()):
         if not q["name"]:
@@ -525,7 +535,7 @@ def write_quests(quests):
                      f'{lua_list(q["starts"])}, {lua_list(q["startObjs"])}, {lua_list(q["ends"])}, {lua_list(q["endObjs"])}, '
                      f'{lua_list(q["mobs"])}, {lua_list(q["objs"])}, {lua_list(q["pre"])}, {lua_list(q["preAll"])}, '
                      f'{lua_list(q["excl"])}, {q["maxLevel"]}, {q["flags"]}, {lua_list(q["vendors"])}, '
-                     f'{{ {spawn_parts(q["explore"], 20)} }} }},')
+                     f'{{ {spawn_parts(q["explore"], 20)} }}' + (f', {lua_list(q["npcPlaces"])}' if q["npcPlaces"] else '') + ' },')
     lines.append("}")
     (ROOT / "Data" / "Quests.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

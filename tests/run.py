@@ -87,6 +87,7 @@ CHECKS = {
                        r"^herbalism 50: off 0; on: herbs [1-9]\d*, above skill 0, ore 0, offered herbs true, ore false; chosen above: greyed true$",
                        r"^one kind: others shown 0$",
                        r"^with mining: ore true$",
+                       r"^call of water: objective 1436, turn-in 1436, next giver 1436; horde's still 1421$",
                        r"^utilities: mailbox true, anvil true, tooltip .+", r"^guild without zmap: 2, tooltip .*Sin Zmap.*",
                        r"^apart: true$", r"^minimap pins: [1-9]\d*$",
                        r"^minimap herbs and ore: 0$",
