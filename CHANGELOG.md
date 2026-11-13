@@ -1,5 +1,9 @@
 # Zmap
 
+## 1.6.1 — Call of Water for the Alliance
+
+- **Call of Water (Alliance shamans)**: the steps at the Forgotten Shrine now point to Stendel's Pond in Westfall. Before, the map and "Go" sent you to the Horde's spot in Silverpine Forest, because Forever reuses Classic's water spirits there. The Horde's version still points to Silverpine.
+
 ## 1.6.0 — Your quests on the NPCs
 
 - **Your quests on the NPCs themselves**: hovering an NPC says which quest of your log it is for, with what is left of it, and which quests it gives or takes. A mark over the nameplates of the NPCs your quests need (to kill, or for what they drop), and of those who take a quest you finished. Both can be turned off in the options (Quest log). In some places the game hides who a unit is during combat; there they show nothing.
