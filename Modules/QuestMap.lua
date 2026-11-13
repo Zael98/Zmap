@@ -16,6 +16,7 @@ local completed, inLog, finished, logList = {}, {}, {}, {}
 local untracked = {}   -- the quests of your log you do not track (the option to show only the tracked ones)
 local Untracked
 local giverMarks, objectiveMarks   -- built from the quest log; nil: to build again
+local byUnit = {}   -- [npcID] = { need = {quests}, gives = {quests}, takes = {quests} } (tooltips, nameplates)
 local dirty = true
 
 --------------------------------------------------------------------------------------------------------------
@@ -141,6 +142,20 @@ local function Build()
             end
         end
     end
+    wipe(byUnit)
+    local function Index(npc, kind, id)
+        byUnit[npc] = byUnit[npc] or { need = {}, gives = {}, takes = {} }
+        table.insert(byUnit[npc][kind], id)
+    end
+    for npc, quests in pairs(byNpc) do
+        for _, id in ipairs(quests) do Index(npc, "gives", id) end
+    end
+    for _, id in ipairs(logList) do
+        local q = QUESTS[id]
+        if q then
+            for _, npc in ipairs(finished[id] and q[8] or q[10]) do Index(npc, finished[id] and "takes" or "need", id) end
+        end
+    end
     giverMarks = {}
     local function Giver(quests, mark, spawns)
         local trivial = true
@@ -200,6 +215,12 @@ function QM.Objectives()
 end
 
 function QM.InLog() if dirty then Build() end return logList end
+
+-- what an NPC means for your quests: { need = {...}, gives = {...}, takes = {...} } or nil
+function QM.ForNpc(npc)
+    if dirty then Build() end
+    return byUnit[npc]
+end
 
 --------------------------------------------------------------------------------------------------------------
 -- On the map

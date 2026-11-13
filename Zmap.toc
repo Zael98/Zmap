@@ -41,6 +41,7 @@ Data\DungeonMaps.lua
 Data\Caves.lua
 # from tools/build_npcs.py (Warcraft DB and Questie's database)
 Data\Npcs.lua
+Data\NpcNames.lua
 Data\Objects.lua
 Data\Quests.lua
 
@@ -66,6 +67,7 @@ Modules\GatherRoute.lua
 Modules\Npcs.lua
 Modules\QuestMap.lua
 Modules\QuestGroup.lua
+Modules\QuestUnits.lua
 Modules\QuestPanel.lua
 Modules\Rares.lua
 Modules\Townsfolk.lua

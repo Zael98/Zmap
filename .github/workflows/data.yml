@@ -1,7 +1,7 @@
 # Every day: is there a newer Forever client (wago.tools) or Questie release than Zmap's data was made from? If so,
-# the data is made again, tested, and offered as a pull request to look at and merge (or, while the repository does
-# not let Actions open pull requests, an issue with the link that opens it). Nothing is published: a release is
-# still only a v* tag, pushed when one is ordered.
+# the data is made again and tested. When the tests pass it goes straight into main; when they fail it waits on a
+# datos/* branch with an issue to look at it. Nothing is published: a release is still only a v* tag, pushed when
+# one is ordered.
 name: Datos
 
 on:
@@ -60,8 +60,18 @@ jobs:
           python tests/run.py > tests-report.txt 2>&1
           echo "tests=$?" >> "$GITHUB_OUTPUT"
           cat tests-report.txt
-      - name: Proponer los datos nuevos
-        if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes'
+      - name: Unir los datos nuevos (las pruebas pasan)
+        if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes' && steps.data.outputs.tests == '0'
+        env:
+          LABEL: ${{ steps.check.outputs.label }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Data Media tools/build_data.py
+          git commit -m "Datos: $LABEL"
+          git push origin HEAD:main
+      - name: Proponer los datos nuevos (las pruebas fallan)
+        if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes' && steps.data.outputs.tests != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LABEL: ${{ steps.check.outputs.label }}
@@ -74,7 +84,7 @@ jobs:
           git add Data Media tools/build_data.py
           git commit -m "Datos: $LABEL"
           git push origin "$branch"
-          if [ "$TESTS" = "0" ]; then result="Las pruebas pasan."; else result="**Las pruebas fallan**: hay que mirarlo antes de unirlo."; fi
+          result="**Las pruebas fallan**: hay que mirarlo antes de unirlo."
           {
             echo "Hay datos nuevos: $LABEL. Están regenerados en esta rama. $result"
             echo

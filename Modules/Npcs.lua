@@ -49,7 +49,7 @@ function N.Name(id)
     local d = NPCS[id]
     local learned = ns.db and ns.db.npcNames and ns.db.npcNames[GetLocale()]
     local seen = Seen(id)
-    return (learned and learned[id]) or (d and d[1]) or (seen and seen.n) or "?"
+    return (learned and learned[id]) or (ns.NPC_NAMES and ns.NPC_NAMES[id]) or (d and d[1]) or (seen and seen.n) or "?"
 end
 
 -- its title as the game shows it, else the data's, put in the client's language where we know how
@@ -198,7 +198,10 @@ end
 ns.On("PLAYER_LOGIN", function()
     if ENGLISH[GetLocale()] then return end
     queue = {}
-    for id in pairs(NPCS) do queue[#queue + 1] = id end
+    local known = ns.NPC_NAMES or {}   -- (the names the data already has in your language are not asked)
+    for id in pairs(NPCS) do
+        if not known[id] then queue[#queue + 1] = id end
+    end
     table.sort(queue)
     at = ns.db.npcAskAt or 1
     pass = ns.db.npcAskPass or 1

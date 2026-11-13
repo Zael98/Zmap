@@ -42,8 +42,10 @@ local rares = 0
 for id in pairs(ZNS.NPCS) do if ZNS.Npcs.Rare(id) then rares = rares + 1 end end
 OUT("rares in data: " .. rares)
 
+-- the names the API gives in your language are there from the start (Data/NpcNames.lua), and not asked
+OUT("api name: " .. ZNS.Npcs.Name(30))
 local ids = {}
-for id in pairs(ZNS.NPCS) do ids[#ids + 1] = id end
+for id in pairs(ZNS.NPCS) do if not ZNS.NPC_NAMES[id] then ids[#ids + 1] = id end end
 table.sort(ids)
 STATE.cached = { [ids[3]] = "Nombre de prueba" }
 ADVANCE(40)

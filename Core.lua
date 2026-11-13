@@ -97,6 +97,8 @@ ns.DEFAULTS = {
     questAlpha = 0.9,         -- its background
     autoTrack = false,        -- quests you take are tracked
     autoUntrack = false,      -- quests ready to turn in are no longer tracked
+    questTooltips = true,     -- an NPC's tooltip says what it is for your quests
+    questPlates = true,       -- a mark over the nameplates of the NPCs your quests need
     fadeMoving = true,        -- the window fades while you move
     fadeAlpha = 0.55,
     -- layers

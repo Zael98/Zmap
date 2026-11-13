@@ -132,4 +132,20 @@ local point, _, _, x = ZmapFrame.questsPanel:GetPoint(1)
 ZNS.SetOpt("questAlpha", 0.5)
 OUT(("left: %s x>6 %s; width for the route %s"):format(tostring(point), tostring(x > 6), tostring(QP.Width())))
 ZNS.SetOpt("questSide", "right")
+
+-- the NPCs themselves: a mob quest 33 needs says so on its tooltip and gets a mark over its nameplate; one that
+-- has nothing to do with your quests gets neither
+local mob = ZNS.QUESTS[33][10][1]
+STATE.units.mouseover = { id = mob, name = "Lobo" }
+STATE.units.nameplate1 = { id = mob, name = "Lobo" }
+STATE.units.nameplate2 = { id = 999999, name = "Nadie" }
+C_NamePlate = { GetNamePlateForUnit = function(unit) PLATES = PLATES or {} PLATES[unit] = PLATES[unit] or CreateFrame("Frame") return PLATES[unit] end }
+local tipLines = {}
+for _, l in ipairs(ZNS.QuestUnitLines("mouseover")) do tipLines[#tipLines + 1] = l[1] end
+EVENT("NAME_PLATE_UNIT_ADDED", "nameplate1")
+EVENT("NAME_PLATE_UNIT_ADDED", "nameplate2")
+OUT(("unit tooltip: %s; plates: needed %s, other %s"):format(table.concat(tipLines, " / "),
+    tostring(ZNS.QuestPlateShown("nameplate1")), tostring(ZNS.QuestPlateShown("nameplate2"))))
+ZNS.SetOpt("questPlates", false)
+OUT("plates off: " .. tostring(ZNS.QuestPlateShown("nameplate1")))
 OUT("errors " .. #STATE.errors)
