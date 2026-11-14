@@ -103,7 +103,7 @@ CHECKS = {
                            r"^tracked true, mark true; folded: Bosque de Elwynn \| \[\d+\] Wolves Across the Border \| - Lobo matado: 3/8 \| Guerrero$",
                            r"^details of 33: \[\d+\] Wolves Across the Border \| Objetivo de la misión \| - Lobo matado: 3/8 \| Se entrega a: .+ \(Bosque de Elwynn\) \| Description \| Texto de la misión 33 \| Rewards \| You will receive: \| Espada vieja \| 150 cobre; map moved true$",
                            r"^go there: arrow true$", r"^share: index 2; abandon: 33 ABANDON_QUEST, asked Wolves Across the Border$",
-                           r"^back: details nil$", r"^map click: details 33, blizzard nil$", r"^reopened: shown true; folded: shown false, tab true, after reopening false; tab click: shown true$", r"^not offered: still marked false; after a level up true$",
+                           r"^back: details nil$", r"^map click: details 33, blizzard nil$", r"^reopened: shown true; folded: shown false, tab true, after reopening false; tab click: shown true$", r"^not offered: still marked false; after another's turn-in false, after its giver's true; after a level up true$", r"^single quest: other marked false; picked from the list true$",
                            r"^tracked only: 102 [1-9]\d* -> 0, 33 ([1-9]\d*) -> \1, shown 102 false$", r"^tracked it: 102 [1-9]\d*$",
                            r"^binding: L -> ZmapQuestsButton$", r"^L: map true, log true; again: map false$",
                            r"^L given back: nil, M ZmapToggleButton$",

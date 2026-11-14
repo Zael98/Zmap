@@ -85,14 +85,49 @@ local still = false
 for _, m in ipairs(ZNS.QuestMap.Givers()) do
     for _, q in ipairs(m.quests) do if q == quest then still = true end end
 end
-EVENT("PLAYER_LEVEL_UP")
-ADVANCE(1)
-local again = false
-for _, m in ipairs(ZNS.QuestMap.Givers()) do
-    for _, q in ipairs(m.quests) do if q == quest then again = true end end
+local function Marked(id)
+    ZNS.Fire("QUEST_LOG_UPDATE")
+    ADVANCE(1)
+    for _, m in ipairs(ZNS.QuestMap.Givers()) do
+        for _, q in ipairs(m.quests) do if q == id then return true end end
+    end
+    return false
 end
-OUT(("not offered: still marked %s; after a level up %s"):format(tostring(still), tostring(again)))
-STATE.npc, STATE.offered = nil, nil
+-- turning in a quest that has nothing to do with that giver keeps it off; one it gave brings it back
+local other
+for id, q in pairs(ZNS.QUESTS) do
+    local near = false
+    for _, n in ipairs(q[6]) do if n == npc then near = true end end
+    for _, n in ipairs(q[8]) do if n == npc then near = true end end
+    if not near and #q[6] > 0 then other = id break end
+end
+EVENT("QUEST_TURNED_IN", other)
+local afterOther = Marked(quest)
+EVENT("QUEST_TURNED_IN", quest)
+local afterOwn = Marked(quest)
+STATE.npc, STATE.offered = { id = npc, name = "Dador" }, {}
+EVENT("GOSSIP_SHOW")
+EVENT("PLAYER_LEVEL_UP")
+local again = Marked(quest)
+OUT(("not offered: still marked %s; after another's turn-in %s, after its giver's %s; after a level up %s"):format(
+    tostring(still), tostring(afterOther), tostring(afterOwn), tostring(again)))
+-- a giver with one quest opens it straight away: the others the data gives it are off; picked from its list, not
+local two
+for _, m in ipairs(ZNS.QuestMap.Givers()) do if m.npc and #m.quests >= 2 then two = m break end end
+local first, second = two.quests[1], two.quests[2]
+function GetQuestID() return first end
+STATE.time = STATE.time + 120
+STATE.npc = { id = two.npc, name = "Dador" }
+EVENT("QUEST_DETAIL")
+local direct = Marked(second)
+EVENT("PLAYER_LEVEL_UP")
+STATE.offered = { first, second }
+EVENT("GOSSIP_SHOW")
+EVENT("QUEST_DETAIL")
+local picked = Marked(second)
+OUT(("single quest: other marked %s; picked from the list %s"):format(tostring(direct), tostring(picked)))
+STATE.npc, STATE.offered, GetQuestID = nil, nil, nil
+EVENT("PLAYER_LEVEL_UP")
 
 -- only the tracked quests: 33 is tracked, 102 is not; its marks go from the map and the minimap
 OPEN()

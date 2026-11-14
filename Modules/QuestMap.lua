@@ -627,14 +627,16 @@ local function Changed()
     ns.Fire("ZMAP_QUESTS")   -- (the quests panel)
 end
 -- What a giver really offers, told by the game as you talk to it: the quests of the data it gives that it does not
--- offer are left off the map (the data cannot know all that holds a quest back), until your level or the quests
--- you have done change
-local function Offered(questIDs)
+-- offer are left off the map (the data cannot know all that holds a quest back). They come back on a level up, or
+-- when you turn in a quest to that giver or one it gave (the next step of a chain); other turn-ins keep them off.
+local function TalkingTo()
     local guid = UnitGUID("npc")
     if not guid or (issecretvalue and issecretvalue(guid)) then return end
     local kind, _, _, _, _, npc = strsplit("-", guid)
-    npc = tonumber(npc)
-    if kind ~= "Creature" or not npc then return end
+    return kind == "Creature" and tonumber(npc) or nil
+end
+local function Offered(npc, questIDs)
+    if not npc then return end
     local offered = {}
     for _, id in ipairs(questIDs) do offered[id] = true end
     local level, race, class = UnitLevel("player") or 1, RaceBit(), ClassBit()
@@ -653,22 +655,42 @@ local function Offered(questIDs)
         givers:Update()
     end
 end
+local listed = {}   -- [npcID] = when it showed its list of quests (picking one from it opens that quest's details)
 ns.On("GOSSIP_SHOW", function()
     if not (C_GossipInfo and C_GossipInfo.GetAvailableQuests) then return end
     local ids = {}
     for _, info in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do ids[#ids + 1] = info.questID end
-    Offered(ids)
+    local npc = TalkingTo()
+    if npc then listed[npc] = GetTime() end
+    Offered(npc, ids)
 end)
 ns.On("QUEST_GREETING", function()
     local ids = {}
     for i = 1, (GetNumAvailableQuests and GetNumAvailableQuests() or 0) do
         ids[#ids + 1] = select(5, GetAvailableQuestInfo(i))
     end
-    Offered(ids)
+    local npc = TalkingTo()
+    if npc then listed[npc] = GetTime() end
+    Offered(npc, ids)
 end)
-local function Unlearn() if ns.char.notOffered then wipe(ns.char.notOffered) end end
-ns.On("PLAYER_LEVEL_UP", Unlearn)
-ns.On("QUEST_TURNED_IN", Unlearn)
+-- a giver with a single quest opens it straight away: that is all it offers
+ns.On("QUEST_DETAIL", function()
+    local npc, id = TalkingTo(), GetQuestID and GetQuestID()
+    if npc and id and id > 0 and not (listed[npc] and GetTime() - listed[npc] < 60) then Offered(npc, { id }) end
+end)
+ns.On("PLAYER_LEVEL_UP", function() if ns.char.notOffered then wipe(ns.char.notOffered) end end)
+ns.On("QUEST_TURNED_IN", function(questID)
+    local done, learned = QUESTS[questID], ns.char.notOffered
+    if not (done and learned) then return end
+    local near = {}
+    for _, npc in ipairs(done[6]) do near[npc] = true end
+    for _, npc in ipairs(done[8]) do near[npc] = true end
+    for id in pairs(learned) do
+        for _, giver in ipairs(QUESTS[id] and QUESTS[id][6] or {}) do
+            if near[giver] then learned[id] = nil break end
+        end
+    end
+end)
 
 local later = ns.Debounce(0.5, Changed)
 ns.On("QUEST_LOG_UPDATE", later)
