@@ -153,6 +153,16 @@ EVENT("NAME_PLATE_UNIT_ADDED", "nameplate1")
 EVENT("NAME_PLATE_UNIT_ADDED", "nameplate2")
 OUT(("unit tooltip: %s; plates: needed %s, other %s"):format(table.concat(tipLines, " / "),
     tostring(ZNS.QuestPlateShown("nameplate1")), tostring(ZNS.QuestPlateShown("nameplate2"))))
+-- a tooltip whose unit token the game keeps secret (it refuses it in UnitExists): the tooltip's own GUID still
+-- names the NPC, and nothing fails
+issecretvalue = function(v) return v == "secret-unit" end
+local realExists = UnitExists
+UnitExists = function(u) if issecretvalue(u) then error("Secret values are only allowed during untainted execution") end return realExists(u) end
+local okSecret, secretLines = pcall(ZNS.QuestUnitLines, "secret-unit", "Creature-0-1-0-1-" .. mob .. "-0000")
+local okBare, bareLines = pcall(ZNS.QuestUnitLines, "secret-unit")
+UnitExists, issecretvalue = realExists, nil
+OUT(("secret unit: no error %s, lines from its guid %s; without a guid %s, lines %d"):format(tostring(okSecret),
+    tostring(okSecret and #secretLines > 0), tostring(okBare), okBare and #bareLines or -1))
 ZNS.SetOpt("questPlates", false)
 OUT("plates off: " .. tostring(ZNS.QuestPlateShown("nameplate1")))
 OUT("errors " .. #STATE.errors)

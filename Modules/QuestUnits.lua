@@ -6,14 +6,19 @@
 local _, ns = ...
 local L = ns.L
 local QM = ns.QuestMap
-local IsSecret = issecretvalue or function() return false end
+local function IsSecret(v) return issecretvalue ~= nil and issecretvalue(v) or false end
 
-local function NpcID(unit)
-    if not unit or not UnitExists(unit) or UnitIsPlayer(unit) then return end
-    local guid = UnitGUID(unit)
+-- an NPC's ID from its GUID (nil: not an NPC, or the game keeps it secret)
+local function GuidNpc(guid)
     if not guid or IsSecret(guid) then return end
     local kind, _, _, _, _, id = strsplit("-", guid)
     if kind == "Creature" or kind == "Vehicle" then return tonumber(id) end
+end
+
+-- (a unit token can itself be secret, e.g. a tooltip's unit in some places: the unit functions refuse it then)
+local function NpcID(unit)
+    if not unit or IsSecret(unit) or not UnitExists(unit) or UnitIsPlayer(unit) then return end
+    return GuidNpc(UnitGUID(unit))
 end
 
 -- what is left of a quest, the objectives naming this unit first (a kill), else all that are left
@@ -28,12 +33,13 @@ local function Left(id, name)
     return #mine > 0 and mine or all
 end
 
--- the lines it adds to a unit's tooltip: { text, r, g, b }
-function ns.QuestUnitLines(unit)
-    local id = NpcID(unit)
+-- the lines it adds to a unit's tooltip: { text, r, g, b } (guid: the tooltip's own, when the unit is not known)
+function ns.QuestUnitLines(unit, guid)
+    local id = GuidNpc(guid) or NpcID(unit)
     local info = id and QM.ForNpc(id)
     if not info then return {} end
-    local out, name = {}, UnitName(unit)
+    local out, name = {}, nil
+    if unit and not IsSecret(unit) and UnitExists(unit) then name = UnitName(unit) end
     for _, q in ipairs(info.need) do
         out[#out + 1] = { QM.Title(q), 1, 0.82, 0 }
         for _, text in ipairs(Left(q, name)) do out[#out + 1] = { "  - " .. text, 0.85, 0.85, 0.85 } end
@@ -43,11 +49,11 @@ function ns.QuestUnitLines(unit)
     return out
 end
 
-local function OnUnitTooltip(tip)
+local function OnUnitTooltip(tip, data)
     if not ns.Opt("questTooltips") or tip ~= GameTooltip then return end
     local ok, _, unit = pcall(tip.GetUnit, tip)
-    if not ok then return end
-    local lines = ns.QuestUnitLines(unit)
+    if not ok then unit = nil end
+    local lines = ns.QuestUnitLines(unit, type(data) == "table" and data.guid or nil)
     for _, l in ipairs(lines) do tip:AddLine(l[1], l[2], l[3], l[4]) end
     if #lines > 0 then tip:Show() end
 end

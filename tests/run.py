@@ -127,7 +127,7 @@ CHECKS = {
                          r"^auto: tracked on taking true, untracked when ready true$",
                          r"^left: (TOP|BOTTOM)LEFT x>6 true; width for the route 0$",
                          r"^unit tooltip: Wolves Across the Border /   - Lobo matado: 3/8; plates: needed true, other false$",
-                         r"^plates off: false$",
+                         r"^secret unit: no error true, lines from its guid true; without a guid true, lines 0$", r"^plates off: false$",
                          r"^errors 0$"]),
     "gatherroute": (False, [r"^route: true, stops [1-9]\d*, each once true, arrow Siguiente nodo \(1/\d+\)$",
                             r"^said: .*Ruta de recolección: \d+ paradas en Bosque de Elwynn, unos [\d:]+ por vuelta$",
