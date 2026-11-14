@@ -1,5 +1,13 @@
 # Zmap
 
+## 1.6.2 — Only the quests you can really take
+
+- **Quest givers check what Questie checks**: a "!" is no longer shown for a quest whose follow-up you already did or carry, a breadcrumb to a quest you already did or carry, a quest that needs a reputation you don't have, one that only appears while another quest is in your log, or one Questie itself hides on the map.
+- **Profession quests** are now shown when you have that profession at the skill they ask for (before, they were never shown), and quests that need a spell when you know it.
+- **Quests with no required level** in the data no longer show up at every level: their own level is used, as Questie does.
+- **Givers that don't offer a quest**: when you talk to an NPC and it doesn't offer a quest the data says it gives, that "!" stays off until you level up or turn in a quest related to that NPC. Before, any turn-in brought it back. NPCs that open their only quest straight away count too.
+- Data from Questie bundle v12.9.0+v1.1.1.
+
 ## 1.6.1 — Call of Water for the Alliance
 
 - **Call of Water (Alliance shamans)**: the steps at the Forgotten Shrine now point to Stendel's Pond in Westfall. Before, the map and "Go" sent you to the Horde's spot in Silverpine Forest, because Forever reuses Classic's water spirits there. The Horde's version still points to Silverpine.
