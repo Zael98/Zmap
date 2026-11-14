@@ -87,6 +87,7 @@ CHECKS = {
                        r"^herbalism 50: off 0; on: herbs [1-9]\d*, above skill 0, ore 0, offered herbs true, ore false; chosen above: greyed true$",
                        r"^one kind: others shown 0$",
                        r"^with mining: ore true$",
+                       r"^quest rules: herbalism quest without it false, with it true; hidden on the map [1-9]\d*, offered false; without a level 0$",
                        r"^quest rules: breadcrumb true, with its quest carried false; standing below false, reached true$",
                        r"^call of water: objective 1436, turn-in 1436, next giver 1436; horde's still 1421$",
                        r"^utilities: mailbox true, anvil true, tooltip .+", r"^guild without zmap: 2, tooltip .*Sin Zmap.*",

@@ -408,7 +408,7 @@ local repQuest, need
 for id, q in pairs(ZNS.QUESTS) do
     local r = q[20]
     if r and r.minRep and not r.maxRep and #q[12] == 0 and #q[13] == 0 and q[5] == 0 and q[16] == 0 and q[3] <= 60
-        and q[15] == 0 and #q[6] > 0 and ZNS.Npcs.Places(q[6][1])[1] and q[4] % 2 == 1 then
+        and q[15] == 0 and #q[6] > 0 and ZNS.Npcs.Places(q[6][1])[1] and (q[4] == 0 or q[4] % 2 == 1) then
         repQuest, need = id, r.minRep
         break
     end
@@ -428,6 +428,37 @@ local reached = Offered(repQuest)
 C_Reputation = oldRep
 OUT(("quest rules: breadcrumb %s, with its quest carried %s; standing below %s, reached %s"):format(tostring(crumb),
     tostring(crumbCarried), tostring(below), tostring(reached)))
+-- a herbalism quest: offered only with Herbalism, so far in it; one Questie hides on the map is never offered; none
+-- is offered at every level for lack of a required level (its own level stands for it)
+local herbQuest, herbNeed
+for id, q in pairs(ZNS.QUESTS) do
+    local r = q[20]
+    if r and r.skill and r.skill[1] == 182 and not r.minRep and not r.spell and #q[12] == 0 and #q[13] == 0
+        and q[5] == 0 and q[16] == 0 and q[15] == 0 and #q[6] > 0 and ZNS.Npcs.Places(q[6][1])[1] and (q[4] == 0 or q[4] % 2 == 1) then
+        herbQuest, herbNeed = id, r.skill[2]
+        break
+    end
+end
+STATE.skills = nil
+EVENT("SKILL_LINES_CHANGED")
+ADVANCE(2)
+local noHerb = Offered(herbQuest)
+STATE.skills = { herb = math.max(herbNeed, 1) }
+EVENT("SKILL_LINES_CHANGED")
+ADVANCE(2)
+local withHerb = Offered(herbQuest)
+STATE.skills = nil
+EVENT("SKILL_LINES_CHANGED")
+local hiddenShown, hiddenCount, noLevel = false, 0, 0
+for id, q in pairs(ZNS.QUESTS) do
+    if q[16] >= 16 then
+        hiddenCount = hiddenCount + 1
+        if ZNS.QuestMap.Available(id, q, 60, 1, 2 ^ 30) then hiddenShown = true end
+    end
+    if q[3] == 0 and q[2] > 1 then noLevel = noLevel + 1 end
+end
+OUT(("quest rules: herbalism quest without it %s, with it %s; hidden on the map %d, offered %s; without a level %d")
+    :format(tostring(noHerb), tostring(withHerb), hiddenCount, tostring(hiddenShown), noLevel))
 
 -- the Alliance's Call of Water meets Classic's water spirits (NPCs 5894/5895, Silverpine in the data, where the
 -- Horde still goes) at Stendel's Pond in Westfall: its objective, its turn-in and the next step's giver are there

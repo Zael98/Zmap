@@ -378,7 +378,7 @@ def ids_of(group):
 
 def questie_blacklist():
     """The quests Questie never shows (duplicates, not in the game, GM island...), its list read as it reads it on
-    Forever: Era content. {questID} (those it only hides on the map are left: they may be in your log)."""
+    Forever: Era content. ({questID} left out, {questID} it only hides on the map: kept, they may be in your log)"""
     from lupa import lua51
     zips = sorted((CACHE / "questie").glob("Questie-*.zip"))
     with zipfile.ZipFile(zips[-1]) as z:
@@ -397,7 +397,8 @@ def questie_blacklist():
     """)
     L.execute(src)
     listed = L.eval('QuestieLoader:ImportModule("QuestieQuestBlacklist"):Load()')
-    return {int(k) for k, v in listed.items() if v is True}
+    return ({int(k) for k, v in listed.items() if v is True},
+            {int(k) for k, v in listed.items() if v == "HIDE_ON_MAP"})
 
 
 # What else holds a quest back, as Questie checks it (QuestieDB.IsDoable): {Lua key: QuestieDB quest field}
@@ -405,11 +406,16 @@ RULE_QUESTS = {"next": 22, "parent": 25, "crumbFor": 27, "untilDone": 33, "start
 
 
 def quest_rules(row):
-    """{next, parent, crumbFor, crumbs, untilDone, startWith, disabledBy, minRep, maxRep} that the quest has."""
+    """{next, parent, crumbFor, crumbs, untilDone, startWith, disabledBy, skill, spell, minRep, maxRep} it has."""
     rules = {key: row[f] for key, f in RULE_QUESTS.items() if isinstance(row.get(f), int) and row[f] > 0}
     crumbs = [c for c in as_list(row.get(28)) if isinstance(c, int)]
     if crumbs:
         rules["crumbs"] = crumbs
+    skill = as_list(row.get(18))
+    if len(skill) == 2 and all(isinstance(v, int) for v in skill):
+        rules["skill"] = skill
+    if isinstance(row.get(30), int) and row[30] != 0:
+        rules["spell"] = row[30]
     for key, f in (("minRep", 19), ("maxRep", 20)):
         rep = as_list(row.get(f))
         if len(rep) == 2 and all(isinstance(v, int) for v in rep):
@@ -421,7 +427,7 @@ def build_quests(npcs):
     items = entities("Item")
     quests = {}
     quest_objects = set()
-    blacklist = questie_blacklist()
+    blacklist, map_hidden = questie_blacklist()
     print(f"Questie's blacklist (Era): {len(blacklist)} quests left out")
     # the quests Forever's client has (QuestV2: those with a "done" bit; repeatable ones have none, so they are
     # kept): a non-repeatable quest it lacks was taken out of Forever
@@ -456,14 +462,17 @@ def build_quests(npcs):
         flags = 0
         if (row.get(24) or 0) & 1:
             flags |= 1   # repeatable
-        if row.get(18) or row.get(31) or row.get(30):
-            flags |= 2   # needs a profession, a specialization or a spell: not offered on the map
+        if row.get(31) or row.get(35):
+            flags |= 2   # needs a specialization or a profession rank: not offered on the map
         if (row.get(24) or 0) & 2:
             flags |= 4   # done by something happening (reaching a place, an escort...): still offered
         if row.get(17) in HOLIDAYS:
             flags |= 8   # a holiday's: its givers are only there then
+        if qid in map_hidden:
+            flags |= 16  # Questie hides it on the map (not taken from its giver as such)
         quest = {
-            "name": row.get(1) or "", "level": row.get(5) or 0, "req": row.get(4) or 0,
+            "name": row.get(1) or "", "level": row.get(5) or 0,
+            "req": row.get(4) or row.get(5) or 0,   # (none given: its own level, as Questie takes it)
             "races": row.get(6) or 0, "classes": row.get(7) or 0,
             "starts": as_list(starts.get(1)), "startObjs": as_list(starts.get(2)),
             "ends": as_list(ends.get(1)), "endObjs": as_list(ends.get(2)),
@@ -551,13 +560,15 @@ def write_quests(quests):
              "--   { NPCs who give it }, { objects that give it }, { NPCs who take it }, { objects that take it },",
              "--   { mobs for its objectives }, { objects for its objectives }, { any of these done first },",
              "--   { all of these done first }, { not if one of these }, highest level it is offered at (0: none),",
-             "--   flags (1 repeatable, 2 needs a profession or spell, 4 done by reaching a place or an event, 8 a holiday's),",
+             "--   flags (1 repeatable, 2 needs a specialization or profession rank, 4 done by reaching a place or an event,",
+             "--   8 a holiday's, 16 hidden on the map by Questie),",
              "--   { NPCs who sell what it asks for },",
              "--   places to reach (uiMapID, { x, y per thousand }, ...),",
              "--   { NPCs it meets elsewhere than their data: npcID, uiMapID, x, y per thousand, ... },",
              "--   what else holds it back (Questie's checks): { next = done or taken: not offered, parent = only with it in",
              "--   your log, crumbFor = a breadcrumb to it: not once it is done or taken, crumbs = not while one is in your",
              "--   log, untilDone = not once done, startWith = only once taken or done, disabledBy = not while in your log,",
+             "--   skill = { skill line, skill at least }, spell = known (below 0: that one not known),",
              "--   minRep / maxRep = { factionID, standing at least / below } } }",
              "ns.QUESTS = {"]
     for qid, q in sorted(quests.items()):

@@ -14,7 +14,7 @@ local COLORS = { { 1, 0.82, 0.1 }, { 0.3, 0.8, 1 }, { 1, 0.4, 0.4 }, { 0.5, 1, 0
 
 local completed, inLog, finished, logList = {}, {}, {}, {}
 local untracked = {}   -- the quests of your log you do not track (the option to show only the tracked ones)
-local Untracked, Standing
+local Untracked, Standing, Knows
 local giverMarks, objectiveMarks   -- built from the quest log; nil: to build again
 local byUnit = {}   -- [npcID] = { need = {quests}, gives = {quests}, takes = {quests} } (tooltips, nameplates)
 local dirty = true
@@ -82,6 +82,13 @@ function Standing(faction)
     return BELOW_NEUTRAL[faction] and -36000 or 0
 end
 
+-- whether you know a spell
+function Knows(spell)
+    if C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(spell) then return true end
+    if IsPlayerSpell and IsPlayerSpell(spell) then return true end
+    return IsSpellKnown and IsSpellKnown(spell) or false
+end
+
 -- { name, level, required level, races, classes, givers, giver objects, takers, taker objects, mobs, objects,
 --   any-of prerequisites, all-of prerequisites, exclusive with, highest level, flags, sellers, places, NPC places,
 --   what else holds it back (Data/Quests.lua) }
@@ -89,8 +96,9 @@ function QM.Available(id, q, level, race, class)
     if completed[id] or inLog[id] then return false end
     if ns.char.notOffered and ns.char.notOffered[id] then return false end   -- (its giver did not offer it)
     if q[16] % 2 == 1 and not ns.Opt("repeatable") then return false end    -- repeatable: only when asked for
-    if math.floor(q[16] / 2) % 2 == 1 then return false end   -- needs a profession or spell
-    if q[16] >= 8 then return false end                        -- a holiday's
+    if math.floor(q[16] / 2) % 2 == 1 then return false end   -- needs a specialization or a profession rank
+    if math.floor(q[16] / 8) % 2 == 1 then return false end   -- a holiday's
+    if q[16] >= 16 then return false end                       -- Questie hides it on the map
     if level < q[3] or (q[15] > 0 and level > q[15]) then return false end
     if not Has(q[4], race) or not Has(q[5], class) then return false end
     if #q[12] > 0 then
@@ -117,6 +125,8 @@ function QM.Available(id, q, level, race, class)
         if r.disabledBy and inLog[r.disabledBy] then return false end
         if r.untilDone and completed[r.untilDone] then return false end
         if r.startWith and not (completed[r.startWith] or inLog[r.startWith]) then return false end
+        if r.skill and (ns.SkillLevel(r.skill[1]) or -1) < r.skill[2] then return false end   -- a profession, so far in it
+        if r.spell and Knows(math.abs(r.spell)) ~= (r.spell > 0) then return false end      -- a spell known (or not)
         if r.minRep and Standing(r.minRep[1]) < r.minRep[2] then return false end
         if r.maxRep and Standing(r.maxRep[1]) >= r.maxRep[2] then return false end
     end
@@ -726,7 +736,9 @@ ns.On("QUEST_TURNED_IN", later)
 ns.On("QUEST_ACCEPTED", later)
 ns.On("QUEST_REMOVED", later)
 ns.On("PLAYER_LEVEL_UP", later)
-ns.On("UPDATE_FACTION", later)   -- (quests that need a standing)
+ns.On("UPDATE_FACTION", later)   -- (quests that need a standing, a profession or a spell)
+ns.On("SKILL_LINES_CHANGED", later)
+ns.On("SPELLS_CHANGED", later)
 ns.On("ZMAP_OPTION", function(key)
     if key == "trivial" then givers:Update() end
     if key == "repeatable" then

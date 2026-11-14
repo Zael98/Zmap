@@ -146,21 +146,25 @@ local function Node(mapID, p, i, into)
     return n
 end
 
--- your skill in Herbalism / Mining (nil: you do not have it)
-local skills, skillsAt = {}, 0
-local function Skill(kind)
+-- your skill in a profession by its skill line (nil: you do not have it)
+local skills, skillsAt = {}, -10
+function ns.SkillLevel(line)
     if GetTime() - skillsAt > 5 then
         skillsAt = GetTime()
         wipe(skills)
         if GetProfessions and GetProfessionInfo then
             for _, index in ipairs({ GetProfessions() }) do
-                local _, _, level, _, _, _, line = GetProfessionInfo(index)
-                if line then skills[line] = level end
+                local _, _, level, _, _, _, l = GetProfessionInfo(index)
+                if l then skills[l] = level end
             end
         end
     end
-    return skills[PROFESSION[kind]]
+    return skills[line]
 end
+ns.On("SKILL_LINES_CHANGED", function() skillsAt = -10 end)
+
+-- your skill in Herbalism / Mining (nil: you do not have it)
+local function Skill(kind) return ns.SkillLevel(PROFESSION[kind]) end
 ns.GatherSkill = Skill
 
 -- herbs only with Herbalism and ore only with Mining, and their layer on
