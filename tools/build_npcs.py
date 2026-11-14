@@ -400,6 +400,23 @@ def questie_blacklist():
     return {int(k) for k, v in listed.items() if v is True}
 
 
+# What else holds a quest back, as Questie checks it (QuestieDB.IsDoable): {Lua key: QuestieDB quest field}
+RULE_QUESTS = {"next": 22, "parent": 25, "crumbFor": 27, "untilDone": 33, "startWith": 34, "disabledBy": 36}
+
+
+def quest_rules(row):
+    """{next, parent, crumbFor, crumbs, untilDone, startWith, disabledBy, minRep, maxRep} that the quest has."""
+    rules = {key: row[f] for key, f in RULE_QUESTS.items() if isinstance(row.get(f), int) and row[f] > 0}
+    crumbs = [c for c in as_list(row.get(28)) if isinstance(c, int)]
+    if crumbs:
+        rules["crumbs"] = crumbs
+    for key, f in (("minRep", 19), ("maxRep", 20)):
+        rep = as_list(row.get(f))
+        if len(rep) == 2 and all(isinstance(v, int) for v in rep):
+            rules[key] = rep
+    return rules
+
+
 def build_quests(npcs):
     items = entities("Item")
     quests = {}
@@ -455,6 +472,7 @@ def build_quests(npcs):
             "pre": as_list(row.get(13)), "preAll": as_list(row.get(12)), "excl": as_list(row.get(16)),
             "maxLevel": row.get(32) or 0, "flags": flags,
             "npcPlaces": [v for npc, place in QUEST_NPC_PLACES.get(qid, {}).items() for v in (npc, *place)],
+            "rules": quest_rules(row),
         }
         quest_objects.update(quest["startObjs"] + quest["endObjs"] + quest["objs"])
         quests[qid] = quest
@@ -517,6 +535,16 @@ def write_objects(objects):
     (ROOT / "Data" / "Objects.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def tail(q):
+    """The quest's optional last fields: its NPC places, then its rules."""
+    if not (q["npcPlaces"] or q["rules"]):
+        return ""
+    out = f', {lua_list(q["npcPlaces"])}'
+    if q["rules"]:
+        out += ", { " + ", ".join(f"{k} = {lua_list(v) if isinstance(v, list) else v}" for k, v in sorted(q["rules"].items())) + " }"
+    return out
+
+
 def write_quests(quests):
     lines = [header() + "local _, ns = ...", "",
              "-- [questID] = { name (English), level, required level, races (mask, 0: all), classes (mask, 0: all),",
@@ -526,7 +554,11 @@ def write_quests(quests):
              "--   flags (1 repeatable, 2 needs a profession or spell, 4 done by reaching a place or an event, 8 a holiday's),",
              "--   { NPCs who sell what it asks for },",
              "--   places to reach (uiMapID, { x, y per thousand }, ...),",
-             "--   { NPCs it meets elsewhere than their data: npcID, uiMapID, x, y per thousand, ... } }",
+             "--   { NPCs it meets elsewhere than their data: npcID, uiMapID, x, y per thousand, ... },",
+             "--   what else holds it back (Questie's checks): { next = done or taken: not offered, parent = only with it in",
+             "--   your log, crumbFor = a breadcrumb to it: not once it is done or taken, crumbs = not while one is in your",
+             "--   log, untilDone = not once done, startWith = only once taken or done, disabledBy = not while in your log,",
+             "--   minRep / maxRep = { factionID, standing at least / below } } }",
              "ns.QUESTS = {"]
     for qid, q in sorted(quests.items()):
         if not q["name"]:
@@ -535,7 +567,7 @@ def write_quests(quests):
                      f'{lua_list(q["starts"])}, {lua_list(q["startObjs"])}, {lua_list(q["ends"])}, {lua_list(q["endObjs"])}, '
                      f'{lua_list(q["mobs"])}, {lua_list(q["objs"])}, {lua_list(q["pre"])}, {lua_list(q["preAll"])}, '
                      f'{lua_list(q["excl"])}, {q["maxLevel"]}, {q["flags"]}, {lua_list(q["vendors"])}, '
-                     f'{{ {spawn_parts(q["explore"], 20)} }}' + (f', {lua_list(q["npcPlaces"])}' if q["npcPlaces"] else '') + ' },')
+                     f'{{ {spawn_parts(q["explore"], 20)} }}' + tail(q) + ' },')
     lines.append("}")
     (ROOT / "Data" / "Quests.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

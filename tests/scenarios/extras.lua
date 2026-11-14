@@ -388,6 +388,47 @@ for _, mark in ipairs(ZNS.QuestMap.Objectives()) do
 end
 OUT(("quests to reach and buy: fargodeep offered %s, places %d, sellers %d"):format(tostring(fargodeepOffered), reach, buy))
 
+-- what else holds a quest back, as Questie checks it: a breadcrumb (Raven Hill, 163) is not offered once you carry
+-- the quest it leads to (5); a quest that needs a standing waits for it
+local function Offered(id)
+    for _, mark in ipairs(ZNS.QuestMap.Givers()) do
+        for _, q in ipairs(mark.quests) do if q == id then return true end end
+    end
+    return false
+end
+STATE.player.level, STATE.completed, STATE.log, STATE.finished = 20, {}, {}, {}
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local crumb = Offered(163)
+STATE.log = { 5 }
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local crumbCarried = Offered(163)
+local repQuest, need
+for id, q in pairs(ZNS.QUESTS) do
+    local r = q[20]
+    if r and r.minRep and not r.maxRep and #q[12] == 0 and #q[13] == 0 and q[5] == 0 and q[16] == 0 and q[3] <= 60
+        and q[15] == 0 and #q[6] > 0 and ZNS.Npcs.Places(q[6][1])[1] and q[4] % 2 == 1 then
+        repQuest, need = id, r.minRep
+        break
+    end
+end
+local standing = 0
+local oldRep = C_Reputation
+C_Reputation = { GetFactionDataByID = function(f) if f == need[1] then return { name = "Facción", currentStanding = standing } end end }
+STATE.player.level, STATE.log = 60, {}
+standing = need[2] - 1
+EVENT("UPDATE_FACTION")
+ADVANCE(2)
+local below = Offered(repQuest)
+standing = need[2]
+EVENT("UPDATE_FACTION")
+ADVANCE(2)
+local reached = Offered(repQuest)
+C_Reputation = oldRep
+OUT(("quest rules: breadcrumb %s, with its quest carried %s; standing below %s, reached %s"):format(tostring(crumb),
+    tostring(crumbCarried), tostring(below), tostring(reached)))
+
 -- the Alliance's Call of Water meets Classic's water spirits (NPCs 5894/5895, Silverpine in the data, where the
 -- Horde still goes) at Stendel's Pond in Westfall: its objective, its turn-in and the next step's giver are there
 STATE.player.level, STATE.player.class, STATE.player.classID, STATE.player.raceID = 23, "SHAMAN", 7, 3

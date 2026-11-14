@@ -14,7 +14,7 @@ local COLORS = { { 1, 0.82, 0.1 }, { 0.3, 0.8, 1 }, { 1, 0.4, 0.4 }, { 0.5, 1, 0
 
 local completed, inLog, finished, logList = {}, {}, {}, {}
 local untracked = {}   -- the quests of your log you do not track (the option to show only the tracked ones)
-local Untracked
+local Untracked, Standing
 local giverMarks, objectiveMarks   -- built from the quest log; nil: to build again
 local byUnit = {}   -- [npcID] = { need = {quests}, gives = {quests}, takes = {quests} } (tooltips, nameplates)
 local dirty = true
@@ -69,8 +69,22 @@ local function ClassBit()
     return 2 ^ ((id or 1) - 1)
 end
 
+-- your standing with a faction (as the reputation panel counts it: 0 is the start of neutral); one you have not met
+-- is at the start of neutral, or of hated for those that start below it (as Questie takes them)
+local BELOW_NEUTRAL = { [87] = true, [576] = true, [910] = true, [941] = true, [970] = true, [978] = true, [1015] = true, [1171] = true }
+function Standing(faction)
+    local d = C_Reputation and C_Reputation.GetFactionDataByID and C_Reputation.GetFactionDataByID(faction)
+    if d and d.name and d.currentStanding then return d.currentStanding end
+    if GetFactionInfoByID then
+        local name, _, _, _, _, value = GetFactionInfoByID(faction)
+        if name and value then return value end
+    end
+    return BELOW_NEUTRAL[faction] and -36000 or 0
+end
+
 -- { name, level, required level, races, classes, givers, giver objects, takers, taker objects, mobs, objects,
---   any-of prerequisites, all-of prerequisites, exclusive with, highest level, flags }
+--   any-of prerequisites, all-of prerequisites, exclusive with, highest level, flags, sellers, places, NPC places,
+--   what else holds it back (Data/Quests.lua) }
 function QM.Available(id, q, level, race, class)
     if completed[id] or inLog[id] then return false end
     if ns.char.notOffered and ns.char.notOffered[id] then return false end   -- (its giver did not offer it)
@@ -91,6 +105,20 @@ function QM.Available(id, q, level, race, class)
     end
     for _, x in ipairs(q[14]) do
         if completed[x] or inLog[x] then return false end
+    end
+    local r = q[20]
+    if r then
+        if r.next and (completed[r.next] or inLog[r.next]) then return false end          -- its follow-up is done or taken
+        if r.parent and not inLog[r.parent] then return false end                         -- only with its parent in the log
+        if r.crumbFor and (completed[r.crumbFor] or inLog[r.crumbFor]) then return false end   -- a breadcrumb to a quest done or taken
+        for _, c in ipairs(r.crumbs or {}) do
+            if inLog[c] then return false end                                             -- you carry a breadcrumb to it
+        end
+        if r.disabledBy and inLog[r.disabledBy] then return false end
+        if r.untilDone and completed[r.untilDone] then return false end
+        if r.startWith and not (completed[r.startWith] or inLog[r.startWith]) then return false end
+        if r.minRep and Standing(r.minRep[1]) < r.minRep[2] then return false end
+        if r.maxRep and Standing(r.maxRep[1]) >= r.maxRep[2] then return false end
     end
     return true
 end
@@ -698,6 +726,7 @@ ns.On("QUEST_TURNED_IN", later)
 ns.On("QUEST_ACCEPTED", later)
 ns.On("QUEST_REMOVED", later)
 ns.On("PLAYER_LEVEL_UP", later)
+ns.On("UPDATE_FACTION", later)   -- (quests that need a standing)
 ns.On("ZMAP_OPTION", function(key)
     if key == "trivial" then givers:Update() end
     if key == "repeatable" then

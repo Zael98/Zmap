@@ -44,7 +44,14 @@ QP.Search("")
 QP.CycleSort()
 OUT("by level: " .. Lines())
 QP.CycleSort()
+-- (standing among the wolves, so 33 is the nearest whatever the data's spawns are)
+local wolves, T = ZNS.QuestMap.Next(33), ZNS.WORLD_TRANSFORM[0]
+local was = { STATE.player.wx, STATE.player.wy }
+STATE.player.wy, STATE.player.wx = (wolves.u - T[1]) / T[2], (wolves.v - T[3]) / T[4]
+ADVANCE(1)
+QP.Refresh()
 OUT("nearest: " .. Lines())
+STATE.player.wx, STATE.player.wy = was[1], was[2]
 QP.CycleSort()
 
 -- every zone folded, then open again
