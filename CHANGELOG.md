@@ -1,5 +1,9 @@
 # Zmap
 
+## 1.6.3 — Fix for the "addons causing problems" warning
+
+- **Quest lines on NPC tooltips no longer cause Lua errors.** In some places the game hands the tooltip's unit to addons as a secret value, which the unit functions refuse. Zmap raised an error every time you hovered such a unit, and after enough of them the game warned that your addons were causing problems. The NPC is now read from the tooltip's own data, so the quest lines still show and nothing fails.
+
 ## 1.6.2 — Only the quests you can really take
 
 - **Quest givers check what Questie checks**: a "!" is no longer shown for a quest whose follow-up you already did or carry, a breadcrumb to a quest you already did or carry, a quest that needs a reputation you don't have, one that only appears while another quest is in your log, or one Questie itself hides on the map.
