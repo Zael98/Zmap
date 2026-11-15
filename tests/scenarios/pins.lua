@@ -39,6 +39,20 @@ OUT("share guild: " .. STATE.sent[#STATE.sent].msg)
 -- the guild chat gets the game's map link (everyone sees it, with or without Zmap), with the pin's name
 local said = STATE.said and STATE.said[#STATE.said]
 OUT(("said in guild: %s, channel %s"):format(tostring(said and said[1]), tostring(said and said[2])))
+-- whisper it to one player: the prompt is filled with your target, the link goes as a whisper and the pin as a
+-- whispered add-on message
+STATE.units.target = { name = "Lyra" }
+local isPlayer = UnitIsPlayer
+UnitIsPlayer = function(u) return u == "target" or isPlayer(u) end
+ZNS.Waypoints.Whisper(id)
+OUT("whisper prompt: " .. tostring(ZmapPrompt.edit:GetText()))
+ANSWER("Lyra-Brisa")
+said = STATE.said[#STATE.said]
+local whisper = STATE.sent[#STATE.sent]
+OUT(("whispered: %s, channel %s, to %s; add-on %s to %s"):format(tostring(said[1]), tostring(said[2]),
+    tostring(said[3]), whisper.channel, tostring(whisper.target)))
+UnitIsPlayer = isPlayer
+STATE.units.target = nil
 EVENT("CHAT_MSG_ADDON", "Zmap", "W\t1436\t0.5600\t0.4700\tGrifo\tCerca del faro", "GUILD", "Lyra-Realm")
 local by
 for _, p in pairs(ZNS.db.pins) do if p.by then by = p.by end end

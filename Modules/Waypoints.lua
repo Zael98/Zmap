@@ -225,31 +225,51 @@ function WP.OpenMapLink(link)
 end
 if SetItemRef then hooksecurefunc("SetItemRef", function(link) WP.OpenMapLink(link) end) end
 
--- A pin to your group or guild: its map link said in that chat, which everyone sees and can click (the game's
--- own "share location"), and, for those with Zmap, the pin itself with its name and note (a hidden add-on message:
--- it lands on their map).
-local function CanSay(channel)
+-- A pin to your group, guild or one player (a whisper): its map link said in that chat, which they see and can
+-- click (the game's own "share location"), and, for those with Zmap, the pin itself with its name and note (a
+-- hidden add-on message: it lands on their map).
+local function CanSay(channel, target)
     if channel == "GUILD" then return IsInGuild() end
+    if channel == "WHISPER" then return target ~= nil and target ~= "" end
     return IsInGroup()
 end
 
-function WP.Share(id, channel)
+function WP.Share(id, channel, target)
     local p = Pin(id)
     if not p then return end
+    if channel ~= "WHISPER" then target = nil end
     local said = false
-    local link = CanSay(channel) and MapLink(p.m, p.x, p.y)
+    local link = CanSay(channel, target) and MapLink(p.m, p.x, p.y)
     if link then
         local name = (p.name or ""):gsub("|", "")
         local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
-        said = send ~= nil and pcall(send, name ~= "" and (link .. " " .. name) or link, channel)
+        said = send ~= nil and pcall(send, name ~= "" and (link .. " " .. name) or link, channel, nil, target)
         if said then PlaySound(SOUNDKIT.UI_MAP_WAYPOINT_CHAT_SHARE) end
     end
-    local sent = ns.Comm.Send("W", channel, nil, p.m, ("%.4f"):format(p.x), ("%.4f"):format(p.y), p.name or "", p.note or "")
+    local sent = (channel ~= "WHISPER" or target) and
+        ns.Comm.Send("W", channel, target, p.m, ("%.4f"):format(p.x), ("%.4f"):format(p.y), p.name or "", p.note or "")
     if said or sent then
         ns.Print(L.PIN_SHARED:format(p.name))
     else
         ns.Print(L.CANNOT_SHARE)
     end
+end
+
+-- the player you have targeted, as a whisper goes ("Name-Surname" on Forever); nil if it is not another player
+local function TargetName()
+    if not (UnitExists("target") and UnitIsPlayer("target")) or UnitIsUnit("target", "player") then return end
+    local name, realm = UnitName("target")
+    if not name or (issecretvalue and (issecretvalue(name) or issecretvalue(realm))) then return end
+    return (realm and realm ~= "") and (name .. "-" .. realm) or name
+end
+
+-- asks who (your target filled in) and whispers the pin to them
+function WP.Whisper(id)
+    if not Pin(id) then return end
+    ns.Prompt(L.WHISPER_TO, TargetName(), function(text)
+        local who = (text or ""):gsub("%s", "")
+        if who ~= "" then WP.Share(id, "WHISPER", who) end
+    end)
 end
 
 ns.Comm.On("W", function(sender, channel, m, x, y, name, note)
@@ -315,6 +335,7 @@ local function PinMenu(owner, id)
         local share = root:CreateButton(L.SHARE)
         share:CreateButton(L.SHARE_GROUP, function() WP.Share(id, IsInRaid() and "RAID" or "PARTY") end)
         share:CreateButton(L.SHARE_GUILD, function() WP.Share(id, "GUILD") end)
+        share:CreateButton(L.SHARE_WHISPER, function() WP.Whisper(id) end)
         share:CreateButton(L.SHARE_CHAT, function() WP.LinkMapPoint(p.m, p.x, p.y) end)
         root:CreateDivider()
         root:CreateButton(L.DELETE, function() WP.Remove(id) end)
