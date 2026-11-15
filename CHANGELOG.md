@@ -1,5 +1,9 @@
 # Zmap
 
+## 1.7.1 — Sharing quests only when you can
+
+- **Share in the quest log** (the details button and the right-click menu) now follows the game's own rule: it is only available when you are in a group, the quest can be shared and it is not disabled for this session. Before, Zmap offered to share quests the game does not let you share, and the right-click menu offered it always. When it cannot be shared it shows greyed out, as in Blizzard's quest log.
+
 ## 1.7.0 — Share a pin with anyone
 
 - **Share by whisper**: right-click a pin → Share → By whisper. The menu lists, newest first, your target and the people you whispered or who whispered you lately, Battle.net friends included (even those who play invisible), then your friends online who are playing this same version of WoW, and "Other name..." to type one. They get the game's own map link, the same one its "share location" sends, and anyone can click it with or without Zmap. Players with Zmap also get the pin with its name and note on their map (not over Battle.net).
