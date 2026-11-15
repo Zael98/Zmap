@@ -464,7 +464,20 @@ Enum = {
 ChatFrameUtil = {
     InsertLink = function(text) table.insert(STATE.chat, text) return true end,
     OpenChat = function(text) table.insert(STATE.chat, text) end,
+    -- the game's whisper history: STATE.tells = { { target, chatType }, ... } newest first (as Blizzard's code walks it)
+    GetNextTellTarget = function(target, chatType)
+        local list = STATE.tells or {}
+        if not target or target == "" then return list[1] and list[1][1], list[1] and list[1][2] end
+        for i = 1, #list - 1 do
+            if list[i][1]:upper() == target:upper() and list[i][2] == chatType then return list[i + 1][1], list[i + 1][2] end
+        end
+        return list[1] and list[1][1], list[1] and list[1][2]
+    end,
+    GetLastToldTarget = function() return STATE.lastTold and STATE.lastTold[1], STATE.lastTold and STATE.lastTold[2] end,
 }
+function BNet_GetBNetIDAccount(name)
+    for _, f in ipairs(STATE.bnFriends or {}) do if f.accountName == name then return f.bnetAccountID end end
+end
 
 -- the right-click menus: the scenario reads what they offer and picks an entry by its text
 local Description = {}
@@ -588,6 +601,11 @@ C_BattleNet = {
     GetAccountInfoByID = function(id)
         for _, f in ipairs(STATE.bnFriends or {}) do if f.bnetAccountID == id then return f end end
     end,
+}
+-- game friends: STATE.friends = { { name, connected } }
+C_FriendList = {
+    GetNumFriends = function() return #(STATE.friends or {}) end,
+    GetFriendInfoByIndex = function(i) return (STATE.friends or {})[i] end,
 }
 function BNSendWhisper(id, text) STATE.said = STATE.said or {} table.insert(STATE.said, { text, "BN_WHISPER", id }) end
 -- chat messages the addon says: STATE.said = { { text, channel, target }, ... }

@@ -71,6 +71,14 @@ ZNS.Waypoints.Whisper(id, "bn:Ana#2101")
 said = STATE.said[#STATE.said]
 OUT(("bnet whispered: %s, channel %s, to %s; add-on messages %d"):format(tostring(said[1]), tostring(said[2]),
     tostring(said[3]), #STATE.sent - sentBefore))
+-- the game's own whisper history (whispers from before Zmap was listening), Battle.net ones by account name
+ZNS.db.whispers = nil
+STATE.bnFriends[3] = { bnetAccountID = 11, accountName = "Bea", battleTag = "Bea#77", gameAccountInfo = { isOnline = true } }
+STATE.tells = { { "Garrosh-Grito", "WHISPER" }, { "Bea", "BN_WHISPER" }, { "Jaina-Mar", "WHISPER" } }
+STATE.lastTold = { "Varian-Rey", "WHISPER" }
+STATE.friends = { { name = "Anduin-Luz", connected = true }, { name = "Tyrande-Luna", connected = false } }
+OUT("whisper names from the game: " .. Who())
+STATE.tells, STATE.lastTold, STATE.friends = nil, nil, nil
 STATE.bnFriends = nil
 UnitIsPlayer = isPlayer
 STATE.units.target = nil

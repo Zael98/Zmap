@@ -291,17 +291,46 @@ local function BNFriend(tag)
     end
 end
 
-local function RememberBN(accountID)
-    if not accountID or Secret(accountID) or not (C_BattleNet and C_BattleNet.GetAccountInfoByID) then return end
+-- "bn:BattleTag" for a Battle.net friend, by account id or else by the name the chat shows
+local function BNKey(accountID, name)
+    if not (C_BattleNet and C_BattleNet.GetAccountInfoByID) then return end
+    if (not accountID or Secret(accountID)) and name and not Secret(name) and BNet_GetBNetIDAccount then
+        accountID = BNet_GetBNetIDAccount(name)
+    end
+    if not accountID or Secret(accountID) then return end
     local info = C_BattleNet.GetAccountInfoByID(accountID)
     local tag = info and info.battleTag
-    if tag and not Secret(tag) and tag ~= "" then Remember("bn:" .. tag) end
+    if tag and not Secret(tag) and tag ~= "" then return "bn:" .. tag end
 end
 
 ns.On("CHAT_MSG_WHISPER", function(_, sender) Remember(Clean(sender)) end)
 ns.On("CHAT_MSG_WHISPER_INFORM", function(_, target) Remember(Clean(target)) end)
-ns.On("CHAT_MSG_BN_WHISPER", function(...) RememberBN((select(13, ...))) end)
-ns.On("CHAT_MSG_BN_WHISPER_INFORM", function(...) RememberBN((select(13, ...))) end)
+ns.On("CHAT_MSG_BN_WHISPER", function(_, name, ...) Remember(BNKey((select(11, ...)), name)) end)
+ns.On("CHAT_MSG_BN_WHISPER_INFORM", function(_, name, ...) Remember(BNKey((select(11, ...)), name)) end)
+
+-- the game's own list of whom you whispered lately (the one Tab walks when you reply), newest first
+local function GameTells()
+    local out = {}
+    local U = ChatFrameUtil
+    if not (U and U.GetNextTellTarget) then return out end
+    local function Add(target, kind)
+        if not target or Secret(target) or Secret(kind) or target == "" then return end
+        if kind == "BN_WHISPER" then out[#out + 1] = BNKey(nil, target) or false
+        else out[#out + 1] = Clean(target) or false end
+    end
+    if U.GetLastToldTarget then Add(U.GetLastToldTarget()) end
+    local seen, target, kind = {}, nil, nil
+    for _ = 1, 20 do
+        local ok, t, k = pcall(U.GetNextTellTarget, target, kind)
+        if not ok or not t or t == "" or Secret(t) or Secret(k) then break end
+        local key = tostring(k) .. ":" .. t:upper()
+        if seen[key] then break end
+        seen[key] = true
+        Add(t, k)
+        target, kind = t, k
+    end
+    return out
+end
 
 -- the player you have targeted, as a whisper goes ("Name-Surname" on Forever); nil if it is not another player
 local function TargetName()
@@ -311,8 +340,8 @@ local function TargetName()
     return Clean((realm and realm ~= "") and (name .. "-" .. realm) or name)
 end
 
--- whom the menu offers: { who = what WP.Whisper takes, label = what it shows }; Battle.net friends only while
--- they are online
+-- whom the menu offers: { who = what WP.Whisper takes, label = what it shows }: your target, whom you whispered
+-- lately (the game's list, then Zmap's), then your friends online; Battle.net friends only while online
 function WP.WhisperNames()
     local out, seen = {}, {}
     local function Add(who)
@@ -329,7 +358,23 @@ function WP.WhisperNames()
         out[#out + 1] = { who = who, label = label }
     end
     Add(TargetName())
+    for _, who in ipairs(GameTells()) do if who then Add(who) end end
     for _, who in ipairs(ns.db.whispers or {}) do Add(who) end
+    -- then your friends online: Battle.net and in game
+    if BNGetNumFriends and C_BattleNet and C_BattleNet.GetFriendAccountInfo then
+        for i = 1, (BNGetNumFriends()) or 0 do
+            local info = C_BattleNet.GetFriendAccountInfo(i)
+            local tag = info and info.battleTag
+            if tag and not Secret(tag) and info.gameAccountInfo and info.gameAccountInfo.isOnline then Add("bn:" .. tag) end
+        end
+    end
+    if C_FriendList and C_FriendList.GetNumFriends and C_FriendList.GetFriendInfoByIndex then
+        for i = 1, (C_FriendList.GetNumFriends()) or 0 do
+            local info = C_FriendList.GetFriendInfoByIndex(i)
+            if info and info.connected then Add(Clean(info.name)) end
+        end
+    end
+    while #out > 20 do table.remove(out) end
     return out
 end
 
