@@ -211,7 +211,10 @@ function Widget:GetText() return self.text end
 function Widget:SetFormattedText(f, ...) self.text = f:format(...) end
 function Widget:SetTextColor(r, g, b) self.textColor = self.textColor or {}; self.textColor[1], self.textColor[2], self.textColor[3] = r, g, b end
 -- buttons, edit boxes, check buttons, status bars
-function Widget:Click(button) if self.scripts.OnClick then self.scripts.OnClick(self, button or "LeftButton") end end
+function Widget:SetEnabled(on) self.disabled = not on end
+function Widget:IsEnabled() return not self.disabled end
+-- (a disabled button does not answer clicks, as in the game)
+function Widget:Click(button) if self.scripts.OnClick and not self.disabled then self.scripts.OnClick(self, button or "LeftButton") end end
 function Widget:SetChecked(v) self.checked = v and true or false end
 function Widget:GetChecked() return self.checked end
 function Widget:SetFocus() self.focus = true; if self.scripts.OnEditFocusGained then self.scripts.OnEditFocusGained(self) end end
@@ -488,6 +491,7 @@ function Description:CreateButton(t, fn) local d = Desc(t, "button", fn) table.i
 function Description:CreateCheckbox(t, get, set) local d = Desc(t, "check", set, get) table.insert(self.items, d) return d end
 function Description:CreateRadio(t, get, set) local d = Desc(t, "radio", set, get) table.insert(self.items, d) return d end
 function Description:CreateDivider() end
+function Description:SetEnabled(on) self.disabled = not on end
 MenuUtil = {
     CreateContextMenu = function(owner, gen)
         local root = Desc("root", "root")
@@ -687,7 +691,7 @@ C_QuestLog = {
     GetQuestWatchType = function(id) return (STATE.watched or {})[id] and 0 or nil end,
     AddQuestWatch = function(id) STATE.watched = STATE.watched or {}; STATE.watched[id] = true end,
     RemoveQuestWatch = function(id) if STATE.watched then STATE.watched[id] = nil end end,
-    IsPushableQuest = function() return true end,
+    IsPushableQuest = function(id) return not (STATE.notPushable and STATE.notPushable[id]) end,
     CanAbandonQuest = function() return true end,
     SetAbandonQuest = function() STATE.abandoning = STATE.selectedQuest end,
 }

@@ -467,7 +467,7 @@ local function ShowDetails(id)
     -- the buttons: back, go there, track, share, abandon
     local watched = C_QuestLog.GetQuestWatchType and C_QuestLog.GetQuestWatchType(id) ~= nil
     buttons.track:SetText(watched and G("UNTRACK_QUEST_ABBREV", "Untrack") or G("TRACK_QUEST_ABBREV", "Track"))
-    buttons.share:SetEnabled(not C_QuestLog.IsPushableQuest or C_QuestLog.IsPushableQuest(id))
+    buttons.share:SetEnabled(QP.CanShare(id))
     buttons.abandon:SetEnabled(not C_QuestLog.CanAbandonQuest or C_QuestLog.CanAbandonQuest(id))
     buttons.go:SetEnabled(ns.QuestMap.Next(id) ~= nil)
     return y
@@ -710,8 +710,17 @@ function QP.WatchAll(quests, on)
     Paint()
 end
 
+-- whether a quest can be shared now, by Blizzard's own rule (its quest log): the quest can be shared, you are in a
+-- group, and it is not disabled for this session
+function QP.CanShare(id)
+    if not IsInGroup() then return false end
+    if C_QuestLog.IsQuestDisabledForSession and C_QuestLog.IsQuestDisabledForSession(id) then return false end
+    return not C_QuestLog.IsPushableQuest or C_QuestLog.IsPushableQuest(id) == true
+end
+
 -- shared with your group, abandoned: as Blizzard's quest log does it (its own confirmation)
 function QP.Share(id)
+    if not QP.CanShare(id) then return end
     if QuestMapQuestOptions_ShareQuest then
         QuestMapQuestOptions_ShareQuest(id)
     else
@@ -741,7 +750,8 @@ function QP.Menu(owner, id)
         local watched = C_QuestLog.GetQuestWatchType(id) ~= nil
         root:CreateButton(watched and G("UNTRACK_QUEST", "Untrack Quest") or G("TRACK_QUEST", "Track Quest"), function() QP.ToggleWatch(id) end)
         if GetQuestLink then root:CreateButton(L.QUEST_LINK, function() LinkQuest(id) end) end
-        root:CreateButton(G("SHARE_QUEST", "Share Quest"), function() QP.Share(id) end)
+        local share = root:CreateButton(G("SHARE_QUEST", "Share Quest"), function() QP.Share(id) end)
+        if not QP.CanShare(id) and share.SetEnabled then share:SetEnabled(false) end
         root:CreateButton(G("ABANDON_QUEST_ABBREV", "Abandon"), function() QP.Abandon(id) end)
     end)
 end

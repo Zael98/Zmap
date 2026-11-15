@@ -45,8 +45,27 @@ lines = ZNS.QuestPanel.Lines()
 OUT(("details of %s: %s; map moved %s"):format(tostring(quest), table.concat(lines, " | "), tostring(l2 ~= l or t2 ~= t)))
 ButtonCalled(ZNS.L.QUEST_GO):Click()
 OUT("go there: arrow " .. tostring(ZNS.Arrow.Target() ~= nil))
-ButtonCalled(SHARE_QUEST_ABBREV or "Share"):Click()
+-- Share, by Blizzard's rule: only in a group and for a quest that can be shared
+local shareButton = ButtonCalled(SHARE_QUEST_ABBREV or "Share")
+local function Shown33() ZNS.QuestPanel.Show(33) FRAMES(1) end
+STATE.shared = nil
+Shown33()
+shareButton:Click()
+OUT(("share alone: enabled %s, shared %s"):format(tostring(shareButton:IsEnabled()), tostring(STATE.shared)))
+STATE.group = { { name = "Lyra", class = "MAGE" } }
+STATE.notPushable = { [33] = true }
+Shown33()
+shareButton:Click()
+OUT(("share not shareable: enabled %s, shared %s"):format(tostring(shareButton:IsEnabled()), tostring(STATE.shared)))
+local menuShare
+ZNS.QuestPanel.Menu(UIParent, 33)
+for _, it in ipairs(STATE.menu.items) do if it.text == (SHARE_QUEST or "Share Quest") then menuShare = it end end
+OUT("menu share not shareable: disabled " .. tostring(menuShare and menuShare.disabled))
+STATE.notPushable = nil
+Shown33()
+shareButton:Click()
 ButtonCalled(ABANDON_QUEST_ABBREV or "Abandon"):Click()
+STATE.group = {}
 OUT(("share: index %s; abandon: %s %s, asked %s"):format(tostring(STATE.shared), tostring(STATE.abandoning),
     tostring(STATE.popup and STATE.popup[1]), tostring(STATE.popup and STATE.popup[2])))
 ButtonCalled(BACK or "Back"):Click()
