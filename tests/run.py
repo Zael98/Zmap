@@ -36,6 +36,7 @@ CHECKS = {
                     r"^whispered: \|cffffff00\|Hworldmap:1429:\d+:\d+\|h\[Map Pin Location\]\|h\|r, channel WHISPER, to Lyra-Brisa; add-on WHISPER to Lyra-Brisa$",
                     r"^whisper names with bnet: Thrall, Off \(Battle\.net\), Ana \(Battle\.net\), Lyra, Korra$",
                     r"^bnet whispered: \|cffffff00\|Hworldmap:1429:\d+:\d+\|h\[Map Pin Location\]\|h\|r, channel BN_WHISPER, to 7; add-on messages 0$",
+                    r"^bnet invisible: channel BN_WHISPER, to 9$",
                     r"^whisper names from the game: Thrall, Varian-Rey, Garrosh-Grito, bn:Bea#77, Jaina-Mar, Anduin-Luz, bn:Ana#2101$",
                     r"^whisper menu: (Recientes|Recent) \| Thrall \| Varian \| Garrosh \| Bea \(Battle\.net\) \| Jaina \| (Amigos conectados|Friends online) \| Anduin \| Ana \(Battle\.net\) \| (Otro nombre|Other name)\.\.\.$",
                     r"^received: pins 2, by Lyra$",

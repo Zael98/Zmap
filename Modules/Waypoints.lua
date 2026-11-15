@@ -348,8 +348,8 @@ local function BNLabel(info, tag)
 end
 
 -- whom the menu offers: { who = what WP.Whisper takes, label = what it shows, recent = true for your target and
--- whom you whispered lately (newest first: the game's list, then Zmap's), offline = a Battle.net friend who is not
--- on now }, then your friends online (Battle.net friends playing WoW first, then by name)
+-- whom you whispered lately (newest first: the game's list, then Zmap's), even Battle.net friends who look offline
+-- (they may play invisible) }, then your friends online (Battle.net friends playing WoW first, then by name)
 function WP.WhisperNames()
     local out, seen = {}, {}
     local function Add(who, recent)
@@ -360,7 +360,7 @@ function WP.WhisperNames()
             local info = BNFriend(tag)
             if not info then return end   -- (no longer a friend)
             entry.label = BNLabel(info, tag)
-            entry.offline = not BNOnline(info)
+            entry.offline = not BNOnline(info)   -- (kept among the recent ones: they may play invisible)
             if entry.offline and not recent then return end
             entry.wow = info.gameAccountInfo and info.gameAccountInfo.clientProgram == (BNET_CLIENT_WOW or "WoW")
         end
@@ -403,14 +403,14 @@ function WP.Whisper(id, who)
     if not Pin(id) then return end
     local tag = who and who:match("^bn:(.+)$")
     if tag then
+        -- (sent even when they look offline: someone who plays invisible gets it; if they are really gone, the game
+        -- says so itself)
         local info = BNFriend(tag)
-        if not info then
-            ns.Print(L.CANNOT_SHARE)
-        elseif not BNOnline(info) then
-            ns.Print(L.WHISPER_OFFLINE:format(BNLabel(info, tag)))
-        else
+        if info then
             WP.Share(id, "BN_WHISPER", info.bnetAccountID)
             Remember(who)
+        else
+            ns.Print(L.CANNOT_SHARE)
         end
         return
     end
@@ -497,9 +497,7 @@ local function PinMenu(owner, id)
                 whisper:CreateDivider()
                 whisper:CreateTitle(L.WHISPER_FRIENDS)
             end
-            local label = t.offline and ("|cff808080" .. t.label:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-                .. " · " .. L.WHISPER_OFFLINE_SHORT .. "|r") or t.label
-            whisper:CreateButton(label, function() WP.Whisper(id, t.who) end)
+            whisper:CreateButton(t.label, function() WP.Whisper(id, t.who) end)
         end
         whisper:CreateDivider()
         whisper:CreateButton(L.WHISPER_OTHER, function() WP.Whisper(id) end)

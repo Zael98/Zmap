@@ -71,6 +71,10 @@ ZNS.Waypoints.Whisper(id, "bn:Ana#2101")
 said = STATE.said[#STATE.said]
 OUT(("bnet whispered: %s, channel %s, to %s; add-on messages %d"):format(tostring(said[1]), tostring(said[2]),
     tostring(said[3]), #STATE.sent - sentBefore))
+-- one who looks offline (maybe playing invisible) still gets it
+ZNS.Waypoints.Whisper(id, "bn:Off#1")
+said = STATE.said[#STATE.said]
+OUT(("bnet invisible: channel %s, to %s"):format(tostring(said[2]), tostring(said[3])))
 -- the game's own whisper history (whispers from before Zmap was listening), Battle.net ones by account name
 ZNS.db.whispers = nil
 STATE.bnFriends[3] = { bnetAccountID = 11, accountName = "Bea", battleTag = "Bea#77", gameAccountInfo = { isOnline = true } }
