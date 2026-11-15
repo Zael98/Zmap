@@ -341,6 +341,13 @@ local function TargetName()
 end
 
 local function BNOnline(info) return info and info.gameAccountInfo and info.gameAccountInfo.isOnline end
+-- playing this same version of WoW (Forever), where the map link works
+local function BNHere(info)
+    local game = info and info.gameAccountInfo
+    if not (game and game.isOnline and game.clientProgram == (BNET_CLIENT_WOW or "WoW")) then return false end
+    if WOW_PROJECT_ID and game.wowProjectID then return game.wowProjectID == WOW_PROJECT_ID end
+    return true
+end
 local function BNLabel(info, tag)
     local name = info and info.accountName
     if not name or Secret(name) or name == "" then name = tag:gsub("#%d+$", "") end
@@ -349,7 +356,7 @@ end
 
 -- whom the menu offers: { who = what WP.Whisper takes, label = what it shows, recent = true for your target and
 -- whom you whispered lately (newest first: the game's list, then Zmap's), even Battle.net friends who look offline
--- (they may play invisible) }, then your friends online (Battle.net friends playing WoW first, then by name)
+-- (they may play invisible) }, then your friends playing this same version of WoW, by name (in-game friends always are)
 function WP.WhisperNames()
     local out, seen = {}, {}
     local function Add(who, recent)
@@ -362,7 +369,6 @@ function WP.WhisperNames()
             entry.label = BNLabel(info, tag)
             entry.offline = not BNOnline(info)   -- (kept among the recent ones: they may play invisible)
             if entry.offline and not recent then return end
-            entry.wow = info.gameAccountInfo and info.gameAccountInfo.clientProgram == (BNET_CLIENT_WOW or "WoW")
         end
         seen[who:lower()] = true
         out[#out + 1] = entry
@@ -375,23 +381,20 @@ function WP.WhisperNames()
         for i = 1, (BNGetNumFriends()) or 0 do
             local info = C_BattleNet.GetFriendAccountInfo(i)
             local tag = info and info.battleTag
-            if tag and not Secret(tag) and BNOnline(info) then Add("bn:" .. tag) end
+            if tag and not Secret(tag) and BNHere(info) then Add("bn:" .. tag) end
         end
     end
     if C_FriendList and C_FriendList.GetNumFriends and C_FriendList.GetFriendInfoByIndex then
         for i = 1, (C_FriendList.GetNumFriends()) or 0 do
             local info = C_FriendList.GetFriendInfoByIndex(i)
             if info and info.connected then
-                local name = Clean(info.name)
-                Add(name)
-                if name and out[#out].who == name then out[#out].wow = true end
+                Add(Clean(info.name))
             end
         end
     end
     local friends = {}
     for i = first + 1, #out do friends[#friends + 1] = out[i] out[i] = nil end
     table.sort(friends, function(x, y)
-        if (x.wow or false) ~= (y.wow or false) then return x.wow == true end
         return x.label:lower() < y.label:lower()
     end)
     for i = 1, math.min(#friends, 25) do out[#out + 1] = friends[i] end

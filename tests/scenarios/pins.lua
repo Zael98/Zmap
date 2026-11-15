@@ -78,6 +78,13 @@ OUT(("bnet invisible: channel %s, to %s"):format(tostring(said[2]), tostring(sai
 -- the game's own whisper history (whispers from before Zmap was listening), Battle.net ones by account name
 ZNS.db.whispers = nil
 STATE.bnFriends[3] = { bnetAccountID = 11, accountName = "Bea", battleTag = "Bea#77", gameAccountInfo = { isOnline = true } }
+-- friends online: only those playing this same WoW (Forever); not retail, not the Battle.net app alone
+WOW_PROJECT_ID = 99
+STATE.bnFriends[1].gameAccountInfo = { isOnline = true, clientProgram = "WoW", wowProjectID = 99 }
+STATE.bnFriends[4] = { bnetAccountID = 12, accountName = "Retail", battleTag = "Retail#5",
+    gameAccountInfo = { isOnline = true, clientProgram = "WoW", wowProjectID = 1 } }
+STATE.bnFriends[5] = { bnetAccountID = 13, accountName = "App", battleTag = "App#6",
+    gameAccountInfo = { isOnline = true, clientProgram = "App" } }
 STATE.tells = { { "Garrosh-Grito", "WHISPER" }, { "Bea", "BN_WHISPER" }, { "Jaina-Mar", "WHISPER" } }
 STATE.lastTold = { "Varian-Rey", "WHISPER" }
 STATE.friends = { { name = "Anduin-Luz", connected = true }, { name = "Tyrande-Luna", connected = false } }
@@ -89,6 +96,7 @@ pinFrames[1].scripts.OnClick(pinFrames[1], "RightButton")
 local menuText = MENU_TEXTS(Child(Child(STATE.menu, ZNS.L.SHARE), ZNS.L.SHARE_WHISPER))
 OUT("whisper menu: " .. menuText:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 STATE.tells, STATE.lastTold, STATE.friends = nil, nil, nil
+WOW_PROJECT_ID = nil
 STATE.bnFriends = nil
 UnitIsPlayer = isPlayer
 STATE.units.target = nil
