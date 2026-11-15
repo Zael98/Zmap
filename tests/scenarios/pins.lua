@@ -36,6 +36,9 @@ OUT(("arrived: active %s, arrow hidden %s, temp pin gone %s"):format(tostring(ZN
 -- share with the guild, receive from someone
 ZNS.Waypoints.Share(id, "GUILD")
 OUT("share guild: " .. STATE.sent[#STATE.sent].msg)
+-- the guild chat gets the game's map link (everyone sees it, with or without Zmap), with the pin's name
+local said = STATE.said and STATE.said[#STATE.said]
+OUT(("said in guild: %s, channel %s"):format(tostring(said and said[1]), tostring(said and said[2])))
 EVENT("CHAT_MSG_ADDON", "Zmap", "W\t1436\t0.5600\t0.4700\tGrifo\tCerca del faro", "GUILD", "Lyra-Realm")
 local by
 for _, p in pairs(ZNS.db.pins) do if p.by then by = p.by end end

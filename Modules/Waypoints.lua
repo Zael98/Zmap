@@ -177,18 +177,24 @@ local function InsertInChat(text)
     if not (insert and insert(text)) and open then open(text) end
 end
 
--- the game's map link for a point, in the chat box (everyone can click it, with or without Zmap)
+-- the game's map link for a point (the one its "share location" makes: everyone can click it, with or without
+-- Zmap); nil where the game sets no waypoint. Your own waypoint is put back as it was.
+local function MapLink(mapID, x, y)
+    if not (C_Map.CanSetUserWaypointOnMap and C_Map.CanSetUserWaypointOnMap(mapID) and UiMapPoint) then return end
+    local previous = C_Map.GetUserWaypoint()
+    C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
+    local link = C_Map.GetUserWaypointHyperlink()
+    if previous then C_Map.SetUserWaypoint(previous) else C_Map.ClearUserWaypoint() end
+    return link
+end
+
+-- that link in the chat box, to send it where you like
 function WP.LinkMapPoint(mapID, x, y)
-    if C_Map.CanSetUserWaypointOnMap and C_Map.CanSetUserWaypointOnMap(mapID) and UiMapPoint then
-        local previous = C_Map.GetUserWaypoint()
-        C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
-        local link = C_Map.GetUserWaypointHyperlink()
-        if previous then C_Map.SetUserWaypoint(previous) else C_Map.ClearUserWaypoint() end
-        if link then
-            InsertInChat(link)
-            PlaySound(SOUNDKIT.UI_MAP_WAYPOINT_CHAT_SHARE)
-            return
-        end
+    local link = MapLink(mapID, x, y)
+    if link then
+        InsertInChat(link)
+        PlaySound(SOUNDKIT.UI_MAP_WAYPOINT_CHAT_SHARE)
+        return
     end
     InsertInChat(("%s (%s)"):format(Geo.Name(mapID), ns.Coords(x, y)))
 end
@@ -219,10 +225,27 @@ function WP.OpenMapLink(link)
 end
 if SetItemRef then hooksecurefunc("SetItemRef", function(link) WP.OpenMapLink(link) end) end
 
+-- A pin to your group or guild: its map link said in that chat, which everyone sees and can click (the game's
+-- own "share location"), and, for those with Zmap, the pin itself with its name and note (a hidden add-on message:
+-- it lands on their map).
+local function CanSay(channel)
+    if channel == "GUILD" then return IsInGuild() end
+    return IsInGroup()
+end
+
 function WP.Share(id, channel)
     local p = Pin(id)
     if not p then return end
-    if ns.Comm.Send("W", channel, nil, p.m, ("%.4f"):format(p.x), ("%.4f"):format(p.y), p.name or "", p.note or "") then
+    local said = false
+    local link = CanSay(channel) and MapLink(p.m, p.x, p.y)
+    if link then
+        local name = (p.name or ""):gsub("|", "")
+        local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
+        said = send ~= nil and pcall(send, name ~= "" and (link .. " " .. name) or link, channel)
+        if said then PlaySound(SOUNDKIT.UI_MAP_WAYPOINT_CHAT_SHARE) end
+    end
+    local sent = ns.Comm.Send("W", channel, nil, p.m, ("%.4f"):format(p.x), ("%.4f"):format(p.y), p.name or "", p.note or "")
+    if said or sent then
         ns.Print(L.PIN_SHARED:format(p.name))
     else
         ns.Print(L.CANNOT_SHARE)

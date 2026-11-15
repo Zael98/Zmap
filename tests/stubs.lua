@@ -581,6 +581,8 @@ function C_Map.CanSetUserWaypointOnMap() return true end
 function C_Map.SetUserWaypoint(p) STATE.waypoint = p return true end
 function C_Map.GetUserWaypoint() return STATE.waypoint end
 function C_Map.ClearUserWaypoint() STATE.waypoint = nil end
+-- chat messages the addon says: STATE.said = { { text, channel }, ... }
+function SendChatMessage(text, channel) STATE.said = STATE.said or {} table.insert(STATE.said, { text, channel }) end
 function C_Map.GetUserWaypointHyperlink()
     local p = STATE.waypoint
     return p and ("|cffffff00|Hworldmap:%d:%d:%d|h[Map Pin Location]|h|r"):format(p.uiMapID, p.position.x * 10000, p.position.y * 10000)
