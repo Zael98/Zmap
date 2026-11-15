@@ -1,5 +1,10 @@
 # Zmap
 
+## 1.7.0 — Share a pin with anyone
+
+- **Share by whisper**: right-click a pin → Share → By whisper. The menu lists, newest first, your target and the people you whispered or who whispered you lately, Battle.net friends included (even those who play invisible), then your friends online who are playing this same version of WoW, and "Other name..." to type one. They get the game's own map link, the same one its "share location" sends, and anyone can click it with or without Zmap. Players with Zmap also get the pin with its name and note on their map (not over Battle.net).
+- **Sharing with your group or guild now says the map link in that chat**, so everyone sees it and can click it, not only Zmap users. Only the link is said, as the game does; the pin's name and note still reach Zmap users on their map.
+
 ## 1.6.3 — Fix for the "addons causing problems" warning
 
 - **Quest lines on NPC tooltips no longer cause Lua errors.** In some places the game hands the tooltip's unit to addons as a secret value, which the unit functions refuse. Zmap raised an error every time you hovered such a unit, and after enough of them the game warned that your addons were causing problems. The NPC is now read from the tooltip's own data, so the quest lines still show and nothing fails.
