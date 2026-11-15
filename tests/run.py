@@ -34,6 +34,8 @@ CHECKS = {
                     r"^share guild: W\t1429\t", r"^said in guild: \|cffffff00\|Hworldmap:1429:\d+:\d+\|h\[Map Pin Location\]\|h\|r, channel GUILD$",
                     r"^whisper names: Thrall, Lyra-Brisa, Korra-Nube$",
                     r"^whispered: \|cffffff00\|Hworldmap:1429:\d+:\d+\|h\[Map Pin Location\]\|h\|r, channel WHISPER, to Lyra-Brisa; add-on WHISPER to Lyra-Brisa$",
+                    r"^whisper names with bnet: Thrall, Ana \(Battle\.net\), Lyra, Korra$",
+                    r"^bnet whispered: \|cffffff00\|Hworldmap:1429:\d+:\d+\|h\[Map Pin Location\]\|h\|r, channel BN_WHISPER, to 7; add-on messages 0$",
                     r"^received: pins 2, by Lyra$",
                     r"^menu: .*(Ir hasta allí|Go there).*", r"^link in chat: \|cffffff00\|Hworldmap:1429",
                     r"^way command: pin true, navigating true$", r"^delete all: pins 0$",

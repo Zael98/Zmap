@@ -47,12 +47,31 @@ EVENT("CHAT_MSG_WHISPER", "eco", "Domi")
 STATE.units.target = { name = "Thrall" }
 local isPlayer = UnitIsPlayer
 UnitIsPlayer = function(u) return u == "target" or isPlayer(u) end
-OUT("whisper names: " .. table.concat(ZNS.Waypoints.WhisperNames(), ", "))
+local function Who()
+    local out = {}
+    for _, t in ipairs(ZNS.Waypoints.WhisperNames()) do out[#out + 1] = t.who end
+    return table.concat(out, ", ")
+end
+OUT("whisper names: " .. Who())
 ZNS.Waypoints.Whisper(id, "Lyra-Brisa")
 said = STATE.said[#STATE.said]
 local whisper = STATE.sent[#STATE.sent]
 OUT(("whispered: %s, channel %s, to %s; add-on %s to %s"):format(tostring(said[1]), tostring(said[2]),
     tostring(said[3]), whisper.channel, tostring(whisper.target)))
+-- Battle.net: a friend who whispered you is offered while online, by account name, and gets a Battle.net whisper
+STATE.bnFriends = { { bnetAccountID = 7, accountName = "Ana", battleTag = "Ana#2101", gameAccountInfo = { isOnline = true } },
+    { bnetAccountID = 9, accountName = "Off", battleTag = "Off#1", gameAccountInfo = { isOnline = false } } }
+EVENT("CHAT_MSG_BN_WHISPER", "hola", "Ana", "", "", "", "", 0, 0, "", 0, 1, nil, 7)
+EVENT("CHAT_MSG_BN_WHISPER_INFORM", "hey", "Off", "", "", "", "", 0, 0, "", 0, 2, nil, 9)
+local labels = {}
+for _, t in ipairs(ZNS.Waypoints.WhisperNames()) do labels[#labels + 1] = t.label:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") end
+OUT("whisper names with bnet: " .. table.concat(labels, ", "))
+local sentBefore = #STATE.sent
+ZNS.Waypoints.Whisper(id, "bn:Ana#2101")
+said = STATE.said[#STATE.said]
+OUT(("bnet whispered: %s, channel %s, to %s; add-on messages %d"):format(tostring(said[1]), tostring(said[2]),
+    tostring(said[3]), #STATE.sent - sentBefore))
+STATE.bnFriends = nil
 UnitIsPlayer = isPlayer
 STATE.units.target = nil
 EVENT("CHAT_MSG_ADDON", "Zmap", "W\t1436\t0.5600\t0.4700\tGrifo\tCerca del faro", "GUILD", "Lyra-Realm")

@@ -230,22 +230,27 @@ if SetItemRef then hooksecurefunc("SetItemRef", function(link) WP.OpenMapLink(li
 -- note (a hidden add-on message: it lands on their map).
 local function CanSay(channel, target)
     if channel == "GUILD" then return IsInGuild() end
-    if channel == "WHISPER" then return target ~= nil and target ~= "" end
+    if channel == "WHISPER" or channel == "BN_WHISPER" then return target ~= nil and target ~= "" end
     return IsInGroup()
 end
 
 function WP.Share(id, channel, target)
     local p = Pin(id)
     if not p then return end
-    if channel ~= "WHISPER" then target = nil end
+    if channel ~= "WHISPER" and channel ~= "BN_WHISPER" then target = nil end
     local said = false
     local link = CanSay(channel, target) and MapLink(p.m, p.x, p.y)
     if link then
-        local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
-        said = send ~= nil and pcall(send, link, channel, nil, target)
+        if channel == "BN_WHISPER" then   -- (a Battle.net friend: the account id)
+            local send = BNSendWhisper or (C_BattleNet and C_BattleNet.SendWhisper)
+            said = send ~= nil and pcall(send, target, link)
+        else
+            local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
+            said = send ~= nil and pcall(send, link, channel, nil, target)
+        end
         if said then PlaySound(SOUNDKIT.UI_MAP_WAYPOINT_CHAT_SHARE) end
     end
-    local sent = (channel ~= "WHISPER" or target) and
+    local sent = channel ~= "BN_WHISPER" and (channel ~= "WHISPER" or target) and
         ns.Comm.Send("W", channel, target, p.m, ("%.4f"):format(p.x), ("%.4f"):format(p.y), p.name or "", p.note or "")
     if said or sent then
         ns.Print(L.PIN_SHARED:format(p.name))
@@ -255,48 +260,89 @@ function WP.Share(id, channel, target)
 end
 
 -- Whispering a pin: the people you whispered or who whispered you lately (newest first, kept between sessions),
--- with your target on top, as the menu offers them; "Other..." asks for a name.
+-- in game ("Name-Surname") or on Battle.net ("bn:" .. BattleTag), with your target on top, as the menu offers
+-- them; "Other..." asks for a name.
 local RECENT = 8
 
+local function Secret(v) return issecretvalue and v ~= nil and issecretvalue(v) end
+
 local function Clean(name)
-    if not name or (issecretvalue and issecretvalue(name)) then return end
+    if not name or Secret(name) then return end
     name = tostring(name):gsub("%s", "")
     if name == "" or ns.IsMe(name) then return end
     return name
 end
 
-local function Remember(name)
-    name = Clean(name)
-    if not (name and ns.db) then return end
+local function Remember(who)
+    if not (who and ns.db) then return end
     local list = ns.db.whispers or {}
-    for i = #list, 1, -1 do if list[i]:lower() == name:lower() then table.remove(list, i) end end
-    table.insert(list, 1, name)
+    for i = #list, 1, -1 do if list[i]:lower() == who:lower() then table.remove(list, i) end end
+    table.insert(list, 1, who)
     while #list > RECENT do table.remove(list) end
     ns.db.whispers = list
 end
-ns.On("CHAT_MSG_WHISPER", function(_, sender) Remember(sender) end)
-ns.On("CHAT_MSG_WHISPER_INFORM", function(_, target) Remember(target) end)
+
+-- a Battle.net friend by BattleTag (their account id changes between sessions; the tag does not)
+local function BNFriend(tag)
+    if not (BNGetNumFriends and C_BattleNet and C_BattleNet.GetFriendAccountInfo) then return end
+    for i = 1, (BNGetNumFriends()) or 0 do
+        local info = C_BattleNet.GetFriendAccountInfo(i)
+        if info and info.battleTag == tag then return info end
+    end
+end
+
+local function RememberBN(accountID)
+    if not accountID or Secret(accountID) or not (C_BattleNet and C_BattleNet.GetAccountInfoByID) then return end
+    local info = C_BattleNet.GetAccountInfoByID(accountID)
+    local tag = info and info.battleTag
+    if tag and not Secret(tag) and tag ~= "" then Remember("bn:" .. tag) end
+end
+
+ns.On("CHAT_MSG_WHISPER", function(_, sender) Remember(Clean(sender)) end)
+ns.On("CHAT_MSG_WHISPER_INFORM", function(_, target) Remember(Clean(target)) end)
+ns.On("CHAT_MSG_BN_WHISPER", function(...) RememberBN((select(13, ...))) end)
+ns.On("CHAT_MSG_BN_WHISPER_INFORM", function(...) RememberBN((select(13, ...))) end)
 
 -- the player you have targeted, as a whisper goes ("Name-Surname" on Forever); nil if it is not another player
 local function TargetName()
     if not (UnitExists("target") and UnitIsPlayer("target")) or UnitIsUnit("target", "player") then return end
     local name, realm = UnitName("target")
-    if not name or (issecretvalue and (issecretvalue(name) or issecretvalue(realm))) then return end
+    if not name or Secret(name) or Secret(realm) then return end
     return Clean((realm and realm ~= "") and (name .. "-" .. realm) or name)
 end
 
+-- whom the menu offers: { who = what WP.Whisper takes, label = what it shows }; Battle.net friends only while
+-- they are online
 function WP.WhisperNames()
     local out, seen = {}, {}
-    local function Add(name)
-        if name and not seen[name:lower()] then seen[name:lower()] = true out[#out + 1] = name end
+    local function Add(who)
+        if not who or seen[who:lower()] then return end
+        local tag = who:match("^bn:(.+)$")
+        local label = Ambiguate(who, "short")
+        if tag then
+            local info = BNFriend(tag)
+            if not (info and info.gameAccountInfo and info.gameAccountInfo.isOnline) then return end
+            label = (info.accountName and info.accountName ~= "" and info.accountName or tag:gsub("#%d+$", ""))
+                .. " |cff82c5ff(Battle.net)|r"
+        end
+        seen[who:lower()] = true
+        out[#out + 1] = { who = who, label = label }
     end
     Add(TargetName())
-    for _, name in ipairs(ns.db.whispers or {}) do Add(name) end
+    for _, who in ipairs(ns.db.whispers or {}) do Add(who) end
     return out
 end
 
+-- whispers the pin to who ("Name-Surname" or "bn:BattleTag"); without who, asks for a name
 function WP.Whisper(id, who)
     if not Pin(id) then return end
+    local tag = who and who:match("^bn:(.+)$")
+    if tag then
+        local info = BNFriend(tag)
+        if info then WP.Share(id, "BN_WHISPER", info.bnetAccountID) else ns.Print(L.CANNOT_SHARE) end
+        Remember(who)
+        return
+    end
     who = Clean(who)
     if who then
         WP.Share(id, "WHISPER", who)
@@ -370,8 +416,8 @@ local function PinMenu(owner, id)
         share:CreateButton(L.SHARE_GROUP, function() WP.Share(id, IsInRaid() and "RAID" or "PARTY") end)
         share:CreateButton(L.SHARE_GUILD, function() WP.Share(id, "GUILD") end)
         local whisper = share:CreateButton(L.SHARE_WHISPER)
-        for _, name in ipairs(WP.WhisperNames()) do
-            whisper:CreateButton(Ambiguate(name, "short"), function() WP.Whisper(id, name) end)
+        for _, t in ipairs(WP.WhisperNames()) do
+            whisper:CreateButton(t.label, function() WP.Whisper(id, t.who) end)
         end
         whisper:CreateButton(L.WHISPER_OTHER, function() WP.Whisper(id) end)
         share:CreateButton(L.SHARE_CHAT, function() WP.LinkMapPoint(p.m, p.x, p.y) end)

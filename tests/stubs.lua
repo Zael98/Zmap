@@ -581,6 +581,15 @@ function C_Map.CanSetUserWaypointOnMap() return true end
 function C_Map.SetUserWaypoint(p) STATE.waypoint = p return true end
 function C_Map.GetUserWaypoint() return STATE.waypoint end
 function C_Map.ClearUserWaypoint() STATE.waypoint = nil end
+-- Battle.net friends: STATE.bnFriends = { { bnetAccountID, accountName, battleTag, gameAccountInfo = { isOnline } } }
+function BNGetNumFriends() return #(STATE.bnFriends or {}) end
+C_BattleNet = {
+    GetFriendAccountInfo = function(i) return (STATE.bnFriends or {})[i] end,
+    GetAccountInfoByID = function(id)
+        for _, f in ipairs(STATE.bnFriends or {}) do if f.bnetAccountID == id then return f end end
+    end,
+}
+function BNSendWhisper(id, text) STATE.said = STATE.said or {} table.insert(STATE.said, { text, "BN_WHISPER", id }) end
 -- chat messages the addon says: STATE.said = { { text, channel, target }, ... }
 function SendChatMessage(text, channel, _, target)
     STATE.said = STATE.said or {}
