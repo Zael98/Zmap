@@ -1,5 +1,9 @@
 # Zmap
 
+## 1.7.2 — Quests with several places
+
+- **Finished objectives leave the map**: in a quest with two or more objectives (kill these here, those there, collect that), the places of the ones you have finished are no longer shown, nor their areas or the marks over those mobs, and "Go" leads to an objective you still have to do. Before, all of them stayed until the quest was done, and "Go" could send you back to a place you had finished. A mob or object that another unfinished objective still needs stays.
+
 ## 1.7.1 — Sharing quests only when you can
 
 - **Share in the quest log** (the details button and the right-click menu) now follows the game's own rule: it is only available when you are in a group, the quest can be shared and it is not disabled for this session. Before, Zmap offered to share quests the game does not let you share, and the right-click menu offered it always. When it cannot be shared it shows greyed out, as in Blizzard's quest log.
