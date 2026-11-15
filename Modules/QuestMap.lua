@@ -17,6 +17,7 @@ local untracked = {}   -- the quests of your log you do not track (the option to
 local Untracked, Standing, Knows
 local giverMarks, objectiveMarks   -- built from the quest log; nil: to build again
 local byUnit = {}   -- [npcID] = { need = {quests}, gives = {quests}, takes = {quests} } (tooltips, nameplates)
+local doneParts = {}   -- [questID of your log] = { { [npcID] = true }, { [objectID] = true } }: its finished objectives' (DoneParts)
 local dirty = true
 
 --------------------------------------------------------------------------------------------------------------
@@ -173,6 +174,35 @@ end
 
 local objectiveAreas   -- built from the objective marks; nil: to build again
 
+-- The mobs and objects of the objectives of a quest you have finished already ({ [npcID] = true }, { [objectID]
+-- = true }): their places are no longer shown, nor is the arrow sent there. The data's objectives (q[21]) are
+-- matched to the game's by kind and order (the game's order within a kind is the data's); when the counts of a
+-- kind differ nothing of it is left out. One that another objective still needs stays.
+local KINDS = { monster = 1, object = 2, item = 3 }
+local function DoneParts(id, q)
+    local groups = q[21]
+    if not (groups and C_QuestLog.GetQuestObjectives) then return end
+    local game = { {}, {}, {} }
+    for _, o in ipairs(C_QuestLog.GetQuestObjectives(id) or {}) do
+        local kind = KINDS[o.type]
+        if kind then table.insert(game[kind], o.finished == true) end
+    end
+    local data = { {}, {}, {} }
+    for _, g in ipairs(groups) do table.insert(data[g[1]], g) end
+    local doneNpc, doneObj, needNpc, needObj = {}, {}, {}, {}
+    for kind = 1, 3 do
+        local same = #data[kind] == #game[kind]
+        for i, g in ipairs(data[kind]) do
+            local finished = same and game[kind][i]
+            for _, n in ipairs(g[2]) do if finished then doneNpc[n] = true else needNpc[n] = true end end
+            for _, o in ipairs(g[3]) do if finished then doneObj[o] = true else needObj[o] = true end end
+        end
+    end
+    for n in pairs(needNpc) do doneNpc[n] = nil end
+    for o in pairs(needObj) do doneObj[o] = nil end
+    return doneNpc, doneObj
+end
+
 local function Build()
     Scan()
     dirty = false
@@ -206,10 +236,15 @@ local function Build()
         for _, id in ipairs(quests) do Index(npc, "gives", id) end
     end
     for _, g in ipairs(moved) do Index(g[1], "gives", g[2]) end
+    wipe(doneParts)
     for _, id in ipairs(logList) do
         local q = QUESTS[id]
         if q then
-            for _, npc in ipairs(finished[id] and q[8] or q[10]) do Index(npc, finished[id] and "takes" or "need", id) end
+            local doneNpc, doneObj = DoneParts(id, q)
+            doneParts[id] = { doneNpc or {}, doneObj or {} }
+            for _, npc in ipairs(finished[id] and q[8] or q[10]) do
+                if finished[id] or not doneParts[id][1][npc] then Index(npc, finished[id] and "takes" or "need", id) end
+            end
         end
     end
     giverMarks = {}
@@ -239,11 +274,16 @@ local function Build()
                 end
             else
                 local before = #objectiveMarks
+                local doneNpc, doneObj = doneParts[id][1], doneParts[id][2]
                 for _, npc in ipairs(q[10]) do
-                    Marks(NpcPlaces(q, npc, true), { quest = id, npc = npc, color = color }, MAX_PER_QUEST, objectiveMarks)
+                    if not doneNpc[npc] then
+                        Marks(NpcPlaces(q, npc, true), { quest = id, npc = npc, color = color }, MAX_PER_QUEST, objectiveMarks)
+                    end
                 end
                 for _, obj in ipairs(q[11]) do
-                    Marks(N.ObjectSpawns(obj), { quest = id, object = obj, color = color }, MAX_PER_QUEST, objectiveMarks)
+                    if not doneObj[obj] then
+                        Marks(N.ObjectSpawns(obj), { quest = id, object = obj, color = color }, MAX_PER_QUEST, objectiveMarks)
+                    end
                 end
                 -- what it asks for that is bought, and where to get to
                 for _, npc in ipairs(q[17] or {}) do
@@ -344,8 +384,11 @@ function QM.Next(id)
     end
     local q = QUESTS[id]
     if not best and q then
+        local skip = not done and QM.Objectives() and doneParts[id] and doneParts[id][1] or {}
         for _, npc in ipairs(done and q[8] or q[10]) do
-            for _, s in ipairs(NpcPlaces(q, npc, true)) do Nearest(s[1], s[2], s[3], { npc = npc, turnIn = done or nil }) end
+            if not skip[npc] then
+                for _, s in ipairs(NpcPlaces(q, npc, true)) do Nearest(s[1], s[2], s[3], { npc = npc, turnIn = done or nil }) end
+            end
         end
     end
     return best

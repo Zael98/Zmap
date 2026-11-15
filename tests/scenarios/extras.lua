@@ -490,6 +490,34 @@ STATE.completed, STATE.log, STATE.finished = {}, {}, {}
 EVENT("QUEST_LOG_UPDATE")
 ADVANCE(2)
 
+-- a quest with two places to kill (The People's Militia: Defias Trappers, then Defias Smugglers): once the trappers
+-- are done their places leave the map, and "Go" leads to the smugglers; while the game's objectives cannot be
+-- matched to the data's (another count), nothing is left out
+local function MilitiaMobs()
+    local seen = {}
+    for _, m in ipairs(ZNS.QuestMap.Objectives()) do if m.quest == 12 and m.npc then seen[m.npc] = true end end
+    return tostring(seen[504] == true) .. "/" .. tostring(seen[95] == true)
+end
+STATE.player.level, STATE.completed, STATE.log, STATE.finished = 12, {}, { 12 }, {}
+STATE.objectives = { [12] = { { type = "monster", finished = false }, { type = "monster", finished = false } } }
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local before = MilitiaMobs()
+STATE.objectives[12][1].finished = true
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+local after = MilitiaMobs()
+local nextMark = ZNS.QuestMap.Next(12)
+local need = ZNS.QuestMap.ForNpc(504)
+STATE.objectives[12] = { { type = "monster", finished = true } }
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+OUT(("objectives one by one: trappers/smugglers %s, trappers done %s, go to %s, trappers still needed %s, unmatched %s")
+    :format(before, after, tostring(nextMark and nextMark.npc), tostring(need ~= nil and #need.need > 0), MilitiaMobs()))
+STATE.objectives, STATE.log = nil, {}
+EVENT("QUEST_LOG_UPDATE")
+ADVANCE(2)
+
 -- /zmap check: every feature tried, OK or FAIL each
 SlashCmdList.ZMAP("check")
 local checkText = ZmapDiag.edit:GetText()

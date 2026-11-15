@@ -444,11 +444,17 @@ def build_quests(npcs):
         objectives = as_map(row.get(10))
         mobs = list(ids_of(objectives.get(1)))
         objs = list(ids_of(objectives.get(2)))
+        # each objective on its own, in the game's order within its kind (1 a mob to kill, 2 an object to use,
+        # 3 an item: who drops it): Zmap hides the places of the ones you have finished
+        groups = [(1, [n], []) for n in mobs] + [(2, [], [o]) for o in objs]
         vendors = []
         for iid in ids_of(objectives.get(3)):   # the items asked for: who drops them, or who sells them
             item = items.get(iid, {})
-            mobs += [n for n in as_list(item.get(2)) if n in npcs][:MAX_DROPPERS]
-            objs += as_list(item.get(3))[:MAX_DROPPERS]
+            droppers = [n for n in as_list(item.get(2)) if n in npcs][:MAX_DROPPERS]
+            containers = as_list(item.get(3))[:MAX_DROPPERS]
+            mobs += droppers
+            objs += containers
+            groups.append((3, droppers, containers))
             sellers = [n for n in as_list(item.get(14)) if isinstance(n, int)]
             if len(sellers) <= MAX_VENDORS:
                 vendors += [n for n in sellers if n in npcs]
@@ -458,7 +464,9 @@ def build_quests(npcs):
         for credit in as_list(objectives.get(5)):   # kill credit: {{npcIds}, baseNpc, text}
             credit = as_list(credit)
             if credit:
-                mobs += [n for n in as_list(credit[0]) if isinstance(n, int)]
+                credited = [n for n in as_list(credit[0]) if isinstance(n, int)]
+                mobs += credited
+                groups.append((1, credited, []))
         flags = 0
         if (row.get(24) or 0) & 1:
             flags |= 1   # repeatable
@@ -482,6 +490,8 @@ def build_quests(npcs):
             "maxLevel": row.get(32) or 0, "flags": flags,
             "npcPlaces": [v for npc, place in QUEST_NPC_PLACES.get(qid, {}).items() for v in (npc, *place)],
             "rules": quest_rules(row),
+            # (only worth it with two or more: the only objective done is the quest done)
+            "objectives": groups if len(groups) > 1 else [],
         }
         quest_objects.update(quest["startObjs"] + quest["endObjs"] + quest["objs"])
         quests[qid] = quest
@@ -545,12 +555,14 @@ def write_objects(objects):
 
 
 def tail(q):
-    """The quest's optional last fields: its NPC places, then its rules."""
-    if not (q["npcPlaces"] or q["rules"]):
+    """The quest's optional last fields: its NPC places, its rules, its objectives one by one."""
+    if not (q["npcPlaces"] or q["rules"] or q["objectives"]):
         return ""
     out = f', {lua_list(q["npcPlaces"])}'
-    if q["rules"]:
+    if q["rules"] or q["objectives"]:
         out += ", { " + ", ".join(f"{k} = {lua_list(v) if isinstance(v, list) else v}" for k, v in sorted(q["rules"].items())) + " }"
+    if q["objectives"]:
+        out += ", { " + ", ".join(f"{{ {kind}, {lua_list(n)}, {lua_list(o)} }}" for kind, n, o in q["objectives"]) + " }"
     return out
 
 
@@ -569,7 +581,9 @@ def write_quests(quests):
              "--   your log, crumbFor = a breadcrumb to it: not once it is done or taken, crumbs = not while one is in your",
              "--   log, untilDone = not once done, startWith = only once taken or done, disabledBy = not while in your log,",
              "--   skill = { skill line, skill at least }, spell = known (below 0: that one not known),",
-             "--   minRep / maxRep = { factionID, standing at least / below } } }",
+             "--   minRep / maxRep = { factionID, standing at least / below } },",
+             "--   its objectives one by one, when it has two or more, in the game's order within each kind:",
+             "--   { { kind (1 a mob to kill, 2 an object to use, 3 an item), { NPCs }, { objects } }, ... } }",
              "ns.QUESTS = {"]
     for qid, q in sorted(quests.items()):
         if not q["name"]:

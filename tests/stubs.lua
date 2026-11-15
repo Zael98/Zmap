@@ -671,7 +671,10 @@ C_QuestLog = {
         return {}
     end,
     GetTitleForQuestID = function(id) return ({ [101] = "Lobos en la linde", [102] = "El collar de Fargodeep" })[id] end,
-    GetQuestObjectives = function(id) return { { text = "Lobo matado: 3/8", finished = false } } end,
+    -- a quest's objectives: STATE.objectives[questID] = { { type, finished }, ... } (else one wolf objective)
+    GetQuestObjectives = function(id)
+        return (STATE.objectives or {})[id] or { { text = "Lobo matado: 3/8", type = "monster", finished = false } }
+    end,
     IsComplete = function(id) return id == 102 or (STATE.finished or {})[id] == true end,
     -- the log: STATE.log = { questID or { header = "Zone", collapsed }, ... } (default 101 and 102);
     -- STATE.completed = { questID, ... }; STATE.watched[questID] = true
