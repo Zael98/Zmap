@@ -340,41 +340,61 @@ local function TargetName()
     return Clean((realm and realm ~= "") and (name .. "-" .. realm) or name)
 end
 
--- whom the menu offers: { who = what WP.Whisper takes, label = what it shows }: your target, whom you whispered
--- lately (the game's list, then Zmap's), then your friends online; Battle.net friends only while online
+local function BNOnline(info) return info and info.gameAccountInfo and info.gameAccountInfo.isOnline end
+local function BNLabel(info, tag)
+    local name = info and info.accountName
+    if not name or Secret(name) or name == "" then name = tag:gsub("#%d+$", "") end
+    return name .. " |cff82c5ff(Battle.net)|r"
+end
+
+-- whom the menu offers: { who = what WP.Whisper takes, label = what it shows, recent = true for your target and
+-- whom you whispered lately (newest first: the game's list, then Zmap's), offline = a Battle.net friend who is not
+-- on now }, then your friends online (Battle.net friends playing WoW first, then by name)
 function WP.WhisperNames()
     local out, seen = {}, {}
-    local function Add(who)
+    local function Add(who, recent)
         if not who or seen[who:lower()] then return end
         local tag = who:match("^bn:(.+)$")
-        local label = Ambiguate(who, "short")
+        local entry = { who = who, label = Ambiguate(who, "short"), recent = recent }
         if tag then
             local info = BNFriend(tag)
-            if not (info and info.gameAccountInfo and info.gameAccountInfo.isOnline) then return end
-            label = (info.accountName and info.accountName ~= "" and info.accountName or tag:gsub("#%d+$", ""))
-                .. " |cff82c5ff(Battle.net)|r"
+            if not info then return end   -- (no longer a friend)
+            entry.label = BNLabel(info, tag)
+            entry.offline = not BNOnline(info)
+            if entry.offline and not recent then return end
+            entry.wow = info.gameAccountInfo and info.gameAccountInfo.clientProgram == (BNET_CLIENT_WOW or "WoW")
         end
         seen[who:lower()] = true
-        out[#out + 1] = { who = who, label = label }
+        out[#out + 1] = entry
     end
-    Add(TargetName())
-    for _, who in ipairs(GameTells()) do if who then Add(who) end end
-    for _, who in ipairs(ns.db.whispers or {}) do Add(who) end
-    -- then your friends online: Battle.net and in game
+    Add(TargetName(), true)
+    for _, who in ipairs(GameTells()) do if who then Add(who, true) end end
+    for _, who in ipairs(ns.db.whispers or {}) do Add(who, true) end
+    local first = #out
     if BNGetNumFriends and C_BattleNet and C_BattleNet.GetFriendAccountInfo then
         for i = 1, (BNGetNumFriends()) or 0 do
             local info = C_BattleNet.GetFriendAccountInfo(i)
             local tag = info and info.battleTag
-            if tag and not Secret(tag) and info.gameAccountInfo and info.gameAccountInfo.isOnline then Add("bn:" .. tag) end
+            if tag and not Secret(tag) and BNOnline(info) then Add("bn:" .. tag) end
         end
     end
     if C_FriendList and C_FriendList.GetNumFriends and C_FriendList.GetFriendInfoByIndex then
         for i = 1, (C_FriendList.GetNumFriends()) or 0 do
             local info = C_FriendList.GetFriendInfoByIndex(i)
-            if info and info.connected then Add(Clean(info.name)) end
+            if info and info.connected then
+                local name = Clean(info.name)
+                Add(name)
+                if name and out[#out].who == name then out[#out].wow = true end
+            end
         end
     end
-    while #out > 20 do table.remove(out) end
+    local friends = {}
+    for i = first + 1, #out do friends[#friends + 1] = out[i] out[i] = nil end
+    table.sort(friends, function(x, y)
+        if (x.wow or false) ~= (y.wow or false) then return x.wow == true end
+        return x.label:lower() < y.label:lower()
+    end)
+    for i = 1, math.min(#friends, 25) do out[#out + 1] = friends[i] end
     return out
 end
 
@@ -384,8 +404,14 @@ function WP.Whisper(id, who)
     local tag = who and who:match("^bn:(.+)$")
     if tag then
         local info = BNFriend(tag)
-        if info then WP.Share(id, "BN_WHISPER", info.bnetAccountID) else ns.Print(L.CANNOT_SHARE) end
-        Remember(who)
+        if not info then
+            ns.Print(L.CANNOT_SHARE)
+        elseif not BNOnline(info) then
+            ns.Print(L.WHISPER_OFFLINE:format(BNLabel(info, tag)))
+        else
+            WP.Share(id, "BN_WHISPER", info.bnetAccountID)
+            Remember(who)
+        end
         return
     end
     who = Clean(who)
@@ -461,9 +487,21 @@ local function PinMenu(owner, id)
         share:CreateButton(L.SHARE_GROUP, function() WP.Share(id, IsInRaid() and "RAID" or "PARTY") end)
         share:CreateButton(L.SHARE_GUILD, function() WP.Share(id, "GUILD") end)
         local whisper = share:CreateButton(L.SHARE_WHISPER)
-        for _, t in ipairs(WP.WhisperNames()) do
-            whisper:CreateButton(t.label, function() WP.Whisper(id, t.who) end)
+        local names = WP.WhisperNames()
+        whisper:CreateTitle(L.WHISPER_RECENT)
+        if not (names[1] and names[1].recent) then whisper:CreateTitle("|cff808080" .. L.WHISPER_NONE .. "|r") end
+        local friends = false
+        for _, t in ipairs(names) do
+            if not t.recent and not friends then
+                friends = true
+                whisper:CreateDivider()
+                whisper:CreateTitle(L.WHISPER_FRIENDS)
+            end
+            local label = t.offline and ("|cff808080" .. t.label:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+                .. " · " .. L.WHISPER_OFFLINE_SHORT .. "|r") or t.label
+            whisper:CreateButton(label, function() WP.Whisper(id, t.who) end)
         end
+        whisper:CreateDivider()
         whisper:CreateButton(L.WHISPER_OTHER, function() WP.Whisper(id) end)
         share:CreateButton(L.SHARE_CHAT, function() WP.LinkMapPoint(p.m, p.x, p.y) end)
         root:CreateDivider()

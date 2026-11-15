@@ -78,6 +78,12 @@ STATE.tells = { { "Garrosh-Grito", "WHISPER" }, { "Bea", "BN_WHISPER" }, { "Jain
 STATE.lastTold = { "Varian-Rey", "WHISPER" }
 STATE.friends = { { name = "Anduin-Luz", connected = true }, { name = "Tyrande-Luna", connected = false } }
 OUT("whisper names from the game: " .. Who())
+-- the menu: recent ones under their title, then the friends online under theirs
+local function Child(node, text) for _, it in ipairs(node.items) do if it.text == text then return it end end end
+local pinFrames = PINS("pins")
+pinFrames[1].scripts.OnClick(pinFrames[1], "RightButton")
+local menuText = MENU_TEXTS(Child(Child(STATE.menu, ZNS.L.SHARE), ZNS.L.SHARE_WHISPER))
+OUT("whisper menu: " .. menuText:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 STATE.tells, STATE.lastTold, STATE.friends = nil, nil, nil
 STATE.bnFriends = nil
 UnitIsPlayer = isPlayer
