@@ -20,7 +20,7 @@ ns.LOCALES.RU = {
     MY_PIN = "Моя метка", MY_PINS = "Мои метки", NO_PINS = "Меток пока нет: Ctrl+щелчок по карте",
     NAVIGATE = "Идти туда", STOP_NAV = "Не идти туда", RENAME = "Переименовать...", EDIT_NOTE = "Заметка...",
     COLOR = "Цвет", SHARE = "Поделиться", SHARE_GROUP = "С группой", SHARE_GUILD = "С гильдией",
-    SHARE_CHAT = "Ссылка в чат", SHARE_WHISPER = "Шёпотом...",
+    SHARE_CHAT = "Ссылка в чат", SHARE_WHISPER = "Шёпотом", WHISPER_OTHER = "Другое имя...",
     WHISPER_TO = "Шепнуть метку (имя)", DELETE = "Удалить", DELETE_ALL = "Удалить все", SHOW_ON_MAP = "Показать на карте",
     DELETE_ALL_CONFIRM = "Удалить все ваши метки?",
     COLOR_1 = "Золотой", COLOR_2 = "Синий", COLOR_3 = "Зелёный", COLOR_4 = "Красный", COLOR_5 = "Фиолетовый", COLOR_6 = "Белый",

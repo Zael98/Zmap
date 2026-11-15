@@ -20,7 +20,7 @@ ns.LOCALES.IT = {
     MY_PIN = "Il mio segnalino", MY_PINS = "I miei segnalini", NO_PINS = "Nessun segnalino: Ctrl+clic sulla mappa",
     NAVIGATE = "Vai lì", STOP_NAV = "Smetti di andarci", RENAME = "Rinomina...", EDIT_NOTE = "Nota...",
     COLOR = "Colore", SHARE = "Condividi", SHARE_GROUP = "Con il mio gruppo", SHARE_GUILD = "Con la mia gilda",
-    SHARE_CHAT = "Collega in chat", SHARE_WHISPER = "Sussurrando...",
+    SHARE_CHAT = "Collega in chat", SHARE_WHISPER = "Sussurrando", WHISPER_OTHER = "Altro nome...",
     WHISPER_TO = "Sussurra il segnalino a (nome)", DELETE = "Elimina", DELETE_ALL = "Elimina tutti", SHOW_ON_MAP = "Mostra sulla mappa",
     DELETE_ALL_CONFIRM = "Eliminare tutti i tuoi segnalini?",
     COLOR_1 = "Oro", COLOR_2 = "Blu", COLOR_3 = "Verde", COLOR_4 = "Rosso", COLOR_5 = "Viola", COLOR_6 = "Bianco",

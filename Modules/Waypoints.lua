@@ -225,9 +225,9 @@ function WP.OpenMapLink(link)
 end
 if SetItemRef then hooksecurefunc("SetItemRef", function(link) WP.OpenMapLink(link) end) end
 
--- A pin to your group, guild or one player (a whisper): its map link said in that chat, which they see and can
--- click (the game's own "share location"), and, for those with Zmap, the pin itself with its name and note (a
--- hidden add-on message: it lands on their map).
+-- A pin to your group, guild or one player (a whisper): the game's own map link said in that chat, just as its
+-- "share location" does (they see it and can click it), and, for those with Zmap, the pin itself with its name and
+-- note (a hidden add-on message: it lands on their map).
 local function CanSay(channel, target)
     if channel == "GUILD" then return IsInGuild() end
     if channel == "WHISPER" then return target ~= nil and target ~= "" end
@@ -241,9 +241,8 @@ function WP.Share(id, channel, target)
     local said = false
     local link = CanSay(channel, target) and MapLink(p.m, p.x, p.y)
     if link then
-        local name = (p.name or ""):gsub("|", "")
         local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
-        said = send ~= nil and pcall(send, name ~= "" and (link .. " " .. name) or link, channel, nil, target)
+        said = send ~= nil and pcall(send, link, channel, nil, target)
         if said then PlaySound(SOUNDKIT.UI_MAP_WAYPOINT_CHAT_SHARE) end
     end
     local sent = (channel ~= "WHISPER" or target) and
@@ -255,21 +254,56 @@ function WP.Share(id, channel, target)
     end
 end
 
+-- Whispering a pin: the people you whispered or who whispered you lately (newest first, kept between sessions),
+-- with your target on top, as the menu offers them; "Other..." asks for a name.
+local RECENT = 8
+
+local function Clean(name)
+    if not name or (issecretvalue and issecretvalue(name)) then return end
+    name = tostring(name):gsub("%s", "")
+    if name == "" or ns.IsMe(name) then return end
+    return name
+end
+
+local function Remember(name)
+    name = Clean(name)
+    if not (name and ns.db) then return end
+    local list = ns.db.whispers or {}
+    for i = #list, 1, -1 do if list[i]:lower() == name:lower() then table.remove(list, i) end end
+    table.insert(list, 1, name)
+    while #list > RECENT do table.remove(list) end
+    ns.db.whispers = list
+end
+ns.On("CHAT_MSG_WHISPER", function(_, sender) Remember(sender) end)
+ns.On("CHAT_MSG_WHISPER_INFORM", function(_, target) Remember(target) end)
+
 -- the player you have targeted, as a whisper goes ("Name-Surname" on Forever); nil if it is not another player
 local function TargetName()
     if not (UnitExists("target") and UnitIsPlayer("target")) or UnitIsUnit("target", "player") then return end
     local name, realm = UnitName("target")
     if not name or (issecretvalue and (issecretvalue(name) or issecretvalue(realm))) then return end
-    return (realm and realm ~= "") and (name .. "-" .. realm) or name
+    return Clean((realm and realm ~= "") and (name .. "-" .. realm) or name)
 end
 
--- asks who (your target filled in) and whispers the pin to them
-function WP.Whisper(id)
+function WP.WhisperNames()
+    local out, seen = {}, {}
+    local function Add(name)
+        if name and not seen[name:lower()] then seen[name:lower()] = true out[#out + 1] = name end
+    end
+    Add(TargetName())
+    for _, name in ipairs(ns.db.whispers or {}) do Add(name) end
+    return out
+end
+
+function WP.Whisper(id, who)
     if not Pin(id) then return end
-    ns.Prompt(L.WHISPER_TO, TargetName(), function(text)
-        local who = (text or ""):gsub("%s", "")
-        if who ~= "" then WP.Share(id, "WHISPER", who) end
-    end)
+    who = Clean(who)
+    if who then
+        WP.Share(id, "WHISPER", who)
+        Remember(who)
+        return
+    end
+    ns.Prompt(L.WHISPER_TO, "", function(text) WP.Whisper(id, text ~= "" and text or nil) end)
 end
 
 ns.Comm.On("W", function(sender, channel, m, x, y, name, note)
@@ -335,7 +369,11 @@ local function PinMenu(owner, id)
         local share = root:CreateButton(L.SHARE)
         share:CreateButton(L.SHARE_GROUP, function() WP.Share(id, IsInRaid() and "RAID" or "PARTY") end)
         share:CreateButton(L.SHARE_GUILD, function() WP.Share(id, "GUILD") end)
-        share:CreateButton(L.SHARE_WHISPER, function() WP.Whisper(id) end)
+        local whisper = share:CreateButton(L.SHARE_WHISPER)
+        for _, name in ipairs(WP.WhisperNames()) do
+            whisper:CreateButton(Ambiguate(name, "short"), function() WP.Whisper(id, name) end)
+        end
+        whisper:CreateButton(L.WHISPER_OTHER, function() WP.Whisper(id) end)
         share:CreateButton(L.SHARE_CHAT, function() WP.LinkMapPoint(p.m, p.x, p.y) end)
         root:CreateDivider()
         root:CreateButton(L.DELETE, function() WP.Remove(id) end)

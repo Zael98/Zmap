@@ -20,7 +20,7 @@ ns.LOCALES.PT = {
     MY_PIN = "Meu marcador", MY_PINS = "Meus marcadores", NO_PINS = "Nenhum marcador: Ctrl+clique no mapa",
     NAVIGATE = "Ir até lá", STOP_NAV = "Parar de ir", RENAME = "Renomear...", EDIT_NOTE = "Nota...",
     COLOR = "Cor", SHARE = "Compartilhar", SHARE_GROUP = "Com meu grupo", SHARE_GUILD = "Com minha guilda",
-    SHARE_CHAT = "Vincular no chat", SHARE_WHISPER = "Por sussurro...",
+    SHARE_CHAT = "Vincular no chat", SHARE_WHISPER = "Por sussurro", WHISPER_OTHER = "Outro nome...",
     WHISPER_TO = "Sussurrar o marcador para (nome)", DELETE = "Excluir", DELETE_ALL = "Apagar todos", SHOW_ON_MAP = "Mostrar no mapa",
     DELETE_ALL_CONFIRM = "Apagar todos os seus marcadores?",
     COLOR_1 = "Dourado", COLOR_2 = "Azul", COLOR_3 = "Verde", COLOR_4 = "Vermelho", COLOR_5 = "Roxo", COLOR_6 = "Branco",
