@@ -154,6 +154,19 @@ C_Map.GetMapInfoAtPosition = function() return nil end
 OUT(("no zone from the client: %s, by rectangle %s"):format(tostring((ZNS.Geo.ZoneAt(gu, gv))),
     tostring((ZNS.Art.Exploration(gu, gv)))))
 C_Map.GetMapInfoAtPosition = clientAt
+-- every area of the zone explored by its rectangle, but the game's exact answer at the spot is nothing explored:
+-- unseen (the rectangles reach well past an area's land); where the game says explored: seen
+STATE.explored = "all"
+EVENT("MAP_EXPLORATION_UPDATED")
+local exactSeen = false
+C_MapExplorationInfo.GetExploredAreaIDsAtPosition = function() return exactSeen and { 1 } or nil end
+CreateVector2D = CreateVector2D or function(x, y) return { x = x, y = y } end
+local outside = ZNS.Art.Exploration(gu, gv)
+exactSeen = true
+EVENT("MAP_EXPLORATION_UPDATED")
+OUT(("exact exploration: outside the area's land %s, inside %s"):format(tostring(outside),
+    tostring((ZNS.Art.Exploration(gu, gv)))))
+C_MapExplorationInfo.GetExploredAreaIDsAtPosition = nil
 STATE.explored = nil
 EVENT("MAP_EXPLORATION_UPDATED")
 ZNS.SetOpt("unexplored", "show")

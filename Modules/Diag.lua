@@ -77,8 +77,14 @@ local function Report()
         if not u then return "cursor not on the map" end
         local client = Geo.ZoneAt(u, v)
         local rect = Geo.ZoneByRect(u, v)
-        return ("client zone %s, rectangle zone %s, %s"):format(tostring(client), tostring(rect),
-            tostring(ns.Art.Exploration(u, v) or "no data"))
+        local exact = "n/a"
+        if client and C_MapExplorationInfo.GetExploredAreaIDsAtPosition then
+            local x, y = Geo.ToZone(client, u, v)
+            local ok, ids = pcall(C_MapExplorationInfo.GetExploredAreaIDsAtPosition, client, CreateVector2D(x, y))
+            exact = ok and (type(ids) == "table" and (#ids .. " areas") or "nil") or "error"
+        end
+        return ("client zone %s, rectangle zone %s, %s (game: %s explored here)"):format(tostring(client), tostring(rect),
+            tostring(ns.Art.Exploration(u, v) or "no data"), exact)
     end)
     Line("flight masters (client)", function()
         local list, unknown = C_TaxiMap.GetTaxiNodesForMap(1415) or {}, 0

@@ -170,10 +170,16 @@ function Art.Exploration(u, v)
     local explored = overlays and #overlays > 0 and Art.Explored(mapID)
     if not explored then return end
     if next(explored) == nil then return "unseen" end
+    -- the game's own answer, exact to the area's shape: an overlay's rectangle is much bigger than its land, so an
+    -- explored area's rectangle took in unexplored land round it (its terrain showed)
+    local exact = C_MapExplorationInfo.GetExploredAreaIDsAtPosition and CreateVector2D
+    local ok, ids
+    if exact then ok, ids = pcall(C_MapExplorationInfo.GetExploredAreaIDsAtPosition, mapID, CreateVector2D(x, y)) end
+    if ok and type(ids) == "table" and #ids > 0 then return "seen" end
     local px, py, inside = x * ART_W, y * ART_H, false
     for _, o in ipairs(overlays) do
         if px >= o[3] and px <= o[3] + o[1] and py >= o[4] and py <= o[4] + o[2] then
-            if explored[o[6]] then return "seen" end
+            if explored[o[6]] and not ok then return "seen" end   -- (no exact answer: by the rectangle)
             inside = true
         end
     end
