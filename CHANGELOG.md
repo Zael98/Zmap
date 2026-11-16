@@ -1,5 +1,12 @@
 # Zmap
 
+## 1.7.5 — Questie, cities and terrain
+
+- **With Questie**: Questie already shows quests on the minimap, over the nameplates and in tooltips, so the first time Zmap sees it installed it turns its own off (each one you never set yourself) and says so in chat. They can be turned back on in Options > Quest log, where "Quests on the minimap" is new.
+- **Capital cities follow "Unexplored areas"** too: Stormwind, Ironforge and the others are dimmed or hidden until you have explored their place on the zone map. Before, they always showed whole.
+- **The terrain up close follows "Unexplored areas"**: dimmed or hidden in the parts you have not discovered.
+- **Zmap's own round icon** in the addon list and the addon menu, instead of a square game icon with dark corners. The coin of "buy it here" on the map lost its frame too.
+
 ## 1.7.4 — Flight times
 
 - **The flight timer counts the route the game really flies**, with its stops. Before, Zmap worked out the quickest route it knew, and the game often flies another one, so the time left could be far off (a flight through Theramore shown minutes too short). A trip you have flown before still uses the time it took.
