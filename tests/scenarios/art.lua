@@ -160,12 +160,18 @@ STATE.explored = "all"
 EVENT("MAP_EXPLORATION_UPDATED")
 local exactSeen = false
 C_MapExplorationInfo.GetExploredAreaIDsAtPosition = function() return exactSeen and { 1 } or nil end
-CreateVector2D = CreateVector2D or function(x, y) return { x = x, y = y } end
+local made = 0
+CreateVector2D = function(x, y)
+    made = made + 1
+    return { x = x, y = y, SetXY = function(self, a, b) self.x, self.y = a, b end }
+end
 local outside = ZNS.Art.Exploration(gu, gv)
 exactSeen = true
 EVENT("MAP_EXPLORATION_UPDATED")
-OUT(("exact exploration: outside the area's land %s, inside %s"):format(tostring(outside),
-    tostring((ZNS.Art.Exploration(gu, gv)))))
+local inside = ZNS.Art.Exploration(gu, gv)
+for _ = 1, 50 do ZNS.Art.Exploration(gu, gv) end
+OUT(("exact exploration: outside the area's land %s, inside %s, positions made %d"):format(tostring(outside),
+    tostring(inside), made))
 C_MapExplorationInfo.GetExploredAreaIDsAtPosition = nil
 STATE.explored = nil
 EVENT("MAP_EXPLORATION_UPDATED")

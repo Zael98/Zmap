@@ -160,6 +160,28 @@ end
 -- whether a point of the map (u, v) is in a part of its zone you have not discovered: anywhere in a zone where you
 -- have explored nothing, else inside some overlay of the zone and in none you have explored (a zone without
 -- overlays counts as discovered)
+local exactCache = {}   -- [mapID] = { [spot] = true (explored) / false }
+local position
+local function ExploredHere(mapID, x, y)
+    local ask = C_MapExplorationInfo.GetExploredAreaIDsAtPosition
+    if not (ask and CreateVector2D) then return end
+    local spots = exactCache[mapID]
+    if not spots then
+        spots = {}
+        exactCache[mapID] = spots
+    end
+    local spot = math.floor(x * 400) * 1000 + math.floor(y * 400)
+    local known = spots[spot]
+    if known ~= nil then return known end
+    position = position or CreateVector2D(0, 0)
+    position:SetXY(x, y)
+    local ok, ids = pcall(ask, mapID, position)
+    if not ok then return end
+    known = type(ids) == "table" and #ids > 0
+    spots[spot] = known
+    return known
+end
+
 -- what you know of a point of the map (u, v): "seen", "unseen", or nil where the game keeps no exploration (no zone
 -- there, a zone without overlays, a spot no overlay covers)
 function Art.Exploration(u, v)
@@ -172,10 +194,9 @@ function Art.Exploration(u, v)
     if next(explored) == nil then return "unseen" end
     -- the game's own answer, exact to the area's shape: an overlay's rectangle is much bigger than its land, so an
     -- explored area's rectangle took in unexplored land round it (its terrain showed)
-    local exact = C_MapExplorationInfo.GetExploredAreaIDsAtPosition and CreateVector2D
-    local ok, ids
-    if exact then ok, ids = pcall(C_MapExplorationInfo.GetExploredAreaIDsAtPosition, mapID, CreateVector2D(x, y)) end
-    if ok and type(ids) == "table" and #ids > 0 then return "seen" end
+    local exact = ExploredHere(mapID, x, y)
+    if exact then return "seen" end
+    local ok = exact ~= nil
     local px, py, inside = x * ART_W, y * ART_H, false
     for _, o in ipairs(overlays) do
         if px >= o[3] and px <= o[3] + o[1] and py >= o[4] and py <= o[4] + o[2] then
@@ -537,6 +558,7 @@ end
 
 ns.On("MAP_EXPLORATION_UPDATED", function()
     wipe(exploredCache)
+    wipe(exactCache)
     ApplyAll()
     if ns.Opt("hideUnexploredIcons") then ns.Pins.UpdateAll() end
 end)
@@ -554,5 +576,6 @@ end)
 ns.On("ZMAP_SHOW", function()
     -- exploration may have changed while the map was closed
     wipe(exploredCache)
+    wipe(exactCache)
     ApplyAll()
 end)
