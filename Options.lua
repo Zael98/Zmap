@@ -169,7 +169,10 @@ function Layout()
         if shown then
             local g = b.layer.group
             if g ~= lastGroup then
-                if lastGroup == "LAYER_GROUP_MAP" then Put(side.unexplored) end
+                if lastGroup == "LAYER_GROUP_MAP" then
+                    Put(side.unexplored)
+                    Put(side.unexploredIcons)
+                end
                 lastGroup = g
                 local h = side.heads[g]
                 h:ClearAllPoints()
@@ -332,6 +335,16 @@ local function CreateSide(frame)
         Layout()
     end)
     side.unexplored = unexplored
+    -- the data's icons left off where you have not been (on/off)
+    local unexploredIcons = Row(list)
+    unexploredIcons.icon:SetTexture(I .. "INV_Misc_Spyglass_03")
+    unexploredIcons.option = "hideUnexploredIcons"
+    unexploredIcons.text:SetText(L.OPT_UNEXPLORED_ICONS)
+    unexploredIcons:SetScript("OnClick", function()
+        ns.SetOpt("hideUnexploredIcons", not ns.Opt("hideUnexploredIcons"))
+        Layout()
+    end)
+    side.unexploredIcons = unexploredIcons
     local more = Row(list)
     more.icon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
     more.text:SetText(L.MORE_OPTIONS)

@@ -52,6 +52,13 @@ FRAMES(2)
 OUT(("row off: alpha %.2f"):format(flightsRow.icon:GetAlpha()))
 OUT("layer off: flights hidden " .. tostring(not PROVIDER("flights").frame:IsVisible()))
 ZNS.SetOpt("flights", true)
+-- the panel's switch for the data's icons where you have not been: shown under the unexplored areas, off, a click on
+local icons = ZmapFrame.layersPanel.unexploredIcons
+local before = ZNS.Opt("hideUnexploredIcons")
+icons.scripts.OnClick(icons)
+OUT(("unexplored icons row: shown %s, %s, off %s, on after click %s"):format(tostring(icons:IsShown()), icons.text:GetText(),
+    tostring(before == false), tostring(ZNS.Opt("hideUnexploredIcons"))))
+ZNS.SetOpt("hideUnexploredIcons", false)
 
 STATE.ghost = true
 STATE.corpse = { map = 1415, x = 0.4, y = 0.6 }

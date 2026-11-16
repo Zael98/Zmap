@@ -69,7 +69,7 @@ CHECKS = {
                        r"^rows: [1-9]\d*, name over what it is true$", r"^errors 0$"]),
     "misc": (False, [r"^binding: M -> ZmapToggleButton$", r"^binding off: none$", r"^binding in combat: deferred, then M$",
                      r"^options panel: checks \d+, replace checked true$",
-                     r"^options layout: scrolls true, after the grid true, all inside true$", r"^layers panel: open true, .*Maestros de vuelo.*$",
+                     r"^options layout: scrolls true, after the grid true, all inside true$", r"^layers panel: open true, .*Maestros de vuelo.*$", r"^unexplored icons row: shown true, Ocultar iconos donde no has estado, off true, on after click true$",
                      r"^row off: alpha 0\.45$",
                      r"^layer off: flights hidden true$", r"^corpse: arrow to corpse true$", r"^alive: arrow cleared true$",
                      r"^corpse known later: at release false; a second after: arrow true, on the map 1, tombstone true$",
