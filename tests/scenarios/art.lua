@@ -142,6 +142,21 @@ STATE.explored = "never"
 EVENT("MAP_EXPLORATION_UPDATED")
 OUT(("never visited: hidden %d, shown %d"):format(Overlays(function(w) return not w.shown end),
     Overlays(function(w) return w.shown end)))
+-- the zones' base (parchment and mountains): hidden too in a zone never visited, shown in one explored in part
+local function Bases(test)
+    local n = 0
+    for _, w in ipairs(ALL_WIDGETS) do
+        if w.kind == "Texture" and w.layer == "BORDER" and w.parent and w.parent.parent
+            and w.parent.parent._level == ZNS.Map.Canvas()._level + 3 and test(w) then n = n + 1 end
+    end
+    return n
+end
+local basesNever = Bases(function(w) return w.shown end)
+STATE.explored = nil
+EVENT("MAP_EXPLORATION_UPDATED")
+OUT(("zone base: never visited shown %d, explored in part shown %d"):format(basesNever, Bases(function(w) return w.shown end)))
+STATE.explored = "never"
+EVENT("MAP_EXPLORATION_UPDATED")
 STATE.explored = nil
 EVENT("MAP_EXPLORATION_UPDATED")
 -- Searing Gorge never visited, at a spot where the client names no zone (outside the outline it uses for clicks):

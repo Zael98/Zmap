@@ -233,7 +233,20 @@ function Art.ApplyExplored(mapID)
     local explored = Art.Explored(mapID)
     local mode = ns.Opt("unexplored")
     local t = Art.Tint(mapID)
-    for _, tex in ipairs(z.base) do tex:SetVertexColor(t[1], t[2], t[3]) end
+    local none = explored ~= nil and next(explored) == nil and #z.overlays > 0
+    for _, tex in ipairs(z.base) do
+        if not none or mode == "show" then
+            tex:SetVertexColor(t[1], t[2], t[3])
+            if tex.SetDesaturation then tex:SetDesaturation(0) end
+            tex:Show()
+        elseif mode == "dim" then
+            tex:SetVertexColor(DIM[1] * t[1], DIM[2] * t[2], DIM[3] * t[3])
+            if tex.SetDesaturation then tex:SetDesaturation(DIM_DESAT) end
+            tex:Show()
+        else
+            tex:Hide()
+        end
+    end
     for _, o in ipairs(z.overlays) do
         local seen = not explored or explored[o.first] == true
         o.explored = seen
