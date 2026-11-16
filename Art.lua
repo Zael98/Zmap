@@ -189,13 +189,49 @@ local ExplorationIn
 -- A capital city has no exploration of its own: in Forever its map hangs from the continent, and its exploration is
 -- an area of its zone's map (Stormwind on Elwynn's). All of it counts as its middle does there: a city reaches past
 -- its zone's rectangle (Orgrimmar sits on Durotar's top edge), so each point by rectangle landed elsewhere.
+-- the zone a city's exploration is an area of: the one with an overlay over the city's middle (the smallest zone
+-- round it is not always it: Ironforge's middle is also inside the Wetlands' rectangle); mapID, x, y of the middle
+local cityZones = {}
+local function CityZone(cityID)
+    local found = cityZones[cityID]
+    if found == nil then
+        local l, r, t, b = Geo.Rect(cityID)
+        local cu, cv = (l + r) / 2, (t + b) / 2
+        local best, area = false, nil
+        for _, id in ipairs(Geo.Zones()) do
+            local d = ns.MAPS[id]
+            local zl, zr, zt, zb = Geo.Rect(id)
+            if d[1] == "zone" and d[7] and cu >= zl and cu <= zr and cv >= zt and cv <= zb then
+                local px, py = (cu - zl) / (zr - zl) * ART_W, (cv - zt) / (zb - zt) * ART_H
+                for _, o in ipairs(d[7]) do
+                    if px >= o[3] and px <= o[3] + o[1] and py >= o[4] and py <= o[4] + o[2] then
+                        local a = (zr - zl) * (zb - zt)
+                        if not area or a < area then best, area = id, a end
+                        break
+                    end
+                end
+            end
+        end
+        if not best then best = Geo.ZoneByRect(cu, cv) or false end
+        found = { best, cu, cv }
+        cityZones[cityID] = found
+    end
+    if found[1] then
+        local x, y = Geo.ToZone(found[1], found[2], found[3])
+        return found[1], x, y
+    end
+end
+
 local function CityExploration(cityID)
-    local l, r, t, b = Geo.Rect(cityID)
-    local mapID, x, y = Geo.ZoneByRect((l + r) / 2, (t + b) / 2)
+    local mapID, x, y = CityZone(cityID)
     if mapID then return ExplorationIn(mapID, x, y) end
 end
 
 function Art.Exploration(u, v)
+    -- inside a capital's rectangle: the city, whatever the client names there (the city, its zone, or nothing on
+    -- the edge of a zone: Orgrimmar sits on Durotar's top edge)
+    local city = Geo.CityAt(u, v)
+    if city then return CityExploration(city) end
     local mapID, x, y = Geo.ZoneAt(u, v)
     if mapID and ns.MAPS[mapID] and ns.MAPS[mapID][1] == "city" then return CityExploration(mapID) end
     local overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]

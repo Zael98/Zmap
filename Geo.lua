@@ -204,6 +204,13 @@ function Geo.ZoneAt(u, v)
     return Geo.ZoneByRect(u, v)
 end
 
+-- the capital city whose rectangle holds a point (its map's id), or nil
+function Geo.CityAt(u, v)
+    for id, d in pairs(MAPS) do
+        if d[1] == "city" and Contains(id, u, v) then return id end
+    end
+end
+
 -- the smallest zone whose rectangle holds a point: mapID, x, y (what ZoneAt answers without the client)
 function Geo.ZoneByRect(u, v)
     local best, area

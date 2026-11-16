@@ -137,6 +137,24 @@ end
 EVENT("MAP_EXPLORATION_UPDATED")
 OUT(("inside a capital: by its zone's rectangle %s, as the city %s"):format(tostring(other),
     tostring((ZNS.Art.Exploration(nu, nv)))))
+C_Map.GetMapInfoAtPosition = function() return { mapID = 1411 } end   -- (Durotar, not the city)
+local namedDurotar = ZNS.Art.Exploration(nu, nv)
+C_Map.GetMapInfoAtPosition = function() return nil end               -- (nothing)
+OUT(("inside a capital, the client naming its zone %s, nothing %s"):format(tostring(namedDurotar),
+    tostring((ZNS.Art.Exploration(nu, nv)))))
+C_MapExplorationInfo.GetExploredMapTextures = textures
+EVENT("MAP_EXPLORATION_UPDATED")
+-- Ironforge's exploration is Dun Morogh's (1426), though the Wetlands' rectangle (1437) also holds its middle:
+-- Dun Morogh explored, the Wetlands not -> Ironforge as Dun Morogh says
+C_MapExplorationInfo.GetExploredMapTextures = function(m)
+    if m ~= 1426 then return {} end
+    local out = {}
+    for _, o in ipairs(ZNS.MAPS[m][7] or {}) do out[#out + 1] = { fileDataIDs = { o[6] } } end
+    return out
+end
+EVENT("MAP_EXPLORATION_UPDATED")
+local il, ir, it, ib = ZNS.Geo.Rect(1455)
+OUT("ironforge on dun morogh: " .. tostring((ZNS.Art.Exploration((il + ir) / 2, (it + ib) / 2))))
 C_MapExplorationInfo.GetExploredMapTextures = textures
 EVENT("MAP_EXPLORATION_UPDATED")
 C_Map.GetMapInfoAtPosition = clientCity
