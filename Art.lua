@@ -184,16 +184,29 @@ end
 
 -- what you know of a point of the map (u, v): "seen", "unseen", or nil where the game keeps no exploration (no zone
 -- there, a zone without overlays, a spot no overlay covers)
+local ExplorationIn
+
+-- A capital city has no exploration of its own: in Forever its map hangs from the continent, and its exploration is
+-- an area of its zone's map (Stormwind on Elwynn's). All of it counts as its middle does there: a city reaches past
+-- its zone's rectangle (Orgrimmar sits on Durotar's top edge), so each point by rectangle landed elsewhere.
+local function CityExploration(cityID)
+    local l, r, t, b = Geo.Rect(cityID)
+    local mapID, x, y = Geo.ZoneByRect((l + r) / 2, (t + b) / 2)
+    if mapID then return ExplorationIn(mapID, x, y) end
+end
+
 function Art.Exploration(u, v)
     local mapID, x, y = Geo.ZoneAt(u, v)
+    if mapID and ns.MAPS[mapID] and ns.MAPS[mapID][1] == "city" then return CityExploration(mapID) end
     local overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]
-    -- the client names no zone on some parts of a zone (outside the outline it uses for clicks), or a map with no
-    -- exploration of its own: a capital city, which hangs from the continent in Forever (Stormwind's exploration is
-    -- an area of Elwynn's map). The zone under it by rectangle, then.
-    if not (overlays and #overlays > 0) then
-        mapID, x, y = Geo.ZoneByRect(u, v)
-        overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]
-    end
+    -- the client names no zone on some parts of a zone (outside the outline it uses for clicks): by rectangle
+    if not (overlays and #overlays > 0) then mapID, x, y = Geo.ZoneByRect(u, v) end
+    if mapID then return ExplorationIn(mapID, x, y) end
+end
+
+-- the same, on a zone's own coordinates
+function ExplorationIn(mapID, x, y)
+    local overlays = ns.MAPS[mapID] and ns.MAPS[mapID][7]
     local explored = overlays and #overlays > 0 and Art.Explored(mapID)
     if not explored then return end
     if next(explored) == nil then return "unseen" end
@@ -308,8 +321,7 @@ end
 local function ApplyCity(mapID)
     local f = cities[mapID]
     if not f then return end
-    local l, r, t, b = Geo.Rect(mapID)
-    local undiscovered = Art.Undiscovered((l + r) / 2, (t + b) / 2)
+    local undiscovered = CityExploration(mapID) == "unseen"
     for _, tex in ipairs(f.tiles) do Unexplored(tex, undiscovered) end
 end
 

@@ -122,6 +122,23 @@ local clientCity = C_Map.GetMapInfoAtPosition
 C_Map.GetMapInfoAtPosition = function() return { mapID = 1453 } end   -- (the city itself, as in Forever)
 EVENT("MAP_EXPLORATION_UPDATED")
 local cityHidden = CityTiles(function(w) return not w.shown end)
+local ol, orr, ot, ob = ZNS.Geo.Rect(1454)
+local nu, nv = (ol + orr) / 2, ot + (ob - ot) * 0.05   -- (near the city's top: above Durotar's rectangle)
+C_Map.GetMapInfoAtPosition = function() return { mapID = 1454 } end
+-- (the zone next to it explored, Durotar not: your case on an Alliance character)
+local other = ZNS.Geo.ZoneByRect(nu, nv)
+local textures = C_MapExplorationInfo.GetExploredMapTextures
+C_MapExplorationInfo.GetExploredMapTextures = function(m)
+    if m ~= other then return {} end
+    local out = {}
+    for _, o in ipairs(ZNS.MAPS[m][7] or {}) do out[#out + 1] = { fileDataIDs = { o[6] } } end
+    return out
+end
+EVENT("MAP_EXPLORATION_UPDATED")
+OUT(("inside a capital: by its zone's rectangle %s, as the city %s"):format(tostring(other),
+    tostring((ZNS.Art.Exploration(nu, nv)))))
+C_MapExplorationInfo.GetExploredMapTextures = textures
+EVENT("MAP_EXPLORATION_UPDATED")
 C_Map.GetMapInfoAtPosition = clientCity
 STATE.explored = "all"
 EVENT("MAP_EXPLORATION_UPDATED")

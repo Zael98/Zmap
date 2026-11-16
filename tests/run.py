@@ -25,7 +25,7 @@ CHECKS = {
                     r"^closed: saved view true$", r"^reopen on player: zone 1429$"]),
     "art": (False, [r"^world: world shown true, zones shown 0, isle shown 2$", r"^continent: zones built [1-9]\d*, all of them in view true$",
                     r"^zone: halo masks \d+ core masks \d+, every tile masked true$", r"^tiles inside rects: true$",
-                    r"^close: terrain tiles [1-9]\d*, alpha 1\.00$", r"^terrain never visited: hide 0 shown, dim [1-9]\d* dimmed, show [1-9]\d* shown$", r"^city: stormwind alpha [0-9.]+ shown true$", r"^city never visited: hidden [1-9]\d*; explored: shown [1-9]\d*, hidden 0$",
+                    r"^close: terrain tiles [1-9]\d*, alpha 1\.00$", r"^terrain never visited: hide 0 shown, dim [1-9]\d* dimmed, show [1-9]\d* shown$", r"^city: stormwind alpha [0-9.]+ shown true$", r"^city never visited: hidden [1-9]\d*; explored: shown [1-9]\d*, hidden 0$", r"^inside a capital: by its zone's rectangle (?!1411)\S+, as the city unseen$",
                     r"^unexplored hide: hidden [1-9]\d*$", r"^never visited: hidden [1-9]\d*, shown 0$", r"^zone base: never visited shown 0, explored in part shown [1-9]\d*$", r"^cave: inside 38, zoom \d+, tiles 12$", r"^cave zoomed out: shown false$", r"^cave floors: Mina Abisal, Minas Inferiores; lower shown 12, first hidden true$", r"^no zone from the client: nil, by rectangle unseen$", r"^exact exploration: outside the area's land unseen, inside seen, positions made 1$", r"^unexplored show: dimmed 0$", r"^errors 0$"]),
     "pins": (True, [r"^ctrl click: pins 1, prompt true$", r"^named: Mi herbolario$",
                     r"^navigate: target true, blizzard waypoint 1429, supertracked true$",
