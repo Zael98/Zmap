@@ -1,5 +1,10 @@
 # Zmap
 
+## 1.7.3 — Places you have not been
+
+- **Zones you have never been to now look unexplored**: dimmed or hidden, as "Unexplored areas" is set. The game gives no exploration data at all for such a zone, and Zmap took that as everything explored, so those zones showed whole.
+- **New option: "Hide icons where you have not been"** (in the Layers panel, under "Unexplored areas", and in Options; off by default). Quest givers, townsfolk, flight masters, dungeons, transports, rares, herbs and ore are left off the parts of a zone you have not discovered yet; in a zone where you have explored nothing, off the whole zone. Your own pins, your quests' objectives, your group and guild, your corpse and search results always stay.
+
 ## 1.7.2 — Quests with several places
 
 - **Finished objectives leave the map**: in a quest with two or more objectives (kill these here, those there, collect that), the places of the ones you have finished are no longer shown, nor their areas or the marks over those mobs, and "Go" leads to an objective you still have to do. Before, all of them stayed until the quest was done, and "Go" could send you back to a place you had finished. A mob or object that another unfinished objective still needs stays.
