@@ -140,17 +140,46 @@ end
 -- Exploration: overlays you have explored are drawn as they are; the rest shown, dimmed or hidden
 --------------------------------------------------------------------------------------------------------------
 
+-- the overlays of a zone you have explored: { [first fileDataID] = true }, kept until the exploration changes; nil
+-- only when the client cannot tell (every overlay counts as explored then). The game gives nothing for a zone you have
+-- never been to: nothing explored there.
+local exploredCache = {}
+function Art.Explored(mapID)
+    if not (C_MapExplorationInfo and C_MapExplorationInfo.GetExploredMapTextures) then return end
+    local set = exploredCache[mapID]
+    if not set then
+        set = {}
+        for _, e in ipairs(C_MapExplorationInfo.GetExploredMapTextures(mapID) or {}) do
+            if e.fileDataIDs and e.fileDataIDs[1] then set[e.fileDataIDs[1]] = true end
+        end
+        exploredCache[mapID] = set
+    end
+    return set
+end
+
+-- whether a point of the map (u, v) is in a part of its zone you have not discovered: anywhere in a zone where you
+-- have explored nothing, else inside some overlay of the zone and in none you have explored (a zone without
+-- overlays counts as discovered)
+function Art.Undiscovered(u, v)
+    local mapID, x, y = Geo.ZoneAt(u, v)
+    local overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]
+    local explored = overlays and #overlays > 0 and Art.Explored(mapID)
+    if not explored then return false end
+    if next(explored) == nil then return true end
+    local px, py, inside = x * ART_W, y * ART_H, false
+    for _, o in ipairs(overlays) do
+        if px >= o[3] and px <= o[3] + o[1] and py >= o[4] and py <= o[4] + o[2] then
+            if explored[o[6]] then return false end
+            inside = true
+        end
+    end
+    return inside
+end
+
 function Art.ApplyExplored(mapID)
     local z = zones[mapID]
     if not z then return end
-    local explored
-    local info = C_MapExplorationInfo and C_MapExplorationInfo.GetExploredMapTextures(mapID)
-    if info then
-        explored = {}
-        for _, e in ipairs(info) do
-            if e.fileDataIDs and e.fileDataIDs[1] then explored[e.fileDataIDs[1]] = true end
-        end
-    end
+    local explored = Art.Explored(mapID)
     local mode = ns.Opt("unexplored")
     local t = Art.Tint(mapID)
     for _, tex in ipairs(z.base) do tex:SetVertexColor(t[1], t[2], t[3]) end
@@ -447,12 +476,16 @@ Art.TERRAIN_ZOOM = 18
 ns.On("ZMAP_VIEW", Art.Update)
 
 ns.On("MAP_EXPLORATION_UPDATED", function()
+    wipe(exploredCache)
     for id in pairs(zones) do Art.ApplyExplored(id) end
+    if ns.Opt("hideUnexploredIcons") then ns.Pins.UpdateAll() end
 end)
 
 ns.On("ZMAP_OPTION", function(key)
     if key == "unexplored" or key == "harmonize" then
         for id in pairs(zones) do Art.ApplyExplored(id) end
+    elseif key == "hideUnexploredIcons" then
+        ns.Pins.UpdateAll()
     elseif (key == "minimap" or key == "caves") and ns.Map.IsShown() then
         Art.Update()
     end
@@ -460,5 +493,6 @@ end)
 
 ns.On("ZMAP_SHOW", function()
     -- exploration may have changed while the map was closed
+    wipe(exploredCache)
     for id in pairs(zones) do Art.ApplyExplored(id) end
 end)

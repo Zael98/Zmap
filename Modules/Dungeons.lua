@@ -3,7 +3,7 @@
 local _, ns = ...
 local L, Geo = ns.L, ns.Geo
 
-local P = ns.Pins.New("dungeons", { level = 45, size = 24, option = "dungeons", minZoom = 1.3 })
+local P = ns.Pins.New("dungeons", { land = true, level = 45, size = 24, option = "dungeons", minZoom = 1.3 })
 local entrances   -- { u, v, name, level, raid, description }
 
 local function LevelOf(name)

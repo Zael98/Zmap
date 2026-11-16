@@ -14,7 +14,8 @@ local Provider = {}
 Provider.__index = Provider
 
 -- spec: level (stacking, higher on top), size, option (the setting that shows it), minZoom, maxZoom,
---       mouse (false: labels the cursor goes through), and the methods Refresh, Tooltip, OnClick, OnEnter
+--       mouse (false: labels the cursor goes through), land (what the data puts on the land: hidden where you have
+--       not discovered it, with the option "hideUnexploredIcons"), and the methods Refresh, Tooltip, OnClick, OnEnter
 function Pins.New(name, spec)
     local p = setmetatable(spec or {}, Provider)
     p.name = name
@@ -97,6 +98,7 @@ end
 function Provider:Place(pin, u, v, mul)
     pin.u, pin.v, pin.mul = u, v, mul or pin.mul or 1
     Place(pin)
+    if self.land and ns.Opt("hideUnexploredIcons") and ns.Art.Undiscovered(u, v) then pin:Hide() end
 end
 
 function Provider:Shown()

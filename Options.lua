@@ -486,11 +486,12 @@ local function Build()
     Cycle(content, "openOn", L.OPT_OPEN_ON, { "player", "last" }, { L.OPEN_PLAYER, L.OPEN_LAST }, 20, y - 104)
     Cycle(content, "unexplored", L.OPT_UNEXPLORED, UNEXPLORED,
         { L.UNEXPLORED_show, L.UNEXPLORED_dim, L.UNEXPLORED_hide }, 20, y - 130)
-    Stepper(content, "iconScale", L.OPT_ICON_SIZE, 0.6, 2, 0.1, 20, y - 158)
-    Stepper(content, "fadeAlpha", L.OPT_FADE_ALPHA, 0.2, 1, 0.05, 20, y - 184)
-    Stepper(content, "questScale", L.OPT_QUEST_SIZE, 0.8, 2, 0.1, 20, y - 210)
+    Check(content, "hideUnexploredIcons", L.OPT_UNEXPLORED_ICONS, 16, y - 154, L.OPT_UNEXPLORED_ICONS_TIP)
+    Stepper(content, "iconScale", L.OPT_ICON_SIZE, 0.6, 2, 0.1, 20, y - 184)
+    Stepper(content, "fadeAlpha", L.OPT_FADE_ALPHA, 0.2, 1, 0.05, 20, y - 210)
+    Stepper(content, "questScale", L.OPT_QUEST_SIZE, 0.8, 2, 0.1, 20, y - 236)
 
-    local GRID = 332   -- where the layers' grid starts (below its header)
+    local GRID = 358   -- where the layers' grid starts (below its header)
     Header(content, L.OPT_SECTION_LAYERS, 16, -(GRID - 20))
     local layerChecks = {}
     for i, layer in ipairs(LAYERS) do layerChecks[i] = Check(content, layer[1], L[layer[2]], 0, 0) end

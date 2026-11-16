@@ -97,6 +97,8 @@ ns.LOCALES.DE = {
     OPT_QUEST_TOOLTIPS = "Quests im Tooltip von NPCs",
     OPT_QUEST_PLATES = "Markierung über NPCs, die meine Quests brauchen",
     OPT_OPEN_ON = "Karte öffnen", OPEN_PLAYER = "in meiner Zone", OPEN_LAST = "wo ich sie gelassen habe",
+    OPT_UNEXPLORED_ICONS = "Symbole verbergen, wo du noch nicht warst",
+    OPT_UNEXPLORED_ICONS_TIP = "Questgeber, Stadtbewohner, Flugmeister, Dungeons, Kräuter und Ähnliches fehlen in den Teilen einer Zone, die du noch nicht entdeckt hast. Deine eigenen Pins und die Ziele deiner Quests bleiben.",
     OPT_UNEXPLORED = "Unerforschte Gebiete", UNEXPLORED_show = "zeigen", UNEXPLORED_dim = "abgedunkelt", UNEXPLORED_hide = "ausblenden",
     OPT_LABELS = "Zonennamen", OPT_LEVELS = "Zonenstufen", OPT_FLIGHTS = "Flugmeister",
     OPT_DUNGEONS = "Dungeons und Schlachtzüge", OPT_TRANSPORTS = "Schiffe und Zeppeline", OPT_QUESTS = "Quests",

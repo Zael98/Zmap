@@ -97,6 +97,8 @@ ns.LOCALES.ZH = {
     OPT_QUEST_TOOLTIPS = "在 NPC 提示中显示任务",
     OPT_QUEST_PLATES = "在任务需要的 NPC 姓名板上显示标记",
     OPT_OPEN_ON = "打开地图时", OPEN_PLAYER = "显示我所在的区域", OPEN_LAST = "显示上次的位置",
+    OPT_UNEXPLORED_ICONS = "隐藏你没去过的地方的图标",
+    OPT_UNEXPLORED_ICONS_TIP = "任务发布者、城镇居民、飞行管理员、地下城、草药等不会显示在区域中你尚未发现的部分。你自己的标记和任务目标仍会显示。",
     OPT_UNEXPLORED = "未探索区域", UNEXPLORED_show = "显示", UNEXPLORED_dim = "变暗", UNEXPLORED_hide = "隐藏",
     OPT_LABELS = "区域名称", OPT_LEVELS = "区域等级", OPT_FLIGHTS = "飞行管理员",
     OPT_DUNGEONS = "地下城和团队副本", OPT_TRANSPORTS = "船和飞艇", OPT_QUESTS = "任务",

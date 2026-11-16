@@ -97,6 +97,8 @@ ns.LOCALES.RU = {
     OPT_QUEST_TOOLTIPS = "Задания в подсказке НИП",
     OPT_QUEST_PLATES = "Значок над НИП, нужными для моих заданий",
     OPT_OPEN_ON = "Открывать карту", OPEN_PLAYER = "на моей зоне", OPEN_LAST = "там, где оставил",
+    OPT_UNEXPLORED_ICONS = "Скрывать значки там, где вы не были",
+    OPT_UNEXPLORED_ICONS_TIP = "Выдающие задания, жители, распорядители полётов, подземелья, травы и прочее не показываются в неоткрытых частях зоны. Ваши метки и цели ваших заданий остаются.",
     OPT_UNEXPLORED = "Неисследованные места", UNEXPLORED_show = "показывать", UNEXPLORED_dim = "затемнять", UNEXPLORED_hide = "скрывать",
     OPT_LABELS = "Названия зон", OPT_LEVELS = "Уровни зон", OPT_FLIGHTS = "Распорядители полётов",
     OPT_DUNGEONS = "Подземелья и рейды", OPT_TRANSPORTS = "Корабли и дирижабли", OPT_QUESTS = "Задания",

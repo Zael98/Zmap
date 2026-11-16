@@ -12,7 +12,7 @@ local clientNames = {} -- [nodeID] = its name in the client's language
 local origin           -- the node you chose to plan from
 local graph            -- [from] = { paths }
 
-local P = ns.Pins.New("flights", { level = 40, size = 20, option = "flights", minZoom = 1.3 })
+local P = ns.Pins.New("flights", { land = true, level = 40, size = 20, option = "flights", minZoom = 1.3 })
 local route = ns.Pins.Lines()
 
 local function MyFaction()

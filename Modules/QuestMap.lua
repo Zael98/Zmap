@@ -443,7 +443,7 @@ function QM.GoTo(id)
     return true
 end
 
-local givers = ns.Pins.New("givers", { level = 48, size = 20, option = "available", minZoom = 3, cull = true })
+local givers = ns.Pins.New("givers", { land = true, level = 48, size = 20, option = "available", minZoom = 3, cull = true })
 
 function givers:Refresh()
     self:ReleaseAll()

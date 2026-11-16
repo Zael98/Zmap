@@ -97,6 +97,8 @@ ns.LOCALES.KO = {
     OPT_QUEST_TOOLTIPS = "NPC 툴팁에 퀘스트 정보",
     OPT_QUEST_PLATES = "내 퀘스트에 필요한 NPC 이름표에 표시",
     OPT_OPEN_ON = "지도 열기", OPEN_PLAYER = "내 지역에서", OPEN_LAST = "마지막 위치에서",
+    OPT_UNEXPLORED_ICONS = "가 보지 않은 곳의 아이콘 숨기기",
+    OPT_UNEXPLORED_ICONS_TIP = "퀘스트 제공자, 마을 주민, 비행 조련사, 던전, 약초 등은 아직 발견하지 않은 지역 부분에 표시되지 않습니다. 내 핀과 퀘스트 목표는 그대로 보입니다.",
     OPT_UNEXPLORED = "탐험하지 않은 지역", UNEXPLORED_show = "표시", UNEXPLORED_dim = "어둡게", UNEXPLORED_hide = "숨기기",
     OPT_LABELS = "지역 이름", OPT_LEVELS = "지역 레벨", OPT_FLIGHTS = "비행 조련사",
     OPT_DUNGEONS = "던전과 공격대", OPT_TRANSPORTS = "배와 비행선", OPT_QUESTS = "퀘스트",

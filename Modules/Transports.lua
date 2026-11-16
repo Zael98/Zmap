@@ -4,7 +4,7 @@
 local _, ns = ...
 local L, Geo = ns.L, ns.Geo
 
-local P = ns.Pins.New("transports", { level = 35, size = 20, option = "transports", minZoom = 1.3 })
+local P = ns.Pins.New("transports", { land = true, level = 35, size = 20, option = "transports", minZoom = 1.3 })
 local lines = ns.Pins.Lines()
 
 local COLORS = { boat = { 0.35, 0.68, 1 }, zeppelin = { 1, 0.5, 0.2 }, airship = { 0.75, 0.6, 1 } }

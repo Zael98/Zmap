@@ -97,6 +97,8 @@ ns.LOCALES.IT = {
     OPT_QUEST_TOOLTIPS = "Missioni nel tooltip dei PNG",
     OPT_QUEST_PLATES = "Un segno sui PNG che servono alle mie missioni",
     OPT_OPEN_ON = "Apri la mappa", OPEN_PLAYER = "sulla mia zona", OPEN_LAST = "dove l'ho lasciata",
+    OPT_UNEXPLORED_ICONS = "Nascondi le icone dove non sei stato",
+    OPT_UNEXPLORED_ICONS_TIP = "Chi dà missioni, abitanti, maestri di volo, spedizioni, erbe e simili non compaiono nelle parti di una zona che non hai ancora scoperto. I tuoi segnalini e gli obiettivi delle tue missioni restano.",
     OPT_UNEXPLORED = "Aree inesplorate", UNEXPLORED_show = "mostrarle", UNEXPLORED_dim = "scurite", UNEXPLORED_hide = "nasconderle",
     OPT_LABELS = "Nomi delle zone", OPT_LEVELS = "Livelli delle zone", OPT_FLIGHTS = "Maestri di volo",
     OPT_DUNGEONS = "Spedizioni e incursioni", OPT_TRANSPORTS = "Navi e zeppelin", OPT_QUESTS = "Missioni",

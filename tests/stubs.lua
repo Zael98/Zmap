@@ -625,6 +625,7 @@ end
 C_MapExplorationInfo = {
     GetExploredMapTextures = function(mapID)
         local d = ZNS.MAPS[mapID]
+        if STATE.explored == "never" then return nil end   -- (a zone never visited: the game gives nothing)
         if not d or not d[7] or STATE.explored == "none" then return {} end
         local out = {}
         for i, o in ipairs(d[7]) do

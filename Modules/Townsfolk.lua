@@ -230,7 +230,7 @@ end
 local BINDER_ICON = 132052   -- the innkeeper's "make this inn your home" gossip option
 local MAX_PINS = 600
 
-local P = ns.Pins.New("townsfolk", { level = 25, size = 16, option = "townsfolk", minZoom = 6, cull = true })
+local P = ns.Pins.New("townsfolk", { land = true, level = 25, size = 16, option = "townsfolk", minZoom = 6, cull = true })
 
 -- the NPC's title line ("Weapon Merchant"), if its tooltip has one
 local function Subtitle(unit)

@@ -100,6 +100,12 @@ local function Overlays(test)
 end
 ZNS.SetOpt("unexplored", "hide")
 OUT("unexplored hide: hidden " .. Overlays(function(w) return not w.shown end))
+STATE.explored = "never"
+EVENT("MAP_EXPLORATION_UPDATED")
+OUT(("never visited: hidden %d, shown %d"):format(Overlays(function(w) return not w.shown end),
+    Overlays(function(w) return w.shown end)))
+STATE.explored = nil
+EVENT("MAP_EXPLORATION_UPDATED")
 ZNS.SetOpt("unexplored", "show")
 OUT("unexplored show: dimmed " .. Overlays(function(w) return w.shown and w.desat and w.desat > 0 end))
 ZNS.SetOpt("unexplored", "dim")

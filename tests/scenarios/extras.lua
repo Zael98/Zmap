@@ -19,6 +19,27 @@ local function GiverOf(npc)
 end
 local dughan = GiverOf(240)   -- Marshal Dughan
 OUT(("givers: %d, dughan %s"):format(#PINS("givers"), dughan and HOVER(dughan) or "none"))
+-- the option to hide the data's icons where you have not been: in a zone never visited the givers go, your own pin
+-- stays; explored, they are back; a city (no overlays) counts as discovered
+local function ShownPins(name) local n = 0 for _, p in ipairs(PINS(name)) do if p.shown then n = n + 1 end end return n end
+local mine = ZNS.Waypoints.Add(1429, 0.42, 0.65, "Mio")
+ZNS.SetOpt("hideUnexploredIcons", true)
+STATE.explored = "never"
+EVENT("MAP_EXPLORATION_UPDATED")
+FRAMES(2)
+local hiddenGivers, myPin = ShownPins("givers"), ShownPins("pins")
+STATE.explored = "all"
+EVENT("MAP_EXPLORATION_UPDATED")
+FRAMES(2)
+local su, sv = ZNS.Geo.ToWorld(1453, 0.5, 0.5)
+local city = ZNS.Art.Undiscovered(su, sv)
+OUT(("unexplored icons: givers %d (of %d), my pin %d, explored: givers %d, city undiscovered %s"):format(
+    hiddenGivers, #PINS("givers"), myPin, ShownPins("givers"), tostring(city)))
+ZNS.SetOpt("hideUnexploredIcons", false)
+ZNS.Waypoints.Remove(mine)
+STATE.explored = nil
+EVENT("MAP_EXPLORATION_UPDATED")
+FRAMES(2)
 -- done, it is no longer offered
 STATE.completed = { 7, 783, 11, 176, 239, 59, 60, 61, 62, 76, 106, 109, 111, 112, 114, 15, 21, 35, 40, 47, 54, 85, 86, 87, 88, 107, 118, 184 }
 EVENT("QUEST_TURNED_IN")

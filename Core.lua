@@ -90,6 +90,7 @@ ns.DEFAULTS = {
     replaceQuestLog = true,   -- L opens Zmap's quest log instead of Blizzard's map
     openOn = "player",        -- "player": on your zone; "last": where you left it
     unexplored = "dim",       -- areas you have not explored: "show", "dim" or "hide"
+    hideUnexploredIcons = false,   -- the data's icons (givers, townsfolk, flights...) hidden where you have not been
     minimap = true,           -- the minimap's terrain when zoomed in close
     iconScale = 1,
     questScale = 1,           -- size of the quest log on the map (text, icons and buttons)

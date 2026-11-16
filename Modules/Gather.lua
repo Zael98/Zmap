@@ -10,7 +10,7 @@ local OPTION = { herb = "herbs", ore = "ore" }
 local SAME = 0.008       -- two finds of the same name this close (share of the zone) are one node
 local MAX_PINS = 600
 
-local P = ns.Pins.New("gather", { level = 30, size = 16, minZoom = 3, cull = true })
+local P = ns.Pins.New("gather", { land = true, level = 30, size = 16, minZoom = 3, cull = true })
 
 function P:Shown()
     return (ns.Opt("herbs") or ns.Opt("ore")) and ns.Map.Zoom() >= self.minZoom

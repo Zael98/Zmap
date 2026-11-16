@@ -97,6 +97,8 @@ ns.LOCALES.FR = {
     OPT_QUEST_TOOLTIPS = "Quêtes dans l'infobulle des PNJ",
     OPT_QUEST_PLATES = "Une marque sur les PNJ utiles à mes quêtes",
     OPT_OPEN_ON = "Ouvrir la carte", OPEN_PLAYER = "sur ma zone", OPEN_LAST = "là où je l'ai laissée",
+    OPT_UNEXPLORED_ICONS = "Masquer les icônes là où vous n'êtes pas allé",
+    OPT_UNEXPLORED_ICONS_TIP = "Donneurs de quêtes, habitants, maîtres de vol, donjons, herbes et autres sont absents des parties d'une zone que vous n'avez pas encore découvertes. Vos repères et les objectifs de vos quêtes restent.",
     OPT_UNEXPLORED = "Zones inexplorées", UNEXPLORED_show = "les montrer", UNEXPLORED_dim = "assombries", UNEXPLORED_hide = "les cacher",
     OPT_LABELS = "Noms des zones", OPT_LEVELS = "Niveaux des zones", OPT_FLIGHTS = "Maîtres de vol",
     OPT_DUNGEONS = "Donjons et raids", OPT_TRANSPORTS = "Bateaux et zeppelins", OPT_QUESTS = "Quêtes",

@@ -97,6 +97,8 @@ ns.LOCALES.PT = {
     OPT_QUEST_TOOLTIPS = "Missões na dica dos PNJs",
     OPT_QUEST_PLATES = "Uma marca nos PNJs que minhas missões precisam",
     OPT_OPEN_ON = "Abrir o mapa", OPEN_PLAYER = "na minha zona", OPEN_LAST = "onde o deixei",
+    OPT_UNEXPLORED_ICONS = "Ocultar ícones onde você não esteve",
+    OPT_UNEXPLORED_ICONS_TIP = "Quem dá missões, moradores, mestres de voo, masmorras, ervas e afins não aparecem nas partes de uma zona que você ainda não descobriu. Seus marcadores e os objetivos das suas missões continuam.",
     OPT_UNEXPLORED = "Áreas inexploradas", UNEXPLORED_show = "mostrar", UNEXPLORED_dim = "escurecidas", UNEXPLORED_hide = "ocultar",
     OPT_LABELS = "Nomes das zonas", OPT_LEVELS = "Níveis das zonas", OPT_FLIGHTS = "Mestres de voo",
     OPT_DUNGEONS = "Masmorras e raides", OPT_TRANSPORTS = "Barcos e zepelins", OPT_QUESTS = "Missões",

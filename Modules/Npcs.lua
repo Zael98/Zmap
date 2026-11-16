@@ -339,7 +339,7 @@ end
 -- Rares, and what the search found
 --------------------------------------------------------------------------------------------------------------
 
-local rares = ns.Pins.New("rares", { level = 32, size = 20, option = "rares", minZoom = 2.6, cull = true })
+local rares = ns.Pins.New("rares", { land = true, level = 32, size = 20, option = "rares", minZoom = 2.6, cull = true })
 local rareList
 
 function rares:Refresh()
