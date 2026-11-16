@@ -1,5 +1,10 @@
 # Zmap
 
+## 1.7.4 — Flight times
+
+- **The flight timer counts the route the game really flies**, with its stops. Before, Zmap worked out the quickest route it knew, and the game often flies another one, so the time left could be far off (a flight through Theramore shown minutes too short). A trip you have flown before still uses the time it took.
+- The flight speed Zmap learns now comes from the route really flown.
+
 ## 1.7.3 — Places you have not been
 
 - **Zones you have never been to now look unexplored**: dimmed or hidden, as "Unexplored areas" is set. The game gives no exploration data at all for such a zone, and Zmap took that as everything explored, so those zones showed whole.
