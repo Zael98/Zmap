@@ -1,5 +1,12 @@
 # Zmap
 
+## 1.7.6 — Unexplored means unexplored
+
+- **A zone you have never been to is hidden whole** with "Unexplored areas: hide them" (dimmed with "dimmed"): its parchment and mountains too, not only the explored pieces drawn on them. Zones you have explored in part keep their base.
+- **The terrain up close follows exactly what you have explored**: Zmap now asks the game whether each spot is explored, by the real shape of the areas. Before, an explored area's rectangle (much bigger than its land) let the terrain show over unexplored land round it, and parts of a zone where the game names no zone were never hidden. With "hide them" the terrain is not shown where you have not been; with "dimmed" it is dimmed. A tile that touches explored land stays.
+- **Quests of both factions send you to your side**: the turn-in, the givers and "Go" use the NPCs friendly to you. Before, Zmap took the nearest of either faction, so an Alliance player near a Horde camp was sent there.
+- `/zmap diag` says what Zmap knows of the spot under the cursor (zone and exploration), for bug reports.
+
 ## 1.7.5 — Questie, cities and terrain
 
 - **With Questie**: Questie already shows quests on the minimap, over the nameplates and in tooltips, so the first time Zmap sees it installed it turns its own off (each one you never set yourself) and says so in chat. They can be turned back on in Options > Quest log, where "Quests on the minimap" is new.
