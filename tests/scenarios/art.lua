@@ -80,6 +80,23 @@ for _, w in ipairs(ALL_WIDGETS) do
     end
 end
 OUT(("close: terrain tiles %d, alpha %.2f"):format(terrain, alpha))
+local function TerrainTiles(test)
+    local n = 0
+    for _, w in ipairs(ALL_WIDGETS) do
+        if w.kind == "Texture" and type(w.file) == "number" and w.parent and w.parent._level == ZNS.Map.Canvas()._level + 8
+            and w.parent.shown and test(w) then n = n + 1 end
+    end
+    return n
+end
+STATE.explored = "never"
+ZNS.SetOpt("unexplored", "hide")
+EVENT("MAP_EXPLORATION_UPDATED")
+local terrainShown = TerrainTiles(function(w) return w.shown end)
+ZNS.SetOpt("unexplored", "dim")
+OUT(("terrain never visited: hide %d shown, dim %d dimmed"):format(terrainShown,
+    TerrainTiles(function(w) return w.shown and w.desat and w.desat > 0 end)))
+STATE.explored = nil
+EVENT("MAP_EXPLORATION_UPDATED")
 OUT("ART goldshire", DUMP_ART())
 
 local sl, sr, st, sb = ZNS.Geo.Rect(1453)
@@ -89,6 +106,24 @@ for _, w in ipairs(ALL_WIDGETS) do
     if w.kind == "MaskTexture" and tostring(w.file):match("city$") then city = w.parent end
 end
 OUT(("city: stormwind alpha %.2f shown %s"):format(city and city.alpha or -1, tostring(city and city:IsVisible())))
+local function CityTiles(test)
+    local n = 0
+    for _, w in ipairs(ALL_WIDGETS) do
+        if w.kind == "Texture" and w.parent == city and type(w.file) == "number" and test(w) then n = n + 1 end
+    end
+    return n
+end
+STATE.explored = "never"
+ZNS.SetOpt("unexplored", "hide")
+EVENT("MAP_EXPLORATION_UPDATED")
+local cityHidden = CityTiles(function(w) return not w.shown end)
+STATE.explored = "all"
+EVENT("MAP_EXPLORATION_UPDATED")
+OUT(("city never visited: hidden %d; explored: shown %d, hidden %d"):format(cityHidden,
+    CityTiles(function(w) return w.shown end), CityTiles(function(w) return not w.shown end)))
+STATE.explored = nil
+ZNS.SetOpt("unexplored", "dim")
+EVENT("MAP_EXPLORATION_UPDATED")
 OUT("ART stormwind", DUMP_ART())
 
 local function Overlays(test)

@@ -95,6 +95,8 @@ ns.LOCALES.KO = {
     QUEST_UNIT_TAKES = "완료 보고: %s",
     QUEST_UNIT_GIVES = "퀘스트 제공: %s",
     OPT_QUEST_TOOLTIPS = "NPC 툴팁에 퀘스트 정보",
+    OPT_MINIMAP_QUESTS = "미니맵에 퀘스트",
+    QUESTIE_OVERLAP = "Questie가 설치되어 있어 미니맵, 이름표, 툴팁에 퀘스트를 이미 표시합니다: Zmap의 표시는 꺼졌습니다 (설정 > 퀘스트 목록에서 다시 켜세요).",
     OPT_QUEST_PLATES = "내 퀘스트에 필요한 NPC 이름표에 표시",
     OPT_OPEN_ON = "지도 열기", OPEN_PLAYER = "내 지역에서", OPEN_LAST = "마지막 위치에서",
     OPT_UNEXPLORED_ICONS = "가 보지 않은 곳의 아이콘 숨기기",

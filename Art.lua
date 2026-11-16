@@ -176,6 +176,22 @@ function Art.Undiscovered(u, v)
     return inside
 end
 
+-- a texture of a part you have not discovered, as "Unexplored areas" says: shown as it is, dimmed or hidden
+local function Unexplored(tex, undiscovered)
+    local mode = ns.Opt("unexplored")
+    if not undiscovered or mode == "show" then
+        tex:SetVertexColor(1, 1, 1)
+        if tex.SetDesaturation then tex:SetDesaturation(0) end
+        tex:Show()
+    elseif mode == "dim" then
+        tex:SetVertexColor(DIM[1], DIM[2], DIM[3])
+        if tex.SetDesaturation then tex:SetDesaturation(DIM_DESAT) end
+        tex:Show()
+    else
+        tex:Hide()
+    end
+end
+
 function Art.ApplyExplored(mapID)
     local z = zones[mapID]
     if not z then return end
@@ -223,10 +239,20 @@ local function BuildZone(mapID)
     return z
 end
 
+-- a city's own map: dimmed or hidden while you have not discovered its place on its zone's map
+local function ApplyCity(mapID)
+    local f = cities[mapID]
+    if not f then return end
+    local l, r, t, b = Geo.Rect(mapID)
+    local undiscovered = Art.Undiscovered((l + r) / 2, (t + b) / 2)
+    for _, tex in ipairs(f.tiles) do Unexplored(tex, undiscovered) end
+end
+
 local function BuildCity(mapID)
     local f = Layer(cityRoot, cityRoot:GetFrameLevel() + 1)
-    Tiles(f, mapID, "ARTWORK", 0, Mask(f, mapID, "city"))
+    f.tiles = Tiles(f, mapID, "ARTWORK", 0, Mask(f, mapID, "city"))
     cities[mapID] = f
+    ApplyCity(mapID)
     return f
 end
 
@@ -403,7 +429,8 @@ local function UpdateTerrain(left, top, right, bottom, alpha)
             tex:SetSize(du * W * SEAM, dv * H * SEAM)
             tex:ClearAllPoints()
             tex:SetPoint("TOPLEFT", terrainRoot, "TOPLEFT", u * W, -v * H)
-            tex:Show()
+            tex.mu, tex.mv = u + du / 2, v + dv / 2
+            Unexplored(tex, Art.Undiscovered(tex.mu, tex.mv))
             terrain[key] = tex
         end
     end
@@ -475,15 +502,22 @@ Art.TERRAIN_ZOOM = 18
 
 ns.On("ZMAP_VIEW", Art.Update)
 
+-- the zones, cities and terrain as the exploration and the option stand now
+local function ApplyAll()
+    for id in pairs(zones) do Art.ApplyExplored(id) end
+    for id in pairs(cities) do ApplyCity(id) end
+    for _, tex in pairs(terrain) do Unexplored(tex, Art.Undiscovered(tex.mu, tex.mv)) end
+end
+
 ns.On("MAP_EXPLORATION_UPDATED", function()
     wipe(exploredCache)
-    for id in pairs(zones) do Art.ApplyExplored(id) end
+    ApplyAll()
     if ns.Opt("hideUnexploredIcons") then ns.Pins.UpdateAll() end
 end)
 
 ns.On("ZMAP_OPTION", function(key)
     if key == "unexplored" or key == "harmonize" then
-        for id in pairs(zones) do Art.ApplyExplored(id) end
+        ApplyAll()
     elseif key == "hideUnexploredIcons" then
         ns.Pins.UpdateAll()
     elseif (key == "minimap" or key == "caves") and ns.Map.IsShown() then
@@ -494,5 +528,5 @@ end)
 ns.On("ZMAP_SHOW", function()
     -- exploration may have changed while the map was closed
     wipe(exploredCache)
-    for id in pairs(zones) do Art.ApplyExplored(id) end
+    ApplyAll()
 end)

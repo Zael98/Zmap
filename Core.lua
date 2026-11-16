@@ -100,6 +100,7 @@ ns.DEFAULTS = {
     autoUntrack = false,      -- quests ready to turn in are no longer tracked
     questTooltips = true,     -- an NPC's tooltip says what it is for your quests
     questPlates = true,       -- a mark over the nameplates of the NPCs your quests need
+    minimapQuests = true,     -- quest givers and your quests' objectives on the minimap
     fadeMoving = true,        -- the window fades while you move
     fadeAlpha = 0.55,
     -- layers
@@ -149,11 +150,29 @@ ns.On("ADDON_LOADED", function(name)
     ns.Fire("ZMAP_DB")
 end)
 
+-- Questie shows quests on the minimap, on the nameplates and in the NPCs' tooltips too: with it installed, Zmap's
+-- own are turned off the first time (each one you never set yourself), and it says so; Options turns them back on
+local QUESTIE_SHOWS = { "minimapQuests", "questPlates", "questTooltips" }
+local function QuestieOverlap()
+    local loaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("Questie")
+    if not loaded or ns.db.questieSeen then return end
+    ns.db.questieSeen = true
+    local changed = false
+    for _, key in ipairs(QUESTIE_SHOWS) do
+        if ns.db.opt[key] == nil then
+            ns.SetOpt(key, false)
+            changed = true
+        end
+    end
+    if changed then ns.Print(L.QUESTIE_OVERLAP) end
+end
+
 ns.On("PLAYER_LOGIN", function()
     if not ns.db.welcomed then
         ns.db.welcomed = true
         ns.Print(L.WELCOME)
     end
+    QuestieOverlap()
 end)
 
 --------------------------------------------------------------------------------------------------------------

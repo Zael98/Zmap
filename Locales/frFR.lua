@@ -95,6 +95,8 @@ ns.LOCALES.FR = {
     QUEST_UNIT_TAKES = "À rendre : %s",
     QUEST_UNIT_GIVES = "Donne : %s",
     OPT_QUEST_TOOLTIPS = "Quêtes dans l'infobulle des PNJ",
+    OPT_MINIMAP_QUESTS = "Quêtes sur la minicarte",
+    QUESTIE_OVERLAP = "Questie est installé et affiche déjà les quêtes sur la minicarte, sur les barres de nom et dans les infobulles : celles de Zmap sont désactivées (réactivez-les dans Options > Journal de quêtes).",
     OPT_QUEST_PLATES = "Une marque sur les PNJ utiles à mes quêtes",
     OPT_OPEN_ON = "Ouvrir la carte", OPEN_PLAYER = "sur ma zone", OPEN_LAST = "là où je l'ai laissée",
     OPT_UNEXPLORED_ICONS = "Masquer les icônes là où vous n'êtes pas allé",

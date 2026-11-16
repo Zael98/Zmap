@@ -126,4 +126,21 @@ EVENT("PLAYER_LOGIN")
 local again = 0
 for _, p in ipairs(STATE.printed) do if p:find(ZNS.L.WELCOME, 1, true) then again = again + 1 end end
 OUT("welcome once: " .. tostring(welcomes == 1 and again == 1))
+-- Questie installed: Zmap's quest marks on the minimap, nameplates and tooltips go off once (not one you set
+-- yourself), with a line saying so; a later login changes nothing
+local loaded = C_AddOns.IsAddOnLoaded
+C_AddOns.IsAddOnLoaded = function(name) return name == "Questie" end
+ZNS.db.questieSeen, ZNS.db.opt.minimapQuests, ZNS.db.opt.questPlates = nil, nil, nil
+ZNS.db.opt.questTooltips = true   -- (set by you: kept)
+local printed = #STATE.printed
+EVENT("PLAYER_LOGIN")
+local said = 0
+for k = printed + 1, #STATE.printed do if STATE.printed[k]:find(ZNS.L.QUESTIE_OVERLAP, 1, true) then said = said + 1 end end
+local minimapOff = ZNS.Opt("minimapQuests")
+ZNS.SetOpt("minimapQuests", true)
+EVENT("PLAYER_LOGIN")
+OUT(("questie: minimap %s, plates %s, tooltips kept %s, said %d, later login keeps your choice %s"):format(
+    tostring(minimapOff), tostring(ZNS.db.opt.questPlates), tostring(ZNS.Opt("questTooltips")),
+    said, tostring(ZNS.Opt("minimapQuests"))))
+C_AddOns.IsAddOnLoaded = loaded
 OUT("errors " .. #STATE.errors)

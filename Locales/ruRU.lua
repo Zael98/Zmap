@@ -95,6 +95,8 @@ ns.LOCALES.RU = {
     QUEST_UNIT_TAKES = "Сдать: %s",
     QUEST_UNIT_GIVES = "Даёт: %s",
     OPT_QUEST_TOOLTIPS = "Задания в подсказке НИП",
+    OPT_MINIMAP_QUESTS = "Задания на миникарте",
+    QUESTIE_OVERLAP = "Установлен Questie, он уже показывает задания на миникарте, над именами и в подсказках: показ Zmap выключен (включите в Настройки > Журнал заданий).",
     OPT_QUEST_PLATES = "Значок над НИП, нужными для моих заданий",
     OPT_OPEN_ON = "Открывать карту", OPEN_PLAYER = "на моей зоне", OPEN_LAST = "там, где оставил",
     OPT_UNEXPLORED_ICONS = "Скрывать значки там, где вы не были",

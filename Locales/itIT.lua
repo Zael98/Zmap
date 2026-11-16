@@ -95,6 +95,8 @@ ns.LOCALES.IT = {
     QUEST_UNIT_TAKES = "Consegna: %s",
     QUEST_UNIT_GIVES = "Dà: %s",
     OPT_QUEST_TOOLTIPS = "Missioni nel tooltip dei PNG",
+    OPT_MINIMAP_QUESTS = "Missioni sulla minimappa",
+    QUESTIE_OVERLAP = "Questie è installato e mostra già le missioni sulla minimappa, sulle targhette e nei tooltip: quelle di Zmap sono disattivate (riattivale in Opzioni > Registro missioni).",
     OPT_QUEST_PLATES = "Un segno sui PNG che servono alle mie missioni",
     OPT_OPEN_ON = "Apri la mappa", OPEN_PLAYER = "sulla mia zona", OPEN_LAST = "dove l'ho lasciata",
     OPT_UNEXPLORED_ICONS = "Nascondi le icone dove non sei stato",

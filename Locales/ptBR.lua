@@ -95,6 +95,8 @@ ns.LOCALES.PT = {
     QUEST_UNIT_TAKES = "Entregar: %s",
     QUEST_UNIT_GIVES = "Dá: %s",
     OPT_QUEST_TOOLTIPS = "Missões na dica dos PNJs",
+    OPT_MINIMAP_QUESTS = "Missões no minimapa",
+    QUESTIE_OVERLAP = "O Questie está instalado e já mostra as missões no minimapa, nas placas de nome e nas dicas: as do Zmap estão desativadas (ative-as em Opções > Registro de missões).",
     OPT_QUEST_PLATES = "Uma marca nos PNJs que minhas missões precisam",
     OPT_OPEN_ON = "Abrir o mapa", OPEN_PLAYER = "na minha zona", OPEN_LAST = "onde o deixei",
     OPT_UNEXPLORED_ICONS = "Ocultar ícones onde você não esteve",

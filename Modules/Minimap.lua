@@ -92,12 +92,12 @@ local function Update()
         local u, v = Geo.ToWorld(p.m, p.x, p.y)
         if u and Geo.Instance(p.m) == instance then Show(u, v, "Waypoint-MapPin-Untracked", nil, 1, 0.82, 0, 14) end
     end
-    if ns.Opt("available") then
+    if ns.Opt("available") and ns.Opt("minimapQuests") then
         for _, mark in ipairs(ns.QuestMap.Givers()) do
             if not mark.trivial or ns.Opt("trivial") then Show(mark.u, mark.v, "QuestNormal", nil, 1, 1, 1, 14) end
         end
     end
-    if ns.Opt("objectives") then
+    if ns.Opt("objectives") and ns.Opt("minimapQuests") then
         for _, mark in ipairs(ns.QuestMap.Objectives()) do
             if not ns.QuestMap.Shown(mark.quest) then   -- (only the tracked ones, when so chosen)
             elseif mark.turnIn then

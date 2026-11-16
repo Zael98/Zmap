@@ -95,6 +95,8 @@ ns.LOCALES.DE = {
     QUEST_UNIT_TAKES = "Abgeben: %s",
     QUEST_UNIT_GIVES = "Gibt: %s",
     OPT_QUEST_TOOLTIPS = "Quests im Tooltip von NPCs",
+    OPT_MINIMAP_QUESTS = "Quests auf der Minikarte",
+    QUESTIE_OVERLAP = "Questie ist installiert und zeigt Quests schon auf der Minikarte, über den Namensplaketten und im Tooltip: die von Zmap sind aus (in Optionen > Questlog wieder einschalten).",
     OPT_QUEST_PLATES = "Markierung über NPCs, die meine Quests brauchen",
     OPT_OPEN_ON = "Karte öffnen", OPEN_PLAYER = "in meiner Zone", OPEN_LAST = "wo ich sie gelassen habe",
     OPT_UNEXPLORED_ICONS = "Symbole verbergen, wo du noch nicht warst",

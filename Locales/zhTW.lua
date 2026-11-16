@@ -95,6 +95,8 @@ ns.LOCALES.TW = {
     QUEST_UNIT_TAKES = "交任務：%s",
     QUEST_UNIT_GIVES = "提供：%s",
     OPT_QUEST_TOOLTIPS = "在 NPC 提示中顯示任務",
+    OPT_MINIMAP_QUESTS = "小地圖上的任務",
+    QUESTIE_OVERLAP = "已安裝 Questie，它已在小地圖、名條和提示中顯示任務：Zmap 自己的顯示已關閉（可在 選項 > 任務日誌 中重新開啟）。",
     OPT_QUEST_PLATES = "在任務需要的 NPC 名條上顯示標記",
     OPT_OPEN_ON = "開啟地圖時", OPEN_PLAYER = "顯示我所在的區域", OPEN_LAST = "顯示上次的位置",
     OPT_UNEXPLORED_ICONS = "隱藏你沒去過的地方的圖示",

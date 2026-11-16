@@ -660,6 +660,7 @@ function objectives:Refresh()
                 self:Place(pin, mark.u, mark.v, 1.5 * grow)
             elseif mark.buy then
                 pin.icon:SetTexture(BUY_ICON)
+                pin.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
                 pin.icon:SetVertexColor(1, 1, 1)
                 self:Place(pin, mark.u, mark.v, 1.3 * grow)
             elseif mark.reach then
