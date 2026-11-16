@@ -246,16 +246,16 @@ local function BuildZone(mapID)
 end
 
 -- a city's own map: dimmed or hidden while you have not discovered its place on its zone's map
+-- a terrain tile where you have not been follows "Unexplored areas" like the map: dimmed, or not shown with "hide
+-- them"; it counts as discovered if any of its points (middle, corners) is
 local function ApplyTerrainTile(tex)
-    local hide = false
-    if ns.Opt("unexplored") ~= "show" then
-        for _, p in ipairs(tex.points) do
-            local state = Art.Exploration(p[1], p[2])
-            if state == "seen" then hide = false break end
-            if state == "unseen" then hide = true end
-        end
+    local unseen = false
+    for _, p in ipairs(tex.points) do
+        local state = Art.Exploration(p[1], p[2])
+        if state == "seen" then unseen = false break end
+        if state == "unseen" then unseen = true end
     end
-    tex:SetShown(not hide)
+    Unexplored(tex, unseen)
 end
 
 local function ApplyCity(mapID)

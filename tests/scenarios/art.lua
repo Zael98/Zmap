@@ -93,10 +93,10 @@ ZNS.SetOpt("unexplored", "hide")
 EVENT("MAP_EXPLORATION_UPDATED")
 local terrainShown = TerrainTiles(function(w) return w.shown end)
 ZNS.SetOpt("unexplored", "dim")
-local terrainDim = TerrainTiles(function(w) return w.shown end)
+local terrainDim = TerrainTiles(function(w) return w.shown and w.desat and w.desat > 0 end)
 ZNS.SetOpt("unexplored", "show")
-OUT(("terrain never visited: hide %d shown, dim %d shown, show %d shown"):format(terrainShown, terrainDim,
-    TerrainTiles(function(w) return w.shown end)))
+OUT(("terrain never visited: hide %d shown, dim %d dimmed, show %d shown"):format(terrainShown, terrainDim,
+    TerrainTiles(function(w) return w.shown and not (w.desat and w.desat > 0) end)))
 ZNS.SetOpt("unexplored", "dim")
 STATE.explored = nil
 EVENT("MAP_EXPLORATION_UPDATED")
