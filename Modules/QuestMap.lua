@@ -161,6 +161,19 @@ local function NpcPlaces(q, npc, every)
     return Moved(q, npc) or (every and ns.Npcs.Spawns(npc) or ns.Npcs.Places(npc))
 end
 
+-- who gives or takes a quest, for you: a quest of both factions lists the Alliance's and the Horde's NPCs; those
+-- friendly to you when there are any (else all: the data does not know their side)
+local function OurNpcs(list)
+    local ours
+    for _, npc in ipairs(list) do
+        if ns.Npcs.Friendly(npc) then
+            ours = ours or {}
+            ours[#ours + 1] = npc
+        end
+    end
+    return ours or list
+end
+
 local function Marks(spawns, mark, cap, out)
     for i, s in ipairs(spawns) do
         if i > cap then break end
@@ -213,7 +226,7 @@ local function Build()
     local byNpc, byObject, moved = {}, {}, {}   -- (moved: { npc, quest } given where the quest has its giver)
     for id, q in pairs(QUESTS) do
         if QM.Available(id, q, level, race, class) then
-            for _, npc in ipairs(q[6]) do
+            for _, npc in ipairs(OurNpcs(q[6])) do
                 if Moved(q, npc) then
                     moved[#moved + 1] = { npc, id }
                 else
@@ -242,7 +255,7 @@ local function Build()
         if q then
             local doneNpc, doneObj = DoneParts(id, q)
             doneParts[id] = { doneNpc or {}, doneObj or {} }
-            for _, npc in ipairs(finished[id] and q[8] or q[10]) do
+            for _, npc in ipairs(finished[id] and OurNpcs(q[8]) or q[10]) do
                 if finished[id] or not doneParts[id][1][npc] then Index(npc, finished[id] and "takes" or "need", id) end
             end
         end
@@ -269,7 +282,7 @@ local function Build()
             local color = COLORS[(i - 1) % #COLORS + 1]
             if finished[id] then
                 if not (ns.BlizzardQuestPins and ns.BlizzardQuestPins[id]) then
-                    for _, npc in ipairs(q[8]) do Marks(NpcPlaces(q, npc), { quest = id, npc = npc, turnIn = true }, 6, objectiveMarks) end
+                    for _, npc in ipairs(OurNpcs(q[8])) do Marks(NpcPlaces(q, npc), { quest = id, npc = npc, turnIn = true }, 6, objectiveMarks) end
                     for _, obj in ipairs(q[9]) do Marks(N.ObjectPlaces(obj), { quest = id, object = obj, turnIn = true }, 6, objectiveMarks) end
                 end
             else
@@ -385,7 +398,7 @@ function QM.Next(id)
     local q = QUESTS[id]
     if not best and q then
         local skip = not done and QM.Objectives() and doneParts[id] and doneParts[id][1] or {}
-        for _, npc in ipairs(done and q[8] or q[10]) do
+        for _, npc in ipairs(done and OurNpcs(q[8]) or q[10]) do
             if not skip[npc] then
                 for _, s in ipairs(NpcPlaces(q, npc, true)) do Nearest(s[1], s[2], s[3], { npc = npc, turnIn = done or nil }) end
             end
@@ -410,7 +423,7 @@ function QM.TurnIn(id)
             end
         end
     end
-    for _, npc in ipairs(q[8]) do Try(NpcPlaces(q, npc), { npc = npc }) end
+    for _, npc in ipairs(OurNpcs(q[8])) do Try(NpcPlaces(q, npc), { npc = npc }) end
     for _, obj in ipairs(q[9]) do Try(ns.Npcs.ObjectPlaces(obj), { object = obj }) end
     if best then best.name = WhoName(best) end
     return best

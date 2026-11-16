@@ -539,6 +539,35 @@ STATE.objectives, STATE.log = nil, {}
 EVENT("QUEST_LOG_UPDATE")
 ADVANCE(2)
 
+-- a quest of both factions, taken by an Alliance NPC and a Horde one: an Alliance player standing by the Horde one
+-- is still sent to the Alliance's (and a Horde player to the Horde's)
+local both, allyNpc, hordeNpc
+for id, q in pairs(ZNS.QUESTS) do
+    local a, h
+    for _, npc in ipairs(q[8]) do
+        local d = ZNS.NPCS[npc]
+        if d and d[4] == "A" and ZNS.Npcs.Places(npc)[1] then a = npc end
+        if d and d[4] == "H" and ZNS.Npcs.Places(npc)[1] then h = npc end
+    end
+    if a and h and (not both or id < both) then both, allyNpc, hordeNpc = id, a, h end
+end
+local function StandBy(npc)
+    local p = ZNS.Npcs.Places(npc)[1]
+    local u, v = ZNS.Geo.ToWorld(p[1], p[2], p[3])
+    local inst = ZNS.Geo.Instance(p[1])
+    STATE.player.inst = inst
+    STATE.player.wx, STATE.player.wy = ZNS.Geo.ToYards(inst, u, v)
+end
+local saved = { STATE.player.inst, STATE.player.wx, STATE.player.wy, STATE.player.faction }
+StandBy(hordeNpc)
+local allianceGoes = ZNS.QuestMap.TurnIn(both).npc
+STATE.player.faction = "Horde"
+StandBy(allyNpc)
+local hordeGoes = ZNS.QuestMap.TurnIn(both).npc
+STATE.player.inst, STATE.player.wx, STATE.player.wy, STATE.player.faction = saved[1], saved[2], saved[3], saved[4]
+OUT(("both factions: quest found %s, alliance by the horde's goes to the alliance's %s, horde by the alliance's to the horde's %s")
+    :format(tostring(both ~= nil), tostring(allianceGoes == allyNpc), tostring(hordeGoes == hordeNpc)))
+
 -- /zmap check: every feature tried, OK or FAIL each
 SlashCmdList.ZMAP("check")
 local checkText = ZmapDiag.edit:GetText()
