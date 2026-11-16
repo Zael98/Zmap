@@ -160,20 +160,26 @@ end
 -- whether a point of the map (u, v) is in a part of its zone you have not discovered: anywhere in a zone where you
 -- have explored nothing, else inside some overlay of the zone and in none you have explored (a zone without
 -- overlays counts as discovered)
-function Art.Undiscovered(u, v)
+-- what you know of a point of the map (u, v): "seen", "unseen", or nil where the game keeps no exploration (no zone
+-- there, a zone without overlays, a spot no overlay covers)
+function Art.Exploration(u, v)
     local mapID, x, y = Geo.ZoneAt(u, v)
     local overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]
     local explored = overlays and #overlays > 0 and Art.Explored(mapID)
-    if not explored then return false end
-    if next(explored) == nil then return true end
+    if not explored then return end
+    if next(explored) == nil then return "unseen" end
     local px, py, inside = x * ART_W, y * ART_H, false
     for _, o in ipairs(overlays) do
         if px >= o[3] and px <= o[3] + o[1] and py >= o[4] and py <= o[4] + o[2] then
-            if explored[o[6]] then return false end
+            if explored[o[6]] then return "seen" end
             inside = true
         end
     end
-    return inside
+    return inside and "unseen" or nil
+end
+
+function Art.Undiscovered(u, v)
+    return Art.Exploration(u, v) == "unseen"
 end
 
 -- a texture of a part you have not discovered, as "Unexplored areas" says: shown as it is, dimmed or hidden
@@ -240,6 +246,18 @@ local function BuildZone(mapID)
 end
 
 -- a city's own map: dimmed or hidden while you have not discovered its place on its zone's map
+local function ApplyTerrainTile(tex)
+    local hide = false
+    if ns.Opt("unexplored") ~= "show" then
+        for _, p in ipairs(tex.points) do
+            local state = Art.Exploration(p[1], p[2])
+            if state == "seen" then hide = false break end
+            if state == "unseen" then hide = true end
+        end
+    end
+    tex:SetShown(not hide)
+end
+
 local function ApplyCity(mapID)
     local f = cities[mapID]
     if not f then return end
@@ -429,8 +447,8 @@ local function UpdateTerrain(left, top, right, bottom, alpha)
             tex:SetSize(du * W * SEAM, dv * H * SEAM)
             tex:ClearAllPoints()
             tex:SetPoint("TOPLEFT", terrainRoot, "TOPLEFT", u * W, -v * H)
-            tex.mu, tex.mv = u + du / 2, v + dv / 2
-            Unexplored(tex, Art.Undiscovered(tex.mu, tex.mv))
+            tex.points = { { u + du / 2, v + dv / 2 }, { u, v }, { u + du, v }, { u, v + dv }, { u + du, v + dv } }
+            ApplyTerrainTile(tex)
             terrain[key] = tex
         end
     end
@@ -506,7 +524,7 @@ ns.On("ZMAP_VIEW", Art.Update)
 local function ApplyAll()
     for id in pairs(zones) do Art.ApplyExplored(id) end
     for id in pairs(cities) do ApplyCity(id) end
-    for _, tex in pairs(terrain) do Unexplored(tex, Art.Undiscovered(tex.mu, tex.mv)) end
+    for _, tex in pairs(terrain) do ApplyTerrainTile(tex) end
 end
 
 ns.On("MAP_EXPLORATION_UPDATED", function()
