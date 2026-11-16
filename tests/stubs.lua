@@ -375,6 +375,9 @@ function ClearOverrideBindings() wipe(STATE.bindings) end
 function ToggleWorldMap() STATE.blizzardMap = true end
 function QuestMapFrame_OpenToQuestDetails(id) STATE.openedQuest = id end
 function TakeTaxiNode(slot) STATE.tookSlot = slot end
+-- the route the game flies: STATE.taxiRoute = { { fromSlot, toSlot }, ... } (a slot is its node id in the stubs)
+function GetNumRoutes() return STATE.taxiRoute and #STATE.taxiRoute or 0 end
+function TaxiGetNodeSlot(_, hop, source) local h = (STATE.taxiRoute or {})[hop] return h and h[source and 1 or 2] end
 
 C_Timer = {}
 function C_Timer.After(d, fn) table.insert(STATE.timers, { at = STATE.time + d, fn = fn }) end

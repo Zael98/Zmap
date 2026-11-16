@@ -65,4 +65,16 @@ STATE.onTaxi = false
 FRAME()
 OUT(("landed: recorded %s s, bar hidden %s"):format(tostring(ZNS.db.flights["2-6"]), tostring(not bar.shown)))
 OUT("speed learned: " .. tostring(ZNS.db.flightSpeed ~= nil and ZNS.db.flightSpeed > 5))
+-- the game's own route: Stormwind to Lakeshire through Sentinel Hill; the timer counts that, not the direct path
+STATE.taxiCurrent, STATE.taxiRoute = 2, { { 2, 4 }, { 4, 5 } }
+TakeTaxiNode(5)
+FRAMES(2)
+STATE.onTaxi = true
+FRAMES(2)
+local gameEta = bar.max or 0
+local quickest = ZNS.Flights.Route(2, 5)
+OUT(("game route: timer %d s, through Sentinel Hill %s, zmap's quickest %d s"):format(gameEta,
+    tostring(math.abs(gameEta - (2290 + 3865) / ZNS.db.flightSpeed) < 1), quickest))
+STATE.onTaxi, STATE.taxiRoute = false, nil
+FRAME()
 OUT("errors " .. #STATE.errors)

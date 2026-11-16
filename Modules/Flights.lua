@@ -73,8 +73,7 @@ local function HopTime(path)
     return ns.db.flights[path[1] .. "-" .. path[2]] or path[3] / Speed()
 end
 
--- the quickest way from one node to another through nodes you know: seconds, { paths }
-function F.Route(from, to)
+local function Graph()
     if not graph then
         graph = {}
         for _, p in ipairs(PATHS) do
@@ -82,6 +81,12 @@ function F.Route(from, to)
             table.insert(graph[p[1]], p)
         end
     end
+    return graph
+end
+
+-- the quickest way from one node to another through nodes you know: seconds, { paths }
+function F.Route(from, to)
+    local graph = Graph()
     local dist, prev, done = { [from] = 0 }, {}, {}
     while true do
         local best, bd
@@ -230,6 +235,7 @@ ns.On("ZMAP_HIDE", function() route:Clear() end)
 --------------------------------------------------------------------------------------------------------------
 
 local flight     -- { from, to, name, taken, start, eta, length }
+local FlightTime -- (below: the game's route at the flight master)
 local bar
 
 local function Bar()
@@ -252,8 +258,8 @@ local function Record(f, seconds)
     local key = f.from .. "-" .. f.to
     local old = ns.db.flights[key]
     ns.db.flights[key] = old and (old + seconds) / 2 or seconds
-    -- how fast flights really are: from the trips flown in one hop
-    local _, hops = F.Route(f.from, f.to)
+    -- how fast flights really are: from the trips flown in one hop (the game's route, else Zmap's guess of it)
+    local hops = f.hops or select(2, F.Route(f.from, f.to))
     if hops and #hops == 1 then
         local samples = ns.db.flightSamples or {}
         samples[#samples + 1] = hops[1][3] / seconds
@@ -275,7 +281,7 @@ local function Watch()
     if not flight.start then
         if UnitOnTaxi("player") then
             flight.start = now
-            if flight.from and flight.to then flight.eta = F.Route(flight.from, flight.to) end
+            flight.eta = FlightTime(flight)
         elseif now - flight.taken > 10 then   -- never took off
             flight = nil
         end
@@ -316,17 +322,50 @@ local function TaxiMapID()
     return mapID
 end
 
+-- The route the game flies to a slot of the open flight map: its hops as the data's paths (nil when the client
+-- does not say, or a hop is not in the data). The game does not always take the quickest way Zmap would work out
+-- (F.Route): it has its own route between two flight masters, through the stops it chooses.
+local function GameRoute(slot, idBySlot)
+    if not (GetNumRoutes and TaxiGetNodeSlot) then return end
+    local ok, count = pcall(GetNumRoutes, slot)
+    if not ok or type(count) ~= "number" or count < 1 then return end
+    local hops = {}
+    for hop = 1, count do
+        local a, b = idBySlot[TaxiGetNodeSlot(slot, hop, true)], idBySlot[TaxiGetNodeSlot(slot, hop, false)]
+        local path
+        for _, p in ipairs(a and Graph()[a] or {}) do if p[2] == b then path = p end end
+        if not path then return end
+        hops[#hops + 1] = path
+    end
+    return hops
+end
+
+-- how long a flight takes: a whole trip timed before, else the game's route hop by hop, else Zmap's quickest
+function FlightTime(f)
+    local timed = f.from and f.to and ns.db.flights[f.from .. "-" .. f.to]
+    if timed then return timed end
+    if f.hops then
+        local seconds = 0
+        for _, p in ipairs(f.hops) do seconds = seconds + HopTime(p) end
+        return seconds
+    end
+    return f.from and f.to and (F.Route(f.from, f.to)) or nil
+end
+F.FlightTime = FlightTime
+
 local function OnTake(slot)
     local mapID = TaxiMapID()
     local ok, list = pcall(C_TaxiMap.GetAllTaxiNodes, mapID)
     local from, to, name
+    local idBySlot = {}
     if ok and list then
         for _, n in ipairs(list) do
             if n.state == Enum.FlightPathState.Current then from = n.nodeID end
             if n.slotIndex == slot then to, name = n.nodeID, n.name end
+            if n.slotIndex then idBySlot[n.slotIndex] = n.nodeID end
         end
     end
-    flight = { from = from, to = to, name = name or (to and F.Name(to)), taken = GetTime() }
+    flight = { from = from, to = to, name = name or (to and F.Name(to)), taken = GetTime(), hops = GameRoute(slot, idBySlot) }
     watcher:SetScript("OnUpdate", ns.Guard(Watch))
 end
 
