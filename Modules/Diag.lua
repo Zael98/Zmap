@@ -72,6 +72,14 @@ local function Report()
         local info = m and C_MapExplorationInfo.GetExploredMapTextures(m)
         return info and (#info .. " of " .. #(ns.MAPS[m][7] or {})) or "nil"
     end)
+    Line("exploration under the cursor", function()
+        local u, v = ns.Map.CursorUV()
+        if not u then return "cursor not on the map" end
+        local client = Geo.ZoneAt(u, v)
+        local rect = Geo.ZoneByRect(u, v)
+        return ("client zone %s, rectangle zone %s, %s"):format(tostring(client), tostring(rect),
+            tostring(ns.Art.Exploration(u, v) or "no data"))
+    end)
     Line("flight masters (client)", function()
         local list, unknown = C_TaxiMap.GetTaxiNodesForMap(1415) or {}, 0
         for _, n in ipairs(list) do if n.isUndiscovered then unknown = unknown + 1 end end

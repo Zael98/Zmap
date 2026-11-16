@@ -144,6 +144,18 @@ OUT(("never visited: hidden %d, shown %d"):format(Overlays(function(w) return no
     Overlays(function(w) return w.shown end)))
 STATE.explored = nil
 EVENT("MAP_EXPLORATION_UPDATED")
+-- Searing Gorge never visited, at a spot where the client names no zone (outside the outline it uses for clicks):
+-- still unexplored, by the zone's rectangle (before: no data, so its terrain stayed)
+STATE.explored = "never"
+EVENT("MAP_EXPLORATION_UPDATED")
+local gu, gv = ZNS.Geo.ToWorld(1427, 0.8, 0.3)
+local clientAt = C_Map.GetMapInfoAtPosition
+C_Map.GetMapInfoAtPosition = function() return nil end
+OUT(("no zone from the client: %s, by rectangle %s"):format(tostring((ZNS.Geo.ZoneAt(gu, gv))),
+    tostring((ZNS.Art.Exploration(gu, gv)))))
+C_Map.GetMapInfoAtPosition = clientAt
+STATE.explored = nil
+EVENT("MAP_EXPLORATION_UPDATED")
 ZNS.SetOpt("unexplored", "show")
 OUT("unexplored show: dimmed " .. Overlays(function(w) return w.shown and w.desat and w.desat > 0 end))
 ZNS.SetOpt("unexplored", "dim")

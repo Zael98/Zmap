@@ -164,6 +164,8 @@ end
 -- there, a zone without overlays, a spot no overlay covers)
 function Art.Exploration(u, v)
     local mapID, x, y = Geo.ZoneAt(u, v)
+    -- (the client names no zone on some parts of a zone, e.g. outside the outline it uses for clicks: by rectangle)
+    if not mapID then mapID, x, y = Geo.ZoneByRect(u, v) end
     local overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]
     local explored = overlays and #overlays > 0 and Art.Explored(mapID)
     if not explored then return end

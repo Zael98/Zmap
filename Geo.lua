@@ -201,6 +201,11 @@ function Geo.ZoneAt(u, v)
         end
         return
     end
+    return Geo.ZoneByRect(u, v)
+end
+
+-- the smallest zone whose rectangle holds a point: mapID, x, y (what ZoneAt answers without the client)
+function Geo.ZoneByRect(u, v)
     local best, area
     for _, id in ipairs(Geo.Zones()) do
         if MAPS[id][1] == "zone" and Contains(id, u, v) then
