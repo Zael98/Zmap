@@ -186,9 +186,14 @@ end
 -- there, a zone without overlays, a spot no overlay covers)
 function Art.Exploration(u, v)
     local mapID, x, y = Geo.ZoneAt(u, v)
-    -- (the client names no zone on some parts of a zone, e.g. outside the outline it uses for clicks: by rectangle)
-    if not mapID then mapID, x, y = Geo.ZoneByRect(u, v) end
     local overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]
+    -- the client names no zone on some parts of a zone (outside the outline it uses for clicks), or a map with no
+    -- exploration of its own: a capital city, which hangs from the continent in Forever (Stormwind's exploration is
+    -- an area of Elwynn's map). The zone under it by rectangle, then.
+    if not (overlays and #overlays > 0) then
+        mapID, x, y = Geo.ZoneByRect(u, v)
+        overlays = mapID and ns.MAPS[mapID] and ns.MAPS[mapID][7]
+    end
     local explored = overlays and #overlays > 0 and Art.Explored(mapID)
     if not explored then return end
     if next(explored) == nil then return "unseen" end

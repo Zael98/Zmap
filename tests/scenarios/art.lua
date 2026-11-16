@@ -118,8 +118,11 @@ local function CityTiles(test)
 end
 STATE.explored = "never"
 ZNS.SetOpt("unexplored", "hide")
+local clientCity = C_Map.GetMapInfoAtPosition
+C_Map.GetMapInfoAtPosition = function() return { mapID = 1453 } end   -- (the city itself, as in Forever)
 EVENT("MAP_EXPLORATION_UPDATED")
 local cityHidden = CityTiles(function(w) return not w.shown end)
+C_Map.GetMapInfoAtPosition = clientCity
 STATE.explored = "all"
 EVENT("MAP_EXPLORATION_UPDATED")
 OUT(("city never visited: hidden %d; explored: shown %d, hidden %d"):format(cityHidden,
