@@ -1,5 +1,11 @@
 # Zmap
 
+## 1.7.7 — Capital cities
+
+- **Capital cities follow "Unexplored areas" and "Hide icons where you have not been"** in the game too. In Forever a city's map hangs from the continent and has no exploration of its own, so Zmap now reads its spot on its zone's map: Stormwind on Elwynn's, Orgrimmar on Durotar's, Ironforge on Dun Morogh's, Thunder Bluff on Mulgore's, Undercity on Tirisfal's, Darnassus on Teldrassil's. Everything inside the city follows it, so its mailboxes, trainers and other icons are hidden with it.
+- Before, a city you had never been to could still show, and icons near a city's edge followed whatever zone lay under them (a mailbox in Orgrimmar went by Azshara).
+- Data from Questie bundle v12.10.0+v1.1.2.
+
 ## 1.7.6 — Unexplored means unexplored
 
 - **A zone you have never been to is hidden whole** with "Unexplored areas: hide them" (dimmed with "dimmed"): its parchment and mountains too, not only the explored pieces drawn on them. Zones you have explored in part keep their base.
