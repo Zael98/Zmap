@@ -51,3 +51,7 @@ Comandos: `/zmap` (abrir/cerrar), `/zmap opciones`, `/zmap pines`, `/zmap buscar
 - `python tools/logo.py` dibuja `logo.png`, la imagen del proyecto.
 - `python tests/run.py` carga el addon en Lua 5.1 (lupa) con una imitación de la API del juego y ejecuta los escenarios de `tests/scenarios`.
 - `python tools/preview.py` dibuja en PNG lo que pinta el escenario `art` (tests/out), con las texturas y máscaras reales, para revisar el cosido sin entrar al juego.
+
+## ☕ Apoyar
+
+Zmap es gratis y lo seguirá siendo. Si te resulta útil, puedes invitarme a un café en [ko-fi.com/zael98](https://ko-fi.com/zael98). ¡Gracias!
