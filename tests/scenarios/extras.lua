@@ -19,6 +19,8 @@ local function GiverOf(npc)
 end
 local dughan = GiverOf(240)   -- Marshal Dughan
 OUT(("givers: %d, dughan %s"):format(#PINS("givers"), dughan and HOVER(dughan) or "none"))
+-- (the text in your language: Questie's translation for the esES run)
+OUT("quest text in your language: " .. tostring(ZNS.QUEST_TEXT ~= nil and (ZNS.QUEST_TEXT[1078] or ""):find("Ventormenta", 1, true) ~= nil))
 -- Shift over a quest mark: each quest's details (levels and id, what it asks, who takes it), as Questie shows them;
 -- pressing Shift with the cursor already on it shows them at once
 dughan.scripts.OnEnter(dughan)
@@ -34,7 +36,7 @@ local firstQuest = dughan.mark.quests[1]
 OUT(("shift details: hint %s, levels %s, text %s, turn in %s, back without %s"):format(
     tostring(plain:find(ZNS.L.QUEST_SHIFT_DETAILS, 1, true) ~= nil),
     tostring(detailed:find(ZNS.L.QUEST_DETAIL_LEVELS:format(ZNS.QUESTS[firstQuest][2], ZNS.QUESTS[firstQuest][3], firstQuest), 1, true) ~= nil),
-    tostring(detailed:find(ZNS.QUESTS[firstQuest][22] or "?", 1, true) ~= nil),
+    tostring(detailed:find((ZNS.QUEST_TEXT and ZNS.QUEST_TEXT[firstQuest]) or ZNS.QUESTS[firstQuest][22] or "?", 1, true) ~= nil),
     tostring(detailed:find(ZNS.L.TURN_IN:sub(1, 6), 1, true) ~= nil),
     tostring(back == plain)))
 -- the option to hide the data's icons where you have not been: in a zone never visited the givers go, your own pin

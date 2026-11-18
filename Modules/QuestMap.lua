@@ -484,7 +484,8 @@ local function LogText(id)
 end
 function QM.Text(id)
     local q = QUESTS[id]
-    return LogText(id) or (q and q[22] ~= "" and q[22]) or nil
+    local translated = ns.QUEST_TEXT and ns.QUEST_TEXT[id]
+    return LogText(id) or translated or (q and q[22] ~= "" and q[22]) or nil
 end
 
 local function Details(tip, id)

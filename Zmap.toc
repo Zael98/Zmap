@@ -44,6 +44,15 @@ Data\Npcs.lua
 Data\NpcNames.lua
 Data\Objects.lua
 Data\Quests.lua
+Data\QuestText\deDE.lua
+Data\QuestText\esES.lua
+Data\QuestText\esMX.lua
+Data\QuestText\frFR.lua
+Data\QuestText\koKR.lua
+Data\QuestText\ptBR.lua
+Data\QuestText\ruRU.lua
+Data\QuestText\zhCN.lua
+Data\QuestText\zhTW.lua
 
 Geo.lua
 Art.lua

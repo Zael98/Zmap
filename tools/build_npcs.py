@@ -28,6 +28,7 @@ import sys
 import time
 import urllib.request
 import zipfile
+import zlib
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -210,6 +211,44 @@ def entities(kind):
                     row[int(key)] = cbor(base64.b64decode(value))[0]
                 out[ident] = row
     return _entities.get(kind, {})
+
+
+# QuestieDB's translations: per language, one zlib-compressed CBOR block per entity type, stored as TOC metadata
+# ("X-l10n-<locale>-<Type>", chunked like the rest). Its columns (for quests: name, objectives text) follow the
+# order of the type's ID list ("X-<Type>-IDS"), as QuestieDB's l10n/overlay.lua reads them.
+L10N_LOCALES = ["deDE", "esES", "esMX", "frFR", "koKR", "ptBR", "ruRU", "zhCN", "zhTW"]
+_toc_meta = None
+
+
+def toc_block(key):
+    """A compressed metadata block of QuestieDB's TOC, decoded (None when it is not there)."""
+    global _toc_meta
+    if _toc_meta is None:
+        _toc_meta = {}
+        for line in questie_toc().splitlines():
+            m = re.match(r"## (X-[^:]+): ?(.*)", line)
+            if m:
+                _toc_meta[m.group(1)] = m.group(2).strip()
+    value = _toc_meta.get(key)
+    if value is None:
+        return None
+    chunks = re.match(r"~(\d+)~", value)
+    if chunks:
+        value = "".join(_toc_meta[f"{key}-{i}"] for i in range(1, int(chunks.group(1)) + 1))
+    return cbor(zlib.decompress(base64.b64decode(value)))[0]
+
+
+def quest_texts(locale):
+    """{questID: objectives text} in one language, from QuestieDB's translations."""
+    ids, block = toc_block("X-Quest-IDS"), toc_block(f"X-l10n-{locale}-Quest")
+    if not (ids and block and len(block) > 1):
+        return {}
+    texts = {}
+    for position, text in enumerate(block[1]):
+        lines = [t.strip() for t in as_list(text) if isinstance(t, str) and t.strip()]
+        if lines and position < len(ids):
+            texts[ids[position]] = " ".join(lines)
+    return texts
 
 
 _zone_maps = None
@@ -602,6 +641,23 @@ def write_quests(quests):
     (ROOT / "Data" / "Quests.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def write_quest_texts(quests):
+    """Data/QuestText/<locale>.lua: what each quest asks in that language; a file loads only in its own client."""
+    folder = ROOT / "Data" / "QuestText"
+    folder.mkdir(exist_ok=True)
+    for locale in L10N_LOCALES:
+        texts = {q: t for q, t in quest_texts(locale).items() if q in quests}
+        lines = [header() + "local _, ns = ...",
+                 f'if GetLocale() ~= "{locale}" then return end   -- (only this language\'s client keeps it)', "",
+                 "-- [questID] = what it asks (Questie's objectives text in this language), shown with Shift on the map",
+                 "ns.QUEST_TEXT = {"]
+        for q in sorted(texts):
+            lines.append(f"    [{q}] = {lua_str(texts[q])},")
+        lines.append("}")
+        (folder / f"{locale}.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print(f"quest texts {locale}: {len(texts)}")
+
+
 def main():
     if "--fresh" in sys.argv[1:]:   # the latest Questie release again (its zip is cached by its own name)
         for name in ("release.json", "QuestieDB_Forever.toc"):
@@ -616,6 +672,7 @@ def main():
     quests, quest_objects = build_quests(npcs)
     write_quests(quests)
     print(f"quests: {len(quests)}")
+    write_quest_texts(quests)
     objects = build_objects(quest_objects)
     write_objects(objects)
     kinds = {}
