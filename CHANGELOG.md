@@ -1,5 +1,11 @@
 # Zmap
 
+## 1.7.8 — Quest details with Shift
+
+- **Hold Shift over a quest mark** on the map (a "!", an objective or a turn-in) to see each quest's details, as Questie shows them: its level, required level and ID, what it asks you to do, and who to turn it in to. Press or let go of Shift with the cursor already on it and the tooltip changes at once.
+- The text is in your game's language: the game's own for the quests in your log, and Questie's translations for the rest (German, Spanish, French, Korean, Portuguese, Russian and Chinese; English where Questie has no translation).
+- Data from Questie bundle v12.11.0+v1.1.3.
+
 ## 1.7.7 — Capital cities
 
 - **Capital cities follow "Unexplored areas" and "Hide icons where you have not been"** in the game too. In Forever a city's map hangs from the continent and has no exploration of its own, so Zmap now reads its spot on its zone's map: Stormwind on Elwynn's, Orgrimmar on Durotar's, Ironforge on Dun Morogh's, Thunder Bluff on Mulgore's, Undercity on Tirisfal's, Darnassus on Teldrassil's. Everything inside the city follows it, so its mailboxes, trainers and other icons are hidden with it.
