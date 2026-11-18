@@ -492,6 +492,8 @@ def build_quests(npcs):
             "rules": quest_rules(row),
             # (only worth it with two or more: the only objective done is the quest done)
             "objectives": groups if len(groups) > 1 else [],
+            # what it asks, as Questie shows it with Shift (English: the game gives a quest's text only once taken)
+            "text": " ".join(t.strip() for t in as_list(row.get(8)) if isinstance(t, str) and t.strip()),
         }
         quest_objects.update(quest["startObjs"] + quest["endObjs"] + quest["objs"])
         quests[qid] = quest
@@ -555,14 +557,16 @@ def write_objects(objects):
 
 
 def tail(q):
-    """The quest's optional last fields: its NPC places, its rules, its objectives one by one."""
-    if not (q["npcPlaces"] or q["rules"] or q["objectives"]):
+    """The quest's optional last fields: its NPC places, its rules, its objectives one by one, its text."""
+    if not (q["npcPlaces"] or q["rules"] or q["objectives"] or q["text"]):
         return ""
     out = f', {lua_list(q["npcPlaces"])}'
-    if q["rules"] or q["objectives"]:
+    if q["rules"] or q["objectives"] or q["text"]:
         out += ", { " + ", ".join(f"{k} = {lua_list(v) if isinstance(v, list) else v}" for k, v in sorted(q["rules"].items())) + " }"
-    if q["objectives"]:
+    if q["objectives"] or q["text"]:
         out += ", { " + ", ".join(f"{{ {kind}, {lua_list(n)}, {lua_list(o)} }}" for kind, n, o in q["objectives"]) + " }"
+    if q["text"]:
+        out += ", " + lua_str(q["text"])
     return out
 
 
@@ -583,7 +587,8 @@ def write_quests(quests):
              "--   skill = { skill line, skill at least }, spell = known (below 0: that one not known),",
              "--   minRep / maxRep = { factionID, standing at least / below } },",
              "--   its objectives one by one, when it has two or more, in the game's order within each kind:",
-             "--   { { kind (1 a mob to kill, 2 an object to use, 3 an item), { NPCs }, { objects } }, ... } }",
+             "--   { { kind (1 a mob to kill, 2 an object to use, 3 an item), { NPCs }, { objects } }, ... },",
+             "--   what it asks, in English (Questie's objectives text, shown with Shift) }",
              "ns.QUESTS = {"]
     for qid, q in sorted(quests.items()):
         if not q["name"]:

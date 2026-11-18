@@ -48,6 +48,8 @@ ns.LOCALES.DE = {
     DUNGEON = "Dungeon", RAID = "Schlachtzug", BATTLEGROUND = "Schlachtfeld", DUNGEON_LEVEL = "Stufe %s",
     BOAT = "Schiff", ZEPPELIN = "Zeppelin", AIRSHIP = "Luftschiff",
     QUEST_DONE = "Abgeschlossen: abgeben",
+    QUEST_SHIFT_DETAILS = "Umschalt: Questdetails",
+    QUEST_DETAIL_LEVELS = "Stufe %d · ab Stufe %d · Quest %d",
     QUEST_HINT = "Klick: im Questlog öffnen · Strg+Klick: hingehen",
     HERB = "Kraut", ORE = "Erz", GATHERED_TIMES = "%d-mal gesammelt", FOUND_BY = "Gefunden von %s",
     NODE_HINT = "Umschalt+Rechtsklick: löschen",

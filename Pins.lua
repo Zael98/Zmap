@@ -31,7 +31,10 @@ function Provider:CreateFrame()
     self.frame:SetFrameLevel(root:GetFrameLevel() + (self.level or 10))
 end
 
+local hovered   -- the pin under the cursor
+
 local function Enter(pin)
+    hovered = pin
     local p = pin.provider
     if p.OnEnter then p:OnEnter(pin) end
     if p.Tooltip then
@@ -42,10 +45,18 @@ local function Enter(pin)
 end
 
 local function Leave(pin)
+    if hovered == pin then hovered = nil end
     local p = pin.provider
     if p.OnLeave then p:OnLeave(pin) end
     GameTooltip:Hide()
 end
+
+-- Shift held or let go over a pin: its tooltip again (quests show their details with Shift, as Questie's do)
+ns.On("MODIFIER_STATE_CHANGED", function(key)
+    if hovered and hovered:IsShown() and type(key) == "string" and key:find("SHIFT") and GameTooltip:IsOwned(hovered) then
+        Enter(hovered)
+    end
+end)
 
 local function Click(pin, button)
     local p = pin.provider

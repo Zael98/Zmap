@@ -48,6 +48,8 @@ ns.LOCALES.KO = {
     DUNGEON = "던전", RAID = "공격대", BATTLEGROUND = "전장", DUNGEON_LEVEL = "레벨 %s",
     BOAT = "배", ZEPPELIN = "비행선", AIRSHIP = "비공정",
     QUEST_DONE = "완료: 보고하세요",
+    QUEST_SHIFT_DETAILS = "Shift: 퀘스트 상세 정보",
+    QUEST_DETAIL_LEVELS = "레벨 %d · %d레벨부터 · 퀘스트 %d",
     QUEST_HINT = "클릭: 퀘스트 목록에서 열기 · Ctrl+클릭: 그곳으로 가기",
     HERB = "약초", ORE = "광석", GATHERED_TIMES = "%d번 채집", FOUND_BY = "발견: %s",
     NODE_HINT = "Shift+오른쪽 클릭: 삭제",

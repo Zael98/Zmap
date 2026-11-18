@@ -48,6 +48,8 @@ ns.LOCALES.RU = {
     DUNGEON = "Подземелье", RAID = "Рейд", BATTLEGROUND = "Поле боя", DUNGEON_LEVEL = "Уровень %s",
     BOAT = "Корабль", ZEPPELIN = "Дирижабль", AIRSHIP = "Воздушный корабль",
     QUEST_DONE = "Выполнено: сдайте задание",
+    QUEST_SHIFT_DETAILS = "Shift: подробности задания",
+    QUEST_DETAIL_LEVELS = "Уровень %d · с %d уровня · задание %d",
     QUEST_HINT = "Щелчок: открыть в журнале · Ctrl+щелчок: идти туда",
     HERB = "Трава", ORE = "Руда", GATHERED_TIMES = "Собрано %d раз", FOUND_BY = "Нашёл: %s",
     NODE_HINT = "Shift+правый щелчок: удалить",

@@ -48,6 +48,8 @@ ns.LOCALES.FR = {
     DUNGEON = "Donjon", RAID = "Raid", BATTLEGROUND = "Champ de bataille", DUNGEON_LEVEL = "Niveau %s",
     BOAT = "Bateau", ZEPPELIN = "Zeppelin", AIRSHIP = "Aéronef",
     QUEST_DONE = "Terminée : à rendre",
+    QUEST_SHIFT_DETAILS = "Maj : détails de la quête",
+    QUEST_DETAIL_LEVELS = "Niveau %d · dès le niveau %d · quête %d",
     QUEST_HINT = "Clic : ouvrir dans le journal · Ctrl+clic : y aller",
     HERB = "Herbe", ORE = "Minerai", GATHERED_TIMES = "Récolté %d fois", FOUND_BY = "Trouvé par %s",
     NODE_HINT = "Maj+clic droit : supprimer",

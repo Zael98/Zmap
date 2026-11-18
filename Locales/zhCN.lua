@@ -48,6 +48,8 @@ ns.LOCALES.ZH = {
     DUNGEON = "地下城", RAID = "团队", BATTLEGROUND = "战场", DUNGEON_LEVEL = "等级 %s",
     BOAT = "船", ZEPPELIN = "飞艇", AIRSHIP = "飞船",
     QUEST_DONE = "已完成：去交任务",
+    QUEST_SHIFT_DETAILS = "Shift：任务详情",
+    QUEST_DETAIL_LEVELS = "等级 %d · %d 级起 · 任务 %d",
     QUEST_HINT = "点击：在任务日志中打开 · Ctrl+点击：前往",
     HERB = "草药", ORE = "矿石", GATHERED_TIMES = "已采集 %d 次", FOUND_BY = "由 %s 发现",
     NODE_HINT = "Shift+右键：删除",

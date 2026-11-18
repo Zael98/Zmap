@@ -267,7 +267,8 @@ function SetItemRef(link)
     if tostring(link):match("^worldmap:") then WorldMapFrame:Show() end
 end
 GameTooltip = CreateFrame("Frame", "GameTooltip")
-function GameTooltip:SetOwner() STATE.tooltip = {} end
+function GameTooltip:SetOwner(owner) STATE.tooltip = {} STATE.tooltipOwner = owner end
+function GameTooltip:IsOwned(f) return STATE.tooltipOwner == f end
 function GameTooltip:SetText(t) STATE.tooltip = { tostring(t) } end
 function GameTooltip:AddLine(t) table.insert(STATE.tooltip, tostring(t)) end
 function GameTooltip_Hide() GameTooltip:Hide() end

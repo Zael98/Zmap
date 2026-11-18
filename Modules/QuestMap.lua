@@ -472,13 +472,43 @@ function givers:Refresh()
     end
 end
 
+-- What a quest asks, its levels and who takes it, under its line in a tooltip (with Shift, as Questie shows them):
+-- the game's own text for a quest of your log (in your language), else the data's (Questie's, in English)
+local function LogText(id)
+    if not (inLog[id] and C_QuestLog.SetSelectedQuest and GetQuestLogQuestText) then return end
+    local old = C_QuestLog.GetSelectedQuest and C_QuestLog.GetSelectedQuest()
+    C_QuestLog.SetSelectedQuest(id)
+    local _, objectives = GetQuestLogQuestText()
+    if old and old ~= 0 then C_QuestLog.SetSelectedQuest(old) end
+    if type(objectives) == "string" and objectives ~= "" then return objectives end
+end
+function QM.Text(id)
+    local q = QUESTS[id]
+    return LogText(id) or (q and q[22] ~= "" and q[22]) or nil
+end
+
+local function Details(tip, id)
+    local q = QUESTS[id]
+    if not q then return end
+    tip:AddLine(L.QUEST_DETAIL_LEVELS:format(q[2], q[3], id), 0.6, 0.6, 0.6)
+    local text = QM.Text(id)
+    if text then tip:AddLine(text, 1, 1, 1, true) end
+    local t = QM.TurnIn(id)
+    if t then tip:AddLine(L.TURN_IN:format(("%s (%s)"):format(t.name, Geo.Name(t.m))), 0.4, 1, 0.4, true) end
+end
+
 function givers:Tooltip(pin, tip)
     local mark = pin.mark
+    local shift = IsShiftKeyDown()
     tip:SetText(WhoName(mark), 1, 1, 1)
     tip:AddLine(L.QUESTS_HERE, 0.7, 0.7, 0.7)
-    for _, id in ipairs(mark.quests) do tip:AddLine(QuestLine(id)) end
+    for _, id in ipairs(mark.quests) do
+        tip:AddLine(QuestLine(id))
+        if shift then Details(tip, id) end
+    end
     tip:AddLine(("%s  %s"):format(Geo.Name(mark.m), ns.Coords(mark.x, mark.y)), 0.6, 0.6, 0.6)
     tip:AddLine(L.CLICK_NAVIGATE, 0.6, 0.6, 0.6)
+    if not shift then tip:AddLine(L.QUEST_SHIFT_DETAILS, 0.6, 0.6, 0.6) end
 end
 
 function givers:OnClick(pin, button)
@@ -705,6 +735,11 @@ function objectives:Tooltip(pin, tip)
                 if o.finished then tip:AddLine(o.text, 0.5, 0.5, 0.5, true) else tip:AddLine(o.text, 1, 1, 1, true) end
             end
         end
+    end
+    if IsShiftKeyDown() then
+        Details(tip, mark.quest)
+    else
+        tip:AddLine(L.QUEST_SHIFT_DETAILS, 0.6, 0.6, 0.6)
     end
     tip:AddLine(L.QUEST_HINT, 0.6, 0.6, 0.6)
 end

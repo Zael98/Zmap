@@ -88,7 +88,7 @@ CHECKS = {
                      r"^not cached, asked again: Respuesta del servidor$",
                      r"^seen: remembered true, sent S\t999001$", r"^seen searchable: Vigía Torvo \| Explorador",
                      r"^far away not remembered: true$", r"^from guild: Guardia Kerr", r"^errors 0$"]),
-    "extras": (False, [r"^givers: [1-9]\d*, dughan .*", r"^unexplored icons: givers 0 \(of [1-9]\d*\), my pin 1, explored: givers [1-9]\d*, city undiscovered false$", r"^completed gone: true$", r"^above level offered: 0$",
+    "extras": (False, [r"^givers: [1-9]\d*, dughan .*", r"^shift details: hint true, levels true, text true, turn in true, back without true$", r"^shift on your quest: game text true$", r"^unexplored icons: givers 0 \(of [1-9]\d*\), my pin 1, explored: givers [1-9]\d*, city undiscovered false$", r"^completed gone: true$", r"^above level offered: 0$",
                        r"^objectives: wolves [1-9]\d*, turn-in true, tooltip .*Wolves Across the Border.*",
                        r"^objective areas: [1-9]\d* areas, outline true, bands true; off: [1-9]\d* dots, outline 0$",
                        r"^no profession: herbs 0, ore 0, offered herbs false, ore false$",

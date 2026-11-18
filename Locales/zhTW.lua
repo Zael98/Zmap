@@ -48,6 +48,8 @@ ns.LOCALES.TW = {
     DUNGEON = "地城", RAID = "團隊", BATTLEGROUND = "戰場", DUNGEON_LEVEL = "等級 %s",
     BOAT = "船", ZEPPELIN = "飛艇", AIRSHIP = "飛船",
     QUEST_DONE = "已完成：去交任務",
+    QUEST_SHIFT_DETAILS = "Shift：任務詳情",
+    QUEST_DETAIL_LEVELS = "等級 %d · %d 級起 · 任務 %d",
     QUEST_HINT = "點擊：在任務日誌中開啟 · Ctrl+點擊：前往",
     HERB = "草藥", ORE = "礦石", GATHERED_TIMES = "已採集 %d 次", FOUND_BY = "由 %s 發現",
     NODE_HINT = "Shift+右鍵：刪除",

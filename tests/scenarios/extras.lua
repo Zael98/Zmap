@@ -19,6 +19,24 @@ local function GiverOf(npc)
 end
 local dughan = GiverOf(240)   -- Marshal Dughan
 OUT(("givers: %d, dughan %s"):format(#PINS("givers"), dughan and HOVER(dughan) or "none"))
+-- Shift over a quest mark: each quest's details (levels and id, what it asks, who takes it), as Questie shows them;
+-- pressing Shift with the cursor already on it shows them at once
+dughan.scripts.OnEnter(dughan)
+local plain = table.concat(STATE.tooltip, " / ")
+STATE.shift = true
+EVENT("MODIFIER_STATE_CHANGED", "LSHIFT", 1)
+local detailed = table.concat(STATE.tooltip, " / ")
+STATE.shift = false
+EVENT("MODIFIER_STATE_CHANGED", "LSHIFT", 0)
+local back = table.concat(STATE.tooltip, " / ")
+dughan.scripts.OnLeave(dughan)
+local firstQuest = dughan.mark.quests[1]
+OUT(("shift details: hint %s, levels %s, text %s, turn in %s, back without %s"):format(
+    tostring(plain:find(ZNS.L.QUEST_SHIFT_DETAILS, 1, true) ~= nil),
+    tostring(detailed:find(ZNS.L.QUEST_DETAIL_LEVELS:format(ZNS.QUESTS[firstQuest][2], ZNS.QUESTS[firstQuest][3], firstQuest), 1, true) ~= nil),
+    tostring(detailed:find(ZNS.QUESTS[firstQuest][22] or "?", 1, true) ~= nil),
+    tostring(detailed:find(ZNS.L.TURN_IN:sub(1, 6), 1, true) ~= nil),
+    tostring(back == plain)))
 -- the option to hide the data's icons where you have not been: in a zone never visited the givers go, your own pin
 -- stays; explored, they are back; a city (no overlays) counts as discovered
 local function ShownPins(name) local n = 0 for _, p in ipairs(PINS(name)) do if p.shown then n = n + 1 end end return n end
@@ -70,6 +88,12 @@ local wolves, turnIn, tip = 0, false, ""
 for _, pin in ipairs(PINS("objectives")) do
     if pin.mark.turnIn then turnIn = true elseif pin.mark.quest == 33 then wolves = wolves + 1; tip = tip ~= "" and tip or HOVER(pin) end
 end
+STATE.shift = true
+local wolfPin
+for _, pin in ipairs(PINS("objectives")) do if pin.mark and pin.mark.quest == 33 and not pin.mark.turnIn then wolfPin = pin end end
+local wolfTip = wolfPin and HOVER(wolfPin) or ""
+STATE.shift = false
+OUT("shift on your quest: game text " .. tostring(wolfTip:find("Objetivo de la misión", 1, true) ~= nil))
 -- as areas (the option, on by default): the wolves' groups outlined and filled; off, a dot for each spawn
 local edges, bands = ZNS.QuestMap.AreasShown()
 local areas = wolves

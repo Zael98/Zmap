@@ -48,6 +48,8 @@ ns.LOCALES.PT = {
     DUNGEON = "Masmorra", RAID = "Raide", BATTLEGROUND = "Campo de Batalha", DUNGEON_LEVEL = "Nível %s",
     BOAT = "Barco", ZEPPELIN = "Zepelim", AIRSHIP = "Aeronave",
     QUEST_DONE = "Concluída: entregue-a",
+    QUEST_SHIFT_DETAILS = "Shift: detalhes da missão",
+    QUEST_DETAIL_LEVELS = "Nível %d · a partir do nível %d · missão %d",
     QUEST_HINT = "Clique: abrir no registro · Ctrl+clique: ir até lá",
     HERB = "Erva", ORE = "Minério", GATHERED_TIMES = "Coletado %d vezes", FOUND_BY = "Encontrado por %s",
     NODE_HINT = "Shift+clique direito: apagar",

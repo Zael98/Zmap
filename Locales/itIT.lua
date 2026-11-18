@@ -48,6 +48,8 @@ ns.LOCALES.IT = {
     DUNGEON = "Spedizione", RAID = "Incursione", BATTLEGROUND = "Campo di battaglia", DUNGEON_LEVEL = "Livello %s",
     BOAT = "Nave", ZEPPELIN = "Zeppelin", AIRSHIP = "Aeronave",
     QUEST_DONE = "Completata: consegnala",
+    QUEST_SHIFT_DETAILS = "Maiusc: dettagli della missione",
+    QUEST_DETAIL_LEVELS = "Livello %d · dal livello %d · missione %d",
     QUEST_HINT = "Clic: apri nel registro · Ctrl+clic: vai lì",
     HERB = "Erba", ORE = "Minerale", GATHERED_TIMES = "Raccolto %d volte", FOUND_BY = "Trovato da %s",
     NODE_HINT = "Maiusc+clic destro: elimina",
