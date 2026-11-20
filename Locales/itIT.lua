@@ -106,6 +106,7 @@ ns.LOCALES.IT = {
     OPT_UNEXPLORED = "Aree inesplorate", UNEXPLORED_show = "mostrarle", UNEXPLORED_dim = "scurite", UNEXPLORED_hide = "nasconderle",
     OPT_LABELS = "Nomi delle zone", OPT_LEVELS = "Livelli delle zone", OPT_FLIGHTS = "Maestri di volo",
     OPT_DUNGEONS = "Spedizioni e incursioni", OPT_TRANSPORTS = "Navi e zeppelin", OPT_QUESTS = "Missioni",
+    OPT_FISH_POOLS = "Banchi di pesci", FISH_POOL = "Banco di pesci", OPT_HANDYNOTES = "HandyNotes",
     OPT_GROUP = "Il mio gruppo", OPT_GUILD = "La mia gilda", OPT_PINS = "I miei segnalini", OPT_HERBS = "Erbe", OPT_ORE = "Minerali",
     OPT_TOWNSFOLK = "Abitanti delle città", OPT_MINIMAP = "Terreno da vicino (minimappa)",
     OPT_SHARE_GUILD = "Condividi la mia posizione con la gilda",

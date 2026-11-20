@@ -106,6 +106,7 @@ ns.LOCALES.ZH = {
     OPT_UNEXPLORED = "未探索区域", UNEXPLORED_show = "显示", UNEXPLORED_dim = "变暗", UNEXPLORED_hide = "隐藏",
     OPT_LABELS = "区域名称", OPT_LEVELS = "区域等级", OPT_FLIGHTS = "飞行管理员",
     OPT_DUNGEONS = "地下城和团队副本", OPT_TRANSPORTS = "船和飞艇", OPT_QUESTS = "任务",
+    OPT_FISH_POOLS = "鱼群", FISH_POOL = "鱼群", OPT_HANDYNOTES = "HandyNotes",
     OPT_GROUP = "我的队伍", OPT_GUILD = "我的公会", OPT_PINS = "我的标记", OPT_HERBS = "草药", OPT_ORE = "矿石",
     OPT_TOWNSFOLK = "镇民", OPT_MINIMAP = "近处地形（小地图）",
     OPT_SHARE_GUILD = "与公会分享我的位置",

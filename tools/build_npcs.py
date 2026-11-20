@@ -238,6 +238,17 @@ def toc_block(key):
     return cbor(zlib.decompress(base64.b64decode(value)))[0]
 
 
+def object_names(locale, ids):
+    """{objectID: name} in one language, for the objects asked (QuestieDB's translations)."""
+    all_ids, block = toc_block("X-Object-IDS"), toc_block(f"X-l10n-{locale}-Object")
+    if not (all_ids and block):
+        return {}
+    names = block[0]   # (a list from the first ID on, or a map of 1-based positions when sparse)
+    pairs = names.items() if isinstance(names, dict) else enumerate(names, 1)
+    return {all_ids[pos - 1]: name for pos, name in pairs
+            if isinstance(pos, int) and 0 < pos <= len(all_ids) and all_ids[pos - 1] in ids and isinstance(name, str) and name}
+
+
 def quest_texts(locale):
     """{questID: objectives text} in one language, from QuestieDB's translations."""
     ids, block = toc_block("X-Quest-IDS"), toc_block(f"X-l10n-{locale}-Quest")
@@ -380,6 +391,10 @@ def merge(questie, wdbs):
 # Objects and quests
 # --------------------------------------------------------------------------------------------------------------
 
+# fishing pools (schools, wreckage, oil spills...): by their English name
+FISH_POOL = re.compile(r"(School$|^School of |Floating Wreckage|Floating Debris|Oil Spill|Patch of Elemental Water)")
+
+
 def build_objects(quest_objects):
     """Herbs, ore, utility objects and the objects quests use: {id: {name, kind, item, skill, spawns}}."""
     item_by_name = {}
@@ -389,6 +404,9 @@ def build_objects(quest_objects):
     for oid, row in entities("Object").items():
         name = row.get(1) or ""
         spawns = spawns_by_map(row.get(4))
+        if FISH_POOL.search(name):   # (kept without spawns too: a pool learned in game is named by it)
+            out[oid] = {"name": name, "kind": "fish", "item": 0, "skill": 0, "spawns": spawns}
+            continue
         if not spawns:
             continue
         kind, item, skill = "", 0, 0
@@ -585,11 +603,11 @@ def write_npcs(npcs):
 
 def write_objects(objects):
     lines = [header() + "local _, ns = ...", "",
-             "-- [objectID] = { name (English), kind (herb, ore, mailbox, anvil, forge, stone or \"\" for a quest's),",
+             "-- [objectID] = { name (English), kind (herb, ore, fish, mailbox, anvil, forge, stone or \"\" for a quest's),",
              "--                item it gives (herbs, ore), skill it needs, uiMapID, { x1, y1, ... } (per thousand), ... }",
              "ns.OBJECTS = {"]
     for oid, o in sorted(objects.items()):
-        cap = 100000 if o["kind"] in ("herb", "ore", "mailbox") else MAX_SPAWNS
+        cap = 100000 if o["kind"] in ("herb", "ore", "mailbox", "fish") else MAX_SPAWNS
         lines.append(f'    [{oid}] = {{ {lua_str(o["name"])}, "{o["kind"]}", {o["item"]}, {o["skill"]}, {spawn_parts(o["spawns"], cap)} }},')
     lines.append("}")
     (ROOT / "Data" / "Objects.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -641,7 +659,7 @@ def write_quests(quests):
     (ROOT / "Data" / "Quests.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_quest_texts(quests):
+def write_quest_texts(quests, objects=None):
     """Data/QuestText/<locale>.lua: what each quest asks in that language; a file loads only in its own client."""
     folder = ROOT / "Data" / "QuestText"
     folder.mkdir(exist_ok=True)
@@ -654,8 +672,14 @@ def write_quest_texts(quests):
         for q in sorted(texts):
             lines.append(f"    [{q}] = {lua_str(texts[q])},")
         lines.append("}")
+        pools = {o for o, d in (objects or {}).items() if d["kind"] == "fish"}
+        names = object_names(locale, pools)
+        lines += ["", "-- [objectID] = a fishing pool's name in this language", "ns.POOL_NAMES = {"]
+        for o in sorted(names):
+            lines.append(f"    [{o}] = {lua_str(names[o])},")
+        lines.append("}")
         (folder / f"{locale}.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
-        print(f"quest texts {locale}: {len(texts)}")
+        print(f"quest texts {locale}: {len(texts)}, pool names {len(names)}")
 
 
 def main():
@@ -672,9 +696,9 @@ def main():
     quests, quest_objects = build_quests(npcs)
     write_quests(quests)
     print(f"quests: {len(quests)}")
-    write_quest_texts(quests)
     objects = build_objects(quest_objects)
     write_objects(objects)
+    write_quest_texts(quests, objects)
     kinds = {}
     for o in objects.values():
         kinds[o["kind"] or "quest"] = kinds.get(o["kind"] or "quest", 0) + sum(len(p) for p in o["spawns"].values())

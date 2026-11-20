@@ -4834,3 +4834,7 @@ ns.QUEST_TEXT = {
     [99435] = "Folgt Reginald Windsor durch Stormwind. Schützt ihn vor Gefahren! Sprecht mit Knappe Rowe, wenn Ihr Reginald Windsor nochmal kontaktieren müsst.",
     [99670] = "Kehrt zu Jereman bei der Wiege der Ruhe zurück.",
 }
+
+-- [objectID] = a fishing pool's name in this language
+ns.POOL_NAMES = {
+}

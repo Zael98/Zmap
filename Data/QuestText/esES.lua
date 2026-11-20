@@ -4475,3 +4475,7 @@ ns.QUEST_TEXT = {
     [99260] = "Habla con Elaadrin Vendaval del Atardecer en Valanaar.",
     [99411] = "Ahab Pezuña de Trigo del Poblado Pezuña de Sangre, en Mulgore, quiere que des de comer a su apreciado cachorro, Kyle el Demenciado. Dale a Kyle carne de zancudo tierna y vuelve junto a Ahab Pezuñatrigo.",
 }
+
+-- [objectID] = a fishing pool's name in this language
+ns.POOL_NAMES = {
+}

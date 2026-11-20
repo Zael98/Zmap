@@ -58,7 +58,7 @@ CHECKS = {
                        r"^you are not a guildmate: Domi-Otro, Lyra$", r"^roster without you: Korra-Nube$", r"^expired: 0$",
                        r"^group shown: Thrall$", r"^query answered: true$", r"^errors 0$"]),
     "finds": (False, [r"^herb recorded: 1, sent N\therb\t", r"^same herb again: nodes 1, times 2$",
-                      r"^received ore: nodes 2, by Lyra$", r"^herb pins at zoom 6: [1-9]\d*$",
+                      r"^received ore: nodes 2, by Lyra$", r"^herb pins at zoom 6: [1-9]\d*$", r"^pool learned: true, Floating Wreckage, ahead true, sent yes$", r"^open water: nodes true$", r"^pool on the map: Floating Wreckage / (Banco de pesca|Fishing pool)", r"^handynotes: nodes 2, tooltip 1429:42(00|50)6(0|1)00, clicks RightButtontrue,RightButtonfalse, plugin off 0$",
                       r"^vendor met: Gregor \(Herrero\) repair, sent T\trepair\t",
                       r"^innkeeper by gossip: true$", r"^mailbox: true$", r"^received folk: Aldric$",
                       r"^folk pins: [1-9]\d*$", r"^errors 0$"]),

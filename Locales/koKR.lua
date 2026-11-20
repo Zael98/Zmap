@@ -106,6 +106,7 @@ ns.LOCALES.KO = {
     OPT_UNEXPLORED = "탐험하지 않은 지역", UNEXPLORED_show = "표시", UNEXPLORED_dim = "어둡게", UNEXPLORED_hide = "숨기기",
     OPT_LABELS = "지역 이름", OPT_LEVELS = "지역 레벨", OPT_FLIGHTS = "비행 조련사",
     OPT_DUNGEONS = "던전과 공격대", OPT_TRANSPORTS = "배와 비행선", OPT_QUESTS = "퀘스트",
+    OPT_FISH_POOLS = "물고기 떼", FISH_POOL = "물고기 떼", OPT_HANDYNOTES = "HandyNotes",
     OPT_GROUP = "내 파티", OPT_GUILD = "내 길드", OPT_PINS = "내 핀", OPT_HERBS = "약초", OPT_ORE = "광석",
     OPT_TOWNSFOLK = "마을 주민", OPT_MINIMAP = "가까운 지형 (미니맵)",
     OPT_SHARE_GUILD = "길드와 내 위치 공유",

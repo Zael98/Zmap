@@ -28,6 +28,61 @@ ZNS.Map.SetView(u * ZNS.Geo.W, v * ZNS.Geo.H, 6)
 FRAMES(3)
 OUT("herb pins at zoom 6: " .. #PINS("gather"))
 
+-- fishing from a pool (Floating Wreckage) facing north: learned 16 yards ahead and shared; from open water (the
+-- bobber), nothing
+STATE.skills.fish = 100
+EVENT("SKILL_LINES_CHANGED")
+local fishing, source = true, "GameObject-0-1-0-1-180685-0000AAAA"
+IsFishingLoot = function() return fishing end
+GetLootSourceInfo = function() return source end
+STATE.player.facing = 0
+local before, beforeX = Nodes(), STATE.player.wx
+EVENT("LOOT_OPENED")
+local pool
+for _, list in pairs(ZNS.db.nodes) do for _, n in ipairs(list) do if n.kind == "fish" then pool = n end end end
+local pu, pv = ZNS.Geo.FromYards(0, beforeX + 16, STATE.player.wy)
+local _, ex, ey = ZNS.Geo.ZoneAt(pu, pv)
+OUT(("pool learned: %s, %s, ahead %s, sent %s"):format(tostring(Nodes() == before + 1), tostring(pool and pool.name),
+    tostring(pool ~= nil and math.abs(pool.x - ex) < 0.001 and math.abs(pool.y - ey) < 0.001), LastSent():match("^N\tfish") and "yes" or "no"))
+STATE.time = STATE.time + 5
+source = "GameObject-0-1-0-1-35591-0000BBBB"   -- (the bobber: open water)
+EVENT("LOOT_OPENED")
+fishing = false
+OUT("open water: nodes " .. tostring(Nodes() == before + 1))
+local fu, fv = ZNS.Geo.ToWorld(pool and 1429 or 1429, pool and pool.x or 0.4, pool and pool.y or 0.6)
+ZNS.Map.SetView(fu * ZNS.Geo.W, fv * ZNS.Geo.H, 8)
+FRAMES(3)
+local poolPin
+for _, p in ipairs(PINS("gather")) do if p.node and p.node.kind == "fish" then poolPin = p end end
+OUT("pool on the map: " .. tostring(poolPin and HOVER(poolPin)))
+IsFishingLoot, GetLootSourceInfo = nil, nil
+
+local entered, clicks = nil, {}
+local nodes = { [42006000] = { icon = "Interface\\Icons\\INV_Misc_Bag_10", tCoordLeft = 0.1, tCoordRight = 0.9,
+    tCoordTop = 0.1, tCoordBottom = 0.9 }, [42506100] = 134400 }
+local plugin = {
+    GetNodes2 = function(self, mapID, minimap)
+        if mapID ~= 1429 then return function() end end
+        return function(_, prev) local c, icon = next(nodes, prev) return c, nil, icon, 1, 1 end, nil, nil
+    end,
+    OnEnter = function(pin, mapID, coord) entered = mapID .. ":" .. coord end,
+    OnClick = function(pin, button, down, mapID, coord) clicks[#clicks + 1] = button .. tostring(down) end,
+}
+HandyNotes = { plugins = { Treasures = plugin }, db = { profile = { enabledPlugins = {}, icon_scale = 1, icon_alpha = 1 } },
+    IsEnabled = function() return true end, UpdateWorldMapPlugin = function() end, UpdateWorldMap = function() end }
+EVENT("PLAYER_LOGIN")
+local hu, hv = ZNS.Geo.ToWorld(1429, 0.42, 0.6)
+ZNS.Map.SetView(hu * ZNS.Geo.W, hv * ZNS.Geo.H, 6)
+FRAMES(3)
+local hn = PINS("handynotes")
+if hn[1] then hn[1].scripts.OnEnter(hn[1]); hn[1].scripts.OnClick(hn[1], "RightButton") end
+HandyNotes.db.profile.enabledPlugins.Treasures = false
+HandyNotes:UpdateWorldMapPlugin("Treasures")
+FRAMES(2)
+OUT(("handynotes: nodes %d, tooltip %s, clicks %s, plugin off %d"):format(#hn, tostring(entered),
+    table.concat(clicks, ","), #PINS("handynotes")))
+HandyNotes = nil
+
 STATE.npc = { name = "Gregor", id = 1234, sub = "Herrero", repair = true }
 EVENT("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", Enum.PlayerInteractionType.Merchant)
 local f = ZNS.db.folk["repair:1234"]

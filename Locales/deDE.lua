@@ -106,6 +106,7 @@ ns.LOCALES.DE = {
     OPT_UNEXPLORED = "Unerforschte Gebiete", UNEXPLORED_show = "zeigen", UNEXPLORED_dim = "abgedunkelt", UNEXPLORED_hide = "ausblenden",
     OPT_LABELS = "Zonennamen", OPT_LEVELS = "Zonenstufen", OPT_FLIGHTS = "Flugmeister",
     OPT_DUNGEONS = "Dungeons und Schlachtzüge", OPT_TRANSPORTS = "Schiffe und Zeppeline", OPT_QUESTS = "Quests",
+    OPT_FISH_POOLS = "Fischschwärme", FISH_POOL = "Fischschwarm", OPT_HANDYNOTES = "HandyNotes",
     OPT_GROUP = "Meine Gruppe", OPT_GUILD = "Meine Gilde", OPT_PINS = "Meine Pins", OPT_HERBS = "Kräuter", OPT_ORE = "Erze",
     OPT_TOWNSFOLK = "Stadtbevölkerung", OPT_MINIMAP = "Gelände aus der Nähe (Minikarte)",
     OPT_SHARE_GUILD = "Meine Position mit meiner Gilde teilen",

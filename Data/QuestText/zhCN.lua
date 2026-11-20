@@ -4767,3 +4767,7 @@ ns.QUEST_TEXT = {
     [99435] = "护送雷吉纳德·温德索尔穿过暴风城，务必确保他毫发无损！ 如需再次联系雷吉纳德·温德索尔，请找侍卫洛文。",
     [99670] = "返回宁静摇篮的杰雷曼处。",
 }
+
+-- [objectID] = a fishing pool's name in this language
+ns.POOL_NAMES = {
+}

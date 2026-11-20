@@ -4776,3 +4776,7 @@ ns.QUEST_TEXT = {
     [99411] = "Ahab Sabot-de-Blé, à Sabot-de-Sang en Mulgore, veut que vous nourrissiez son précieux chiot, Kyle le Frénétique. Donnez de la Viande de trotteur tendre à Kyle puis retournez voir Ahab Sabot-de-Blé.",
     [99670] = "Retournez voir Jereman au Berceau de la tranquillité.",
 }
+
+-- [objectID] = a fishing pool's name in this language
+ns.POOL_NAMES = {
+}

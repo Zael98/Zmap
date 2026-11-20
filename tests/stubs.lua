@@ -290,9 +290,11 @@ function strsplit(sep, s)
     for part in (s .. sep):gmatch("(.-)" .. sep:gsub("%p", "%%%0")) do out[#out + 1] = part end
     return unpack(out)
 end
-function hooksecurefunc(name, fn)
-    local old = _G[name]
-    _G[name] = function(...) local r = { old(...) } fn(...) return unpack(r) end
+function hooksecurefunc(name, fn, hook)
+    local t = _G
+    if type(name) == "table" then t, name, fn = name, fn, hook end
+    local old = t[name]
+    t[name] = function(...) local r = { old(...) } fn(...) return unpack(r) end
 end
 function PlaySound() STATE.sounds = STATE.sounds + 1 end
 SOUNDKIT = setmetatable({}, { __index = function() return 1 end })
@@ -727,12 +729,13 @@ function GetQuestGreenRange() return 8 end
 -- professions: STATE.skills = { herb = 75, ore = 150 }
 function GetProfessions()
     local sk = STATE.skills or {}
-    return sk.herb and 1 or nil, sk.ore and 2 or nil
+    return sk.herb and 1 or nil, sk.ore and 2 or nil, nil, sk.fish and 3 or nil
 end
 function GetProfessionInfo(i)
     local sk = STATE.skills or {}
     if i == 1 then return "Herboristería", 136065, sk.herb, 300, 0, 0, 182 end
     if i == 2 then return "Minería", 136248, sk.ore, 300, 0, 0, 186 end
+    if i == 3 then return "Pesca", 136245, sk.fish, 300, 0, 0, 356 end
 end
 C_Item = {
     GetItemCount = function(id) return (STATE.items or {})[id] or 0 end,

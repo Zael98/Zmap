@@ -14,6 +14,7 @@
 ## Author: Domi
 ## Version: 1.7.8
 ## IconTexture: Interface\AddOns\Zmap\Media\Icon
+## OptionalDeps: HandyNotes
 ## SavedVariables: ZmapDB
 ## SavedVariablesPerCharacter: ZmapCharDB
 ## AddonCompartmentFunc: Zmap_OnCompartmentClick
@@ -83,6 +84,7 @@ Modules\Townsfolk.lua
 Modules\Dungeon.lua
 Modules\Caves.lua
 Modules\Minimap.lua
+Modules\HandyNotes.lua
 Modules\Route.lua
 Modules\Search.lua
 Modules\Diag.lua

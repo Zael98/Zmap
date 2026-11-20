@@ -106,6 +106,7 @@ ns.LOCALES.FR = {
     OPT_UNEXPLORED = "Zones inexplorées", UNEXPLORED_show = "les montrer", UNEXPLORED_dim = "assombries", UNEXPLORED_hide = "les cacher",
     OPT_LABELS = "Noms des zones", OPT_LEVELS = "Niveaux des zones", OPT_FLIGHTS = "Maîtres de vol",
     OPT_DUNGEONS = "Donjons et raids", OPT_TRANSPORTS = "Bateaux et zeppelins", OPT_QUESTS = "Quêtes",
+    OPT_FISH_POOLS = "Bancs de poissons", FISH_POOL = "Banc de poissons", OPT_HANDYNOTES = "HandyNotes",
     OPT_GROUP = "Mon groupe", OPT_GUILD = "Ma guilde", OPT_PINS = "Mes repères", OPT_HERBS = "Herbes", OPT_ORE = "Minerais",
     OPT_TOWNSFOLK = "Citadins", OPT_MINIMAP = "Terrain de près (minicarte)",
     OPT_SHARE_GUILD = "Partager ma position avec ma guilde",

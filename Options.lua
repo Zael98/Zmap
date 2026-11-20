@@ -30,12 +30,18 @@ local LAYERS = {
     { "guild", "OPT_GUILD", I .. "INV_Misc_Tournaments_Banner_Human", group = "LAYER_GROUP_PEOPLE" },
     { "herbs", "OPT_HERBS", I .. "INV_Misc_Herb_01", needs = "herb", nodes = "herb", group = "LAYER_GROUP_GATHER" },
     { "ore", "OPT_ORE", I .. "INV_Ore_Copper_01", needs = "ore", nodes = "ore", group = "LAYER_GROUP_GATHER" },
+    { "fishPools", "OPT_FISH_POOLS", I .. "Trade_Fishing", needs = "fish", group = "LAYER_GROUP_GATHER" },
+    { "handynotes", "OPT_HANDYNOTES", I .. "INV_Misc_Note_02", addon = "HandyNotes", group = "LAYER_GROUP_TRAVEL" },
     { "minimapPins", "OPT_MINIMAP_PINS", I .. "INV_Letter_15", group = "LAYER_GROUP_MINIMAP" },
 }
 local UNEXPLORED = { "show", "dim", "hide" }
 
 -- herbs and ore are only offered to whom has Herbalism or Mining
-local function Offered(layer) return not layer.needs or ns.GatherSkill(layer.needs) ~= nil end
+-- (and HandyNotes' layer to whom has HandyNotes)
+local function Offered(layer)
+    if layer.addon then return C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded(layer.addon) or false end
+    return not layer.needs or ns.GatherSkill(layer.needs) ~= nil
+end
 
 --------------------------------------------------------------------------------------------------------------
 -- The layers panel: down the map's left side, a click on a layer turns it on or off; folded, a tab

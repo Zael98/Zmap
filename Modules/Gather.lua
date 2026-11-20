@@ -5,15 +5,16 @@ local _, ns = ...
 local L, Geo, Comm = ns.L, ns.Geo, ns.Comm
 
 local SPELLS = { [2366] = "herb", [2575] = "ore" }   -- Herb Gathering, Mining (every rank has the same name)
-local ICONS = { herb = "Interface\\Icons\\INV_Misc_Herb_01", ore = "Interface\\Icons\\INV_Ore_Copper_01" }
-local OPTION = { herb = "herbs", ore = "ore" }
+local ICONS = { herb = "Interface\\Icons\\INV_Misc_Herb_01", ore = "Interface\\Icons\\INV_Ore_Copper_01",
+    fish = "Interface\\Icons\\Trade_Fishing" }
+local OPTION = { herb = "herbs", ore = "ore", fish = "fishPools" }
 local SAME = 0.008       -- two finds of the same name this close (share of the zone) are one node
 local MAX_PINS = 600
 
 local P = ns.Pins.New("gather", { land = true, level = 30, size = 16, minZoom = 3, cull = true })
 
 function P:Shown()
-    return (ns.Opt("herbs") or ns.Opt("ore")) and ns.Map.Zoom() >= self.minZoom
+    return (ns.Opt("herbs") or ns.Opt("ore") or ns.Opt("fishPools")) and ns.Map.Zoom() >= self.minZoom
 end
 
 function P:OnCreate(pin)
@@ -79,6 +80,44 @@ ns.On("UNIT_SPELLCAST_SUCCEEDED", function(unit, guid)
     end
 end)
 
+-- Fishing pools: the data knows few of them, so each pool you fish from is learned (and shared like a herb). The loot of
+-- your line comes from the pool's object (an open-water cast's from the bobber); the pool is where the line went, about
+-- 16 yards ahead of you.
+local BOBBER = 35591
+local CAST = 16
+local lastPool = 0
+
+local function PoolName(objectID)
+    local o = ns.OBJECTS and ns.OBJECTS[objectID]
+    return (ns.POOL_NAMES and ns.POOL_NAMES[objectID]) or (o and o[2] == "fish" and o[1]) or L.FISH_POOL
+end
+ns.PoolName = PoolName
+
+local function FishedFromPool()
+    if not (IsFishingLoot and IsFishingLoot() and GetLootSourceInfo) then return end
+    if GetTime() - lastPool < 2 then return end   -- (LOOT_READY, then LOOT_OPENED)
+    local ok, guid = pcall(GetLootSourceInfo, 1)
+    if not ok or type(guid) ~= "string" or (issecretvalue and issecretvalue(guid)) then return end
+    local kind, objectID = guid:match("^(%a+)%-%d+%-%d+%-%d+%-%d+%-(%d+)")
+    objectID = tonumber(objectID)
+    if kind ~= "GameObject" or not objectID or objectID == BOBBER then return end
+    local px, py, instance = Geo.PlayerYards()
+    local facing = GetPlayerFacing and GetPlayerFacing()
+    if not px or not facing or (issecretvalue and issecretvalue(facing)) then return end
+    lastPool = GetTime()
+    local u, v = Geo.FromYards(instance, px + math.cos(facing) * CAST, py + math.sin(facing) * CAST)
+    local mapID, x, y = Geo.ZoneAt(u, v)
+    if not mapID then mapID, x, y = Geo.ZoneByRect(u, v) end
+    if not mapID then return end
+    local name = PoolName(objectID)
+    local new = Record("fish", name, mapID, x, y)
+    if new and ns.Opt("shareFinds") and not IsInInstance() then
+        Comm.Send("N", "GUILD", nil, "fish", mapID, ("%.4f"):format(x), ("%.4f"):format(y), name)
+    end
+end
+ns.On("LOOT_READY", FishedFromPool)
+ns.On("LOOT_OPENED", FishedFromPool)
+
 Comm.On("N", function(sender, channel, kind, m, x, y, name)
     m, x, y = tonumber(m), tonumber(x), tonumber(y)
     if channel ~= "GUILD" or not ICONS[kind] or not (m and x and y) or not name or name == "" then return end
@@ -90,7 +129,7 @@ end)
 -- (all of them with the option), the ones your skill does not reach yet greyed
 --------------------------------------------------------------------------------------------------------------
 
-local PROFESSION = { herb = 182, ore = 186 }   -- skill lines: Herbalism, Mining
+local PROFESSION = { herb = 182, ore = 186, fish = 356 }   -- skill lines: Herbalism, Mining, Fishing
 local NODE = 8   -- yards: the same kind of node listed this close is one (under two IDs, or the same spot twice)
 
 -- a node's kind: the item it gives (its name if none)
@@ -105,7 +144,7 @@ local function NodeZones()
     if zones then return zones end
     zones = {}
     for id, o in pairs(ns.OBJECTS or {}) do
-        if o[2] == "herb" or o[2] == "ore" then
+        if o[2] == "herb" or o[2] == "ore" or o[2] == "fish" then
             for i = 5, #o - 1, 2 do
                 local list = zones[o[i]] or {}
                 zones[o[i]] = list
@@ -153,9 +192,14 @@ function ns.SkillLevel(line)
         skillsAt = GetTime()
         wipe(skills)
         if GetProfessions and GetProfessionInfo then
-            for _, index in ipairs({ GetProfessions() }) do
-                local _, _, level, _, _, _, l = GetProfessionInfo(index)
-                if l then skills[l] = level end
+            -- (prof1, prof2, archaeology, fishing, cooking: a nil between them, so not ipairs)
+            local list = { GetProfessions() }
+            for i = 1, select("#", GetProfessions()) do
+                local index = list[i]
+                if index then
+                    local _, _, level, _, _, _, l = GetProfessionInfo(index)
+                    if l then skills[l] = level end
+                end
             end
         end
     end
@@ -250,41 +294,7 @@ function P:Refresh()
     self:ReleaseAll()
     local u0, v0, u1, v1 = ns.Pins.ViewBox()
     local count = 0
-    if ns.Map.Zoom() >= DATA_MIN_ZOOM then
-        local found = 0
-        if Wanted("herb") or Wanted("ore") then
-            for mapID in pairs(NodeZones()) do
-                local l, r, t, b = Geo.Rect(mapID)
-                if l and l < u1 and r > u0 and t < v1 and b > v0 then
-                    local p = Nodes(mapID)
-                    for i = 1, #p, 5 do
-                        local u, v = p[i], p[i + 1]
-                        if u > u0 and u < u1 and v > v0 and v < v1 and Shown(ns.OBJECTS[p[i + 4]]) then
-                            found = found + 1
-                            inMap[found], inList[found], inAt[found] = mapID, p, i
-                        end
-                    end
-                end
-            end
-        end
-        -- at most MAX_PINS of them, every k-th (as Pins.Spread)
-        local step = found > MAX_PINS and found / MAX_PINS or 1
-        for k = 1, math.min(found, MAX_PINS) do
-            local j = math.floor((k - 1) * step) + 1
-            count = count + 1
-            local pin = self:Acquire()
-            local n = Node(inMap[j], inList[j], inAt[j], pin.nodeData)
-            pin.nodeData = n
-            local mine = Skill(n.kind)
-            pin.icon:SetTexture(ItemIcon(n.item, n.kind))
-            local reach = mine and mine >= n.skill
-            pin.icon:SetDesaturated(not reach)
-            pin.icon:SetAlpha(reach and 1 or 0.6)
-            pin.data, pin.node, pin.mapID, pin.index = n, nil, n.m, nil
-            self:Place(pin, n.u, n.v)
-        end
-        for k = found + 1, #inMap do inMap[k], inList[k], inAt[k] = nil, nil, nil end   -- (let go of the rest)
-    end
+    -- what you and your guild found first: few, and what is really there (the data's thousands fill the rest)
     for mapID, list in pairs(ns.db.nodes) do
         local l, r, t, b = Geo.Rect(mapID)
         if l and l < u1 and r > u0 and t < v1 and b > v0 then
@@ -304,25 +314,66 @@ function P:Refresh()
             end
         end
     end
+    if ns.Map.Zoom() >= DATA_MIN_ZOOM then
+        local found = 0
+        if Wanted("herb") or Wanted("ore") or Wanted("fish") then
+            for mapID in pairs(NodeZones()) do
+                local l, r, t, b = Geo.Rect(mapID)
+                if l and l < u1 and r > u0 and t < v1 and b > v0 then
+                    local p = Nodes(mapID)
+                    for i = 1, #p, 5 do
+                        local u, v = p[i], p[i + 1]
+                        if u > u0 and u < u1 and v > v0 and v < v1 and Shown(ns.OBJECTS[p[i + 4]]) then
+                            found = found + 1
+                            inMap[found], inList[found], inAt[found] = mapID, p, i
+                        end
+                    end
+                end
+            end
+        end
+        -- at most MAX_PINS of them, every k-th (as Pins.Spread)
+        local room = MAX_PINS - count
+        local step = found > room and found / room or 1
+        for k = 1, math.min(found, room) do
+            local j = math.floor((k - 1) * step) + 1
+            count = count + 1
+            local pin = self:Acquire()
+            local n = Node(inMap[j], inList[j], inAt[j], pin.nodeData)
+            pin.nodeData = n
+            local mine = Skill(n.kind)
+            pin.icon:SetTexture(ItemIcon(n.item, n.kind))
+            local reach = mine and mine >= n.skill
+            pin.icon:SetDesaturated(not reach)
+            pin.icon:SetAlpha(reach and 1 or 0.6)
+            pin.data, pin.node, pin.mapID, pin.index = n, nil, n.m, nil
+            self:Place(pin, n.u, n.v)
+        end
+        for k = found + 1, #inMap do inMap[k], inList[k], inAt[k] = nil, nil, nil end   -- (let go of the rest)
+    end
 end
 
 function P:Tooltip(pin, tip)
     if pin.data then
         local d = pin.data
         local o = ns.OBJECTS[d.object]
-        tip:SetText(ItemName(d.item, o[1]), 1, 1, 1)
-        tip:AddLine(d.kind == "herb" and L.HERB or L.ORE, 0.7, 0.7, 0.7)
-        local mine = Skill(d.kind)
-        local r, g, b = 0.4, 1, 0.4
-        if not mine or mine < d.skill then r, g, b = 1, 0.4, 0.4 end
-        tip:AddLine(L.NEEDS_SKILL:format(d.skill, d.kind == "herb" and L.HERBALISM or L.MINING), r, g, b)
+        if d.kind == "fish" then
+            tip:SetText(PoolName(d.object), 1, 1, 1)
+            tip:AddLine(L.FISH_POOL, 0.7, 0.7, 0.7)
+        else
+            tip:SetText(ItemName(d.item, o[1]), 1, 1, 1)
+            tip:AddLine(d.kind == "herb" and L.HERB or L.ORE, 0.7, 0.7, 0.7)
+            local mine = Skill(d.kind)
+            local r, g, b = 0.4, 1, 0.4
+            if not mine or mine < d.skill then r, g, b = 1, 0.4, 0.4 end
+            tip:AddLine(L.NEEDS_SKILL:format(d.skill, d.kind == "herb" and L.HERBALISM or L.MINING), r, g, b)
+        end
         tip:AddLine(("%s  %s"):format(Geo.Name(pin.mapID), ns.Coords(d.x, d.y)), 0.6, 0.6, 0.6)
         tip:AddLine(L.CLICK_NAVIGATE, 0.6, 0.6, 0.6)
         return
     end
     local n = pin.node
     tip:SetText(n.name, 1, 1, 1)
-    tip:AddLine(n.kind == "herb" and L.HERB or L.ORE, 0.7, 0.7, 0.7)
+    tip:AddLine(n.kind == "fish" and L.FISH_POOL or n.kind == "herb" and L.HERB or L.ORE, 0.7, 0.7, 0.7)
     if n.n and n.n > 0 then tip:AddLine(L.GATHERED_TIMES:format(n.n), 1, 0.82, 0) end
     if n.by then tip:AddLine(L.FOUND_BY:format(n.by), 0.6, 0.8, 1) end
     tip:AddLine(L.NODE_HINT, 0.6, 0.6, 0.6)
@@ -415,7 +466,7 @@ function ns.GatherList()
 end
 
 ns.On("ZMAP_OPTION", function(key)
-    if key == "herbs" or key == "ore" then P:Update() end
+    if key == "herbs" or key == "ore" or key == "fishPools" then P:Update() end
 end)
 ns.On("SKILL_LINES_CHANGED", function()
     skillsAt = 0

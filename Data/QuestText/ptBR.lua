@@ -4284,3 +4284,7 @@ ns.QUEST_TEXT = {
     [99260] = "Fale com Elaadrin Plenovento em Valanaar.",
     [99411] = "Ahab Casco Trigo, na Aldeia Casco Sangrento em Mulgore, quer que você alimente o bichinho de estimação dele, Kyle, o Frenético. Alimente Kyle com Carne Tenra de Moa e fale novamente com Ahab Casco Trigo.",
 }
+
+-- [objectID] = a fishing pool's name in this language
+ns.POOL_NAMES = {
+}
