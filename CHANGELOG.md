@@ -1,5 +1,13 @@
 # Zmap
 
+## 1.7.9 — Fishing pools and HandyNotes
+
+- **Fishing pools** layer (shown when you have Fishing). The game's data only knows a few pools, so Zmap learns them as you fish: each pool you fish from is saved where your line landed (about 16 yards ahead of you) and shared with your guild's Zmap users, like herbs and ore. Pools from Questie's data are shown too. Fishing in open water is not a pool.
+- **HandyNotes**: with HandyNotes installed, the nodes of all your HandyNotes plugins (treasures, rares, notes...) show on Zmap's map with their own icons, tooltips and clicks, following which plugins you have enabled in HandyNotes. A "HandyNotes" layer turns them on or off.
+- Fixed: Fishing and Cooking were never seen as your professions (the game lists them after an empty slot).
+- Fixed: with the herbs or ore layer on, the nodes you and your guild found could be left out when the data's filled the map; they are drawn first now.
+- Data from Forever build 1.60.1.70959 and Questie bundle v12.11.1+v1.1.3.
+
 ## 1.7.8 — Quest details with Shift
 
 - **Hold Shift over a quest mark** on the map (a "!", an objective or a turn-in) to see each quest's details, as Questie shows them: its level, required level and ID, what it asks you to do, and who to turn it in to. Press or let go of Shift with the cursor already on it and the tooltip changes at once.
