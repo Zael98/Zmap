@@ -107,6 +107,7 @@ ns.LOCALES.FR = {
     OPT_LABELS = "Noms des zones", OPT_LEVELS = "Niveaux des zones", OPT_FLIGHTS = "Maîtres de vol",
     OPT_DUNGEONS = "Donjons et raids", OPT_TRANSPORTS = "Bateaux et zeppelins", OPT_QUESTS = "Quêtes",
     OPT_FISH_POOLS = "Bancs de poissons", FISH_POOL = "Banc de poissons", OPT_HANDYNOTES = "HandyNotes",
+    DUNGEON_PARTS = "Cartes : %s",
     JOURNAL = "Journal", JOURNAL_TIP = "Ouvrir ce donjon dans DungeonJournal : boss, butin et quêtes.", JOURNAL_HINT = "Maj+clic : ouvrir dans DungeonJournal",
     OPT_GROUP = "Mon groupe", OPT_GUILD = "Ma guilde", OPT_PINS = "Mes repères", OPT_HERBS = "Herbes", OPT_ORE = "Minerais",
     OPT_TOWNSFOLK = "Citadins", OPT_MINIMAP = "Terrain de près (minicarte)",

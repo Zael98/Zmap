@@ -225,8 +225,9 @@ OUT("back to the world: " .. tostring(not ZNS.Dungeon.IsShown()))
 -- it on that dungeon's bosses; matched by the data's English name, by your language's name, or a wing's first page
 local opened, toggled = nil, 0
 ForeverDungeonJournal_NS = {
-    DB = { ["Blackrock Depths"] = {}, ["Scarlet Monastery: Graveyard"] = {}, ["Hall of Thanes"] = {} },
-    ORDER = { "Hall of Thanes", "Scarlet Monastery: Graveyard", "Blackrock Depths" },
+    DB = { ["Blackrock Depths"] = {}, ["Scarlet Monastery: Graveyard"] = {}, ["Hall of Thanes"] = {},
+        ["Scarlet Monastery: Library"] = {} },
+    ORDER = { "Hall of Thanes", "Scarlet Monastery: Graveyard", "Scarlet Monastery: Library", "Blackrock Depths" },
     DungeonFromInstanceName = function(name)
         local bare = name:lower():gsub("^the%s+", ""):gsub("[%s%p]", "")
         for key in pairs(ForeverDungeonJournal_NS.DB) do
@@ -244,6 +245,14 @@ if jb then jb:Click() end
 OUT(("journal: button %s, opened %s, shown %d; wing %s; your language %s; none %s"):format(tostring(jb ~= nil), tostring(opened),
     toggled, tostring((ZNS.Journal.Page("Scarlet Monastery", "Monasterio Escarlata"))),
     tostring((ZNS.Journal.Page(nil, "Salón de los Feudales"))), tostring((ZNS.Journal.Page("Molten Core", "Núcleo de Magma")))))
+-- Scarlet Monastery: its four wings in its map's tooltip; on the Library, the journal opens the Library
+local wings = table.concat(ZNS.Dungeon.Floors(189) or {}, ", ")
+ZNS.Dungeon.Open(189, "Monasterio Escarlata")
+for _, w in ipairs(ALL_WIDGETS) do
+    if w.kind == "Button" and w.text == "Biblioteca" and w:IsShown() then w:Click() end
+end
+if jb then jb:Click() end
+OUT(("wings: %s; journal on the library %s"):format(wings, tostring(opened)))
 ForeverDungeonJournal_NS = nil
 ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
 OUT("journal without DungeonJournal: button " .. tostring(jb ~= nil and jb:IsShown()))

@@ -65,6 +65,8 @@ function P:Tooltip(pin, tip)
     tip:AddLine(e.raid and L.RAID or L.DUNGEON, 0.7, 0.7, 0.7)
     if e.level then tip:AddLine(L.DUNGEON_LEVEL:format(ns.LevelText(e.level, e.level)), 1, 1, 1) end
     if e.description and e.description ~= "" then tip:AddLine(e.description, 1, 0.82, 0, true) end
+    local floors = e.inst and ns.Dungeon.Floors(e.inst)
+    if floors then tip:AddLine(L.DUNGEON_PARTS:format(table.concat(floors, ", ")), 0.85, 0.85, 0.85, true) end
     if e.inst and ns.Dungeon.Has(e.inst) then tip:AddLine(L.DUNGEON_MAP_HINT, 0.6, 0.6, 0.6) end
     if ns.Journal.Page(e.inst and ns.Journal.EnglishName(e.inst), e.name) then tip:AddLine(L.JOURNAL_HINT, 0.6, 0.6, 0.6) end
     tip:AddLine(L.CTRL_NAVIGATE, 0.6, 0.6, 0.6)

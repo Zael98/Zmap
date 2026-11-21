@@ -102,7 +102,7 @@ CHECKS = {
                        r"^apart: true$", r"^minimap pins: [1-9]\d*$",
                        r"^minimap herbs and ore: 0$",
                        r"^inside deadmines: shown true$",
-                       r"^back to the world: true$", r"^journal: button true, opened Blackrock Depths/boss, shown 1; wing Scarlet Monastery: Graveyard; your language Hall of Thanes; none nil$", r"^journal without DungeonJournal: button false$", r"^deadmines bosses: 8, 1\. Rhahk'Zor, .*Cocinitas, 8\. Edwin VanCleef$", r"^brd: to floor 2, numbered on it true$",
+                       r"^back to the world: true$", r"^journal: button true, opened Blackrock Depths/boss, shown 1; wing Scarlet Monastery: Graveyard; your language Hall of Thanes; none nil$", r"^wings: Cementerio, Biblioteca, Arsenal, Catedral; journal on the library Scarlet Monastery: Library/boss$", r"^journal without DungeonJournal: button false$", r"^deadmines bosses: 8, 1\. Rhahk'Zor, .*Cocinitas, 8\. Edwin VanCleef$", r"^brd: to floor 2, numbered on it true$",
                        r"^hall of thanes: shown true, bosses 4 \(1\. Faldrim Yunquemar\), placed 0, minimap tiles 6 of 6, its shape true$",
                        r"^a dungeon with its own map after it: tiles 12, its shape true, minimap tiles left 0$", r"^outside: dungeon map shown false$", r"^tinted: true$",
                        r"^diag: shown true, lines \d\d, quests line true$", r"^layers fold: folded true, open again true$", r"^folk types: rows 20, food true -> 0, innkeepers kept true, row alpha 0.45$", r"^only mine: classes 1 \(warrior true\), all [2-9]; profession trainers shown without professions true$", r"^food back: true$",

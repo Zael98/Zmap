@@ -26,6 +26,33 @@ local poiPins, flagPins = {}, {}
 local function Data(inst) return ns.DUNGEON_MAPS and ns.DUNGEON_MAPS[inst] end
 
 function D.Has(inst) return Data(inst) ~= nil end
+
+-- its floors' names in your language (a dungeon of wings: its wings), when it has more than one
+function D.Floors(inst)
+    local d = Data(inst)
+    if not (d and d.floors and #d.floors > 1) then return end
+    local out = {}
+    for i, floor in ipairs(d.floors) do
+        local name = ns.Name(floor[2])
+        out[#out + 1] = name ~= "" and name or tostring(i)
+    end
+    return out
+end
+
+-- DungeonJournal's page for what is shown: the wing on screen, when DungeonJournal has it as a page of its own
+-- (Scarlet Monastery: Library), else the dungeon's
+function D.JournalPage()
+    if not current then return end
+    local d = Data(current.inst)
+    local floor = d and d.floors[current.floor or 1]
+    local english = ns.Journal.EnglishName(current.inst)
+    local wing = floor and floor[2] and floor[2][1]
+    if english and wing and wing ~= "" then
+        local page = ns.Journal.Page(english .. ": " .. wing)
+        if page and page:find(wing, 1, true) then return page end
+    end
+    return current.journal
+end
 function D.IsShown() return view ~= nil and view:IsShown() end
 
 -- the battleground's uiMap, while one is shown
@@ -470,7 +497,7 @@ local function Create(viewport)
     back = ns.Button(view, L.BACK_TO_WORLD, 130, function() D.Close() end)
     back:SetPoint("TOPRIGHT", -6, -6)
     view.journal = ns.Button(view, L.JOURNAL, 90, function()
-        if current then ns.Journal.Open(current.journal) end
+        if current then ns.Journal.Open(D.JournalPage()) end
     end, L.JOURNAL_TIP)
     view.journal:SetPoint("RIGHT", back, "LEFT", -4, 0)
     view.journal:Hide()
