@@ -1,5 +1,10 @@
 # Zmap
 
+## 1.7.10 — Smoother quest log, zoom per zone
+
+- **The map opens at the zoom you like in each zone**: the zoom you leave in a zone is remembered, so after zooming in once in the Barrens the map opens there at that zoom instead of fitting the whole zone (too far out to read the roads). Zones you have not adjusted still open showing the whole zone.
+- **Scrolling the quest log is smooth**: scrolling no longer rebuilds the whole list, and with "Nearest" each quest's distance is only worked out again once you have moved, not on every scroll step (it caused a hitch).
+
 ## 1.7.9 — Fishing pools and HandyNotes
 
 - **Fishing pools** layer (shown when you have Fishing). The game's data only knows a few pools, so Zmap learns them as you fish: each pool you fish from is saved where your line landed (about 16 yards ahead of you) and shared with your guild's Zmap users, like herbs and ore. Pools from Questie's data are shown too. Fishing in open water is not a pool.
