@@ -124,7 +124,7 @@ CHECKS = {
                          r"^search collar: Guerrero \| \[\d+\] El collar de Fargodeep .*\|r \| - Lista para entregar$",
                          r"^search none: Ninguna misión coincide$",
                          r"^by level: \[2\] Wolves Across the Border \| - Lobo matado: 3/8 \| \[\d+\] El collar",
-                         r"^nearest: \[2\] Wolves Across the Border \|cff999999\d+ m\|r .+ \|cff999999\d+ m\|r",
+                         r"^nearest: \[2\] Wolves Across the Border \|cff999999\d+ m\|r .+ \|cff999999\d+ m\|r", r"^nearest, scrolling: marks looked for 0$",
                          r"^all folded: Bosque de Elwynn \| Guerrero$", r"^all open: Bosque de Elwynn \| \[2\] Wolves",
                          r"^highlight: 33 bright true, others dim true; after leaving dim 0$",
                          r"^shift-click: \|Hquest:102\|h\[102\]\|h, details nil$",

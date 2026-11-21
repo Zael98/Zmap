@@ -51,6 +51,14 @@ STATE.player.wy, STATE.player.wx = (wolves.u - T[1]) / T[2], (wolves.v - T[3]) /
 ADVANCE(1)
 QP.Refresh()
 OUT("nearest: " .. Lines())
+-- scrolling the list sorted by nearest: it only moves (no quest's nearest mark is looked for again)
+local next0, asked = ZNS.QuestMap.Next, 0
+ZNS.QuestMap.Next = function(...) asked = asked + 1 return next0(...) end
+local p = QP.Panel()
+for _ = 1, 10 do p.scripts.OnMouseWheel(p, -1) end
+QP.Refresh()   -- (and a repaint while standing still keeps them)
+ZNS.QuestMap.Next = next0
+OUT("nearest, scrolling: marks looked for " .. asked)
 STATE.player.wx, STATE.player.wy = was[1], was[2]
 QP.CycleSort()
 

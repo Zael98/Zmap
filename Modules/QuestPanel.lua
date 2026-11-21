@@ -105,8 +105,26 @@ local function Mates(id)
 end
 
 -- yards to its next mark (nil: not on your continent, or nowhere known)
+-- (each quest's nearest mark is worked out again only once you have moved 20 yards, or the quests changed: finding
+-- it walks the marks, and asks the game zone by zone for those it lacks)
+local nearCache, nearAt = {}, nil
+local function NearestMark(id)
+    local px, py = Geo.PlayerYards()
+    if not px or not nearAt or (px - nearAt[1]) ^ 2 + (py - nearAt[2]) ^ 2 > 400 then
+        wipe(nearCache)
+        nearAt = px and { px, py } or nil
+    end
+    local mark = nearCache[id]
+    if mark == nil then
+        mark = ns.QuestMap.Next(id) or false
+        nearCache[id] = mark
+    end
+    return mark or nil
+end
+ns.On("ZMAP_QUESTS", function() wipe(nearCache) end)
+
 local function Yards(id)
-    local mark = ns.QuestMap.Next(id)
+    local mark = NearestMark(id)
     local u, v, m = Geo.UnitPosition("player")
     if not (mark and u and mark.m) or Geo.Instance(m) ~= Geo.Instance(mark.m) then return end
     return Geo.Yards(Geo.Instance(m), u, v, mark.u, mark.v)
@@ -477,6 +495,15 @@ end
 -- The panel
 --------------------------------------------------------------------------------------------------------------
 
+-- the list where the wheel left it (scrolling only moves it: it is not built again)
+local function Scroll()
+    local room = view:GetHeight() or 0
+    scroll = math.max(0, math.min(scroll, (content:GetHeight() or 0) - room))
+    content:ClearAllPoints()
+    content:SetPoint("TOPLEFT", view, "TOPLEFT", 0, scroll)
+    content:SetPoint("TOPRIGHT", view, "TOPRIGHT", 0, scroll)
+end
+
 local function Paint()
     if not (panel and panel:IsShown()) then return end
     ReleaseAll()
@@ -489,14 +516,11 @@ local function Paint()
     toolbar.sort:SetText(SortName(ns.db.questSort))
     view:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, shownQuest and -30 or -TOP)
     view:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, shownQuest and BOTTOM or 6)
-    local room = view:GetHeight() or 0
-    scroll = math.max(0, math.min(scroll, total - room))
     content:SetHeight(math.max(total, 1))
-    content:ClearAllPoints()
-    content:SetPoint("TOPLEFT", view, "TOPLEFT", 0, scroll)
-    content:SetPoint("TOPRIGHT", view, "TOPRIGHT", 0, scroll)
+    Scroll()
 end
 QP.Refresh = Paint
+function QP.Panel() return panel end   -- (for the tests)
 
 local function Button(text, onClick) return ns.Button(panel, text, 50, onClick) end
 
@@ -558,7 +582,7 @@ local function Create()
     panel:EnableMouseWheel(true)
     panel:SetScript("OnMouseWheel", function(_, delta)
         scroll = scroll - delta * 40
-        Paint()
+        Scroll()
     end)
     panel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
         edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
