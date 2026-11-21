@@ -64,6 +64,19 @@ OUT("closed: saved view " .. tostring(ZNS.db.view ~= nil and ZNS.db.view.z >= 1)
 OPEN()
 local _, _, m2 = ZNS.Geo.UnitPosition("player")
 OUT("reopen on player: zone " .. tostring(m2))
+-- the zoom you leave in a zone is the one it opens at next time (zoomed in on the player: twice); elsewhere (looking at
+-- another place) it is not taken
+local fit = ZNS.Map.Zoom()
+local pu, pv = ZNS.Geo.UnitPosition("player")
+ZNS.Map.SetView(pu * ZNS.Geo.W, pv * ZNS.Geo.H, fit * 2)
+ZNS.Map.Close()
+OPEN()
+local again = ZNS.Map.Zoom()
+ZNS.Map.SetView(ZNS.Geo.W * 0.2, ZNS.Geo.H * 0.3, fit * 4)   -- (far from the player)
+ZNS.Map.Close()
+OPEN()
+OUT(("zone zoom kept: %s, browsing elsewhere not taken: %s"):format(tostring(math.abs(again - fit * 2) < 0.05 * fit),
+    tostring(math.abs(ZNS.Map.Zoom() - fit * 2) < 0.05 * fit)))
 OUT("errors " .. #STATE.errors)
 local list = {}
 for k in pairs(STATE.unknown) do list[#list + 1] = k end

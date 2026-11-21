@@ -137,12 +137,31 @@ local function ZoomAt(x, y, z, px, py)
     glide = nil
 end
 
--- center on the player (fitting their zone, when opening) and keep following them until the map is dragged
+-- The zoom you like in each zone, kept as how far past fitting the whole zone it is (so it holds whatever the window's
+-- size): the map opens at it there. A big zone fitted whole (the Barrens) is too far out to read its roads.
+local FIT = 0.85
+local function ZoneZoom(mapID)
+    local fit = Map.ZoomFor(mapID, FIT)
+    local ratio = ns.db.zoneZoom and ns.db.zoneZoom[mapID]
+    return fit * math.max(0.5, math.min(8, ratio or 1))
+end
+
+-- on closing: the zoom you left, for the zone you are in, when you are still in view (not browsing elsewhere)
+local function RememberZoneZoom()
+    local u, v, mapID = Geo.UnitPosition("player")
+    if not (u and mapID and Geo.Kind(mapID) == "zone") then return end
+    local l, t, r, b = Map.ViewRect()
+    if u * W < l or u * W > r or v * H < t or v * H > b then return end
+    ns.db.zoneZoom = ns.db.zoneZoom or {}
+    ns.db.zoneZoom[mapID] = view.z / Map.ZoomFor(mapID, FIT)
+end
+
+-- center on the player (at their zone's zoom, when opening) and keep following them until the map is dragged
 function Map.CenterOnPlayer(fitZone)
     local u, v, mapID = Geo.UnitPosition("player")
     local z = math.max(view.z, 2.5)
     if u then
-        if fitZone then z = Map.ZoomFor(mapID, 0.85) end
+        if fitZone then z = Geo.Kind(mapID) == "zone" and ZoneZoom(mapID) or Map.ZoomFor(mapID, FIT) end
         -- underground (indoors, in a cave's box): the cave's own map, surfaced
         local cave, l, r, t, b = nil
         if fitZone and IsIndoors and IsIndoors() and ns.Opt("caves") then cave, l, r, t, b = ns.Art.CaveAt(u, v) end
@@ -478,6 +497,7 @@ local function Create()
         frame:SetScript("OnUpdate", nil)
         drag, zoomGoal, glide = nil, nil, nil
         ns.db.view = { x = view.x, y = view.y, z = view.z }
+        RememberZoneZoom()
         ns.Fire("ZMAP_HIDE")
     end)
     ns.Fire("ZMAP_CREATED", frame)

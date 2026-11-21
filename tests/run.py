@@ -22,7 +22,7 @@ CHECKS = {
                     r"^labels \d\d+$", r"^unexplored dimmed [1-9]\d*$", r"^after wheel: zoom up true, point held true$",
                     r"^after drag: moved true, following false$", r"^double click: zoom up true$",
                     r"^zoomed out and dragged away: map fills the window true, zoom 1\.00$",
-                    r"^closed: saved view true$", r"^reopen on player: zone 1429$"]),
+                    r"^closed: saved view true$", r"^reopen on player: zone 1429$", r"^zone zoom kept: true, browsing elsewhere not taken: true$"]),
     "art": (False, [r"^world: world shown true, zones shown 0, isle shown 2$", r"^continent: zones built [1-9]\d*, all of them in view true$",
                     r"^zone: halo masks \d+ core masks \d+, every tile masked true$", r"^tiles inside rects: true$",
                     r"^close: terrain tiles [1-9]\d*, alpha 1\.00$", r"^terrain never visited: hide 0 shown, dim [1-9]\d* dimmed, show [1-9]\d* shown$", r"^city: stormwind alpha [0-9.]+ shown true$", r"^city never visited: hidden [1-9]\d*; explored: shown [1-9]\d*, hidden 0$", r"^inside a capital: by its zone's rectangle (?!1411)\S+, as the city unseen$", r"^inside a capital, the client naming its zone unseen, nothing unseen$", r"^ironforge on dun morogh: seen$",
