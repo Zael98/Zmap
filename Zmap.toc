@@ -14,7 +14,7 @@
 ## Author: Domi
 ## Version: 1.7.10
 ## IconTexture: Interface\AddOns\Zmap\Media\Icon
-## OptionalDeps: HandyNotes
+## OptionalDeps: HandyNotes, ForeverDungeonJournal
 ## SavedVariables: ZmapDB
 ## SavedVariablesPerCharacter: ZmapCharDB
 ## AddonCompartmentFunc: Zmap_OnCompartmentClick
@@ -69,6 +69,7 @@ Modules\Arrow.lua
 Modules\Waypoints.lua
 Modules\Corpse.lua
 Modules\Flights.lua
+Modules\Journal.lua
 Modules\Dungeons.lua
 Modules\Transports.lua
 Modules\Quests.lua

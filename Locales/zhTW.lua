@@ -107,6 +107,7 @@ ns.LOCALES.TW = {
     OPT_LABELS = "區域名稱", OPT_LEVELS = "區域等級", OPT_FLIGHTS = "飛行管理員",
     OPT_DUNGEONS = "地城和團隊副本", OPT_TRANSPORTS = "船和飛艇", OPT_QUESTS = "任務",
     OPT_FISH_POOLS = "魚群", FISH_POOL = "魚群", OPT_HANDYNOTES = "HandyNotes",
+    JOURNAL = "手冊", JOURNAL_TIP = "在 DungeonJournal 中開啟此地城：首領、戰利品和任務。", JOURNAL_HINT = "Shift+點擊：在 DungeonJournal 中開啟",
     OPT_GROUP = "我的隊伍", OPT_GUILD = "我的公會", OPT_PINS = "我的標記", OPT_HERBS = "草藥", OPT_ORE = "礦石",
     OPT_TOWNSFOLK = "村民", OPT_MINIMAP = "近處地形（小地圖）",
     OPT_SHARE_GUILD = "與公會分享我的位置",

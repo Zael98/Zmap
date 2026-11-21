@@ -66,11 +66,15 @@ function P:Tooltip(pin, tip)
     if e.level then tip:AddLine(L.DUNGEON_LEVEL:format(ns.LevelText(e.level, e.level)), 1, 1, 1) end
     if e.description and e.description ~= "" then tip:AddLine(e.description, 1, 0.82, 0, true) end
     if e.inst and ns.Dungeon.Has(e.inst) then tip:AddLine(L.DUNGEON_MAP_HINT, 0.6, 0.6, 0.6) end
+    if ns.Journal.Page(e.inst and ns.Journal.EnglishName(e.inst), e.name) then tip:AddLine(L.JOURNAL_HINT, 0.6, 0.6, 0.6) end
     tip:AddLine(L.CTRL_NAVIGATE, 0.6, 0.6, 0.6)
 end
 
 function P:OnClick(pin, button)
-    if button == "LeftButton" and IsControlKeyDown() then
+    if button == "LeftButton" and IsShiftKeyDown() then
+        local page = ns.Journal.Page(pin.entry.inst and ns.Journal.EnglishName(pin.entry.inst), pin.entry.name)
+        if page then ns.Journal.Open(page) end
+    elseif button == "LeftButton" and IsControlKeyDown() then
         local mapID, x, y = Geo.ZoneAt(pin.entry.u, pin.entry.v)
         if mapID then ns.Waypoints.Add(mapID, x, y, pin.entry.name, { navigate = true, temp = true }) end
     elseif button == "LeftButton" and pin.entry.inst then

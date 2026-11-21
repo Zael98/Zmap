@@ -221,6 +221,32 @@ local dview
 for _, w in ipairs(ALL_WIDGETS) do if w.parent == ZmapFrame.viewport and w.scripts.OnMouseUp and w ~= ZmapFrame.layersPanel and w:IsShown() and w._level and w.kind == "Frame" and w.scripts.OnMouseWheel and w ~= ZmapFrame.viewport then dview = w end end
 dview.scripts.OnMouseUp(dview, "RightButton")
 OUT("back to the world: " .. tostring(not ZNS.Dungeon.IsShown()))
+-- DungeonJournal installed (a stand-in with its public functions): the dungeon's map has a "Journal" button that opens
+-- it on that dungeon's bosses; matched by the data's English name, by your language's name, or a wing's first page
+local opened, toggled = nil, 0
+ForeverDungeonJournal_NS = {
+    DB = { ["Blackrock Depths"] = {}, ["Scarlet Monastery: Graveyard"] = {}, ["Hall of Thanes"] = {} },
+    ORDER = { "Hall of Thanes", "Scarlet Monastery: Graveyard", "Blackrock Depths" },
+    DungeonFromInstanceName = function(name)
+        local bare = name:lower():gsub("^the%s+", ""):gsub("[%s%p]", "")
+        for key in pairs(ForeverDungeonJournal_NS.DB) do
+            if key:lower():gsub("^the%s+", ""):gsub("[%s%p]", "") == bare then return key end
+        end
+    end,
+    LocalizeDungeonName = function(page) return page == "Hall of Thanes" and "Salón de los Feudales" or page end,
+    ToggleJournal = function() toggled = toggled + 1 end,
+    OpenSearchResult = function(r) opened = r.dungeonName .. "/" .. r.kind end,
+}
+ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
+local jb
+for _, w in ipairs(ALL_WIDGETS) do if w.kind == "Button" and w.text == ZNS.L.JOURNAL and w:IsShown() then jb = w end end
+if jb then jb:Click() end
+OUT(("journal: button %s, opened %s, shown %d; wing %s; your language %s; none %s"):format(tostring(jb ~= nil), tostring(opened),
+    toggled, tostring((ZNS.Journal.Page("Scarlet Monastery", "Monasterio Escarlata"))),
+    tostring((ZNS.Journal.Page(nil, "Salón de los Feudales"))), tostring((ZNS.Journal.Page("Molten Core", "Núcleo de Magma")))))
+ForeverDungeonJournal_NS = nil
+ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
+OUT("journal without DungeonJournal: button " .. tostring(jb ~= nil and jb:IsShown()))
 -- Blackrock Depths: a boss on another floor, chosen in the list
 ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
 local bossesBRD = ZNS.DUNGEON_MAPS[230].bosses

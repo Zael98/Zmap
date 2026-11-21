@@ -469,6 +469,11 @@ local function Create(viewport)
     title:SetPoint("TOPLEFT", 10, -8)
     back = ns.Button(view, L.BACK_TO_WORLD, 130, function() D.Close() end)
     back:SetPoint("TOPRIGHT", -6, -6)
+    view.journal = ns.Button(view, L.JOURNAL, 90, function()
+        if current then ns.Journal.Open(current.journal) end
+    end, L.JOURNAL_TIP)
+    view.journal:SetPoint("RIGHT", back, "LEFT", -4, 0)
+    view.journal:Hide()
     local hint = view:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetPoint("BOTTOMRIGHT", -8, 8)
     hint:SetText(L.DUNGEON_BACK_HINT)
@@ -522,6 +527,8 @@ function D.Open(inst, name)
     if not d or not ns.Map.Frame() then return false end
     if not view then Create(ns.Map.Frame().viewport) end
     current = { inst = inst, name = name or "" }
+    current.journal = ns.Journal.Page(ns.Journal.EnglishName(inst), name)
+    view.journal:SetShown(current.journal ~= nil)
     for _, b in ipairs(floorButtons) do b:Hide() end
     if #d.floors > 1 then
         local x = 10

@@ -107,6 +107,7 @@ ns.LOCALES.PT = {
     OPT_LABELS = "Nomes das zonas", OPT_LEVELS = "Níveis das zonas", OPT_FLIGHTS = "Mestres de voo",
     OPT_DUNGEONS = "Masmorras e raides", OPT_TRANSPORTS = "Barcos e zepelins", OPT_QUESTS = "Missões",
     OPT_FISH_POOLS = "Cardumes", FISH_POOL = "Cardume", OPT_HANDYNOTES = "HandyNotes",
+    JOURNAL = "Diário", JOURNAL_TIP = "Abrir esta masmorra no DungeonJournal: chefes, saque e missões.", JOURNAL_HINT = "Shift+clique: abrir no DungeonJournal",
     OPT_GROUP = "Meu grupo", OPT_GUILD = "Minha guilda", OPT_PINS = "Meus marcadores", OPT_HERBS = "Ervas", OPT_ORE = "Minérios",
     OPT_TOWNSFOLK = "Serviços", OPT_MINIMAP = "Terreno de perto (minimapa)",
     OPT_SHARE_GUILD = "Compartilhar minha posição com a guilda",
