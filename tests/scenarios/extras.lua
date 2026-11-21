@@ -256,6 +256,21 @@ OUT(("wings: %s; journal on the library %s"):format(wings, tostring(opened)))
 ForeverDungeonJournal_NS = nil
 ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
 OUT("journal without DungeonJournal: button " .. tostring(jb ~= nil and jb:IsShown()))
+-- Scarlet Monastery: a mark for each wing's door (measured in game), each opening the dungeon's map on its wing;
+-- Stratholme: its two gates
+local sm, strat = {}, 0
+for _, e in ipairs(ZNS.DungeonList()) do
+    if e.inst == 189 then sm[#sm + 1] = e end
+    if e.inst == 329 then strat = strat + 1 end
+end
+local lib
+for _, e in ipairs(sm) do if e.floor == 2 then lib = e end end
+local lx, ly = ZNS.Geo.ToZone(1420, lib.u, lib.v)   -- (Tirisfal Glades, where they were measured)
+ZNS.Dungeon.Open(189, lib.dungeon, lib.floor)
+local _, _, shownFloor = ZNS.Dungeon.Shown()
+OUT(("wing doors: monastery %d, library %s at %.1f %.1f, opens floor %s; stratholme gates %d"):format(#sm, lib.name,
+    lx * 100, ly * 100, tostring(shownFloor), strat))
+ZNS.Dungeon.Close()
 -- Blackrock Depths: a boss on another floor, chosen in the list
 ZNS.Dungeon.Open(230, "Profundidades de Roca Negra")
 local bossesBRD = ZNS.DUNGEON_MAPS[230].bosses

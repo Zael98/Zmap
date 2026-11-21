@@ -15,13 +15,40 @@ local function LevelOf(name)
     end
 end
 
+-- Dungeons with a door for each wing: the game keeps one entrance for the whole instance, so each wing's door is
+-- here, with the floor of the dungeon's map that is that wing. [instance] = { { floor, instance, yards north, west },
+-- ... } (Scarlet Monastery's four doors in its Grand Vestibule, measured in game) or { { floor, uiMapID, x, y } }
+-- (Stratholme's two gates, from Questie's dungeon list: the main gate, the service gate).
+local WINGS = {
+    [189] = { { 1, 0, 2916.2, -801.3 }, { 2, 0, 2876.9, -817.5 }, { 3, 0, 2886.8, -835.5 }, { 4, 0, 2914.3, -824.5 } },
+    [329] = { { 1, map = 1423, x = 0.313, y = 0.157 }, { 2, map = 1423, x = 0.479, y = 0.239 } },
+}
+
+local function Wings(d, level, out)
+    local data = ns.DUNGEON_MAPS and ns.DUNGEON_MAPS[d[1]]
+    for _, w in ipairs(WINGS[d[1]]) do
+        local floor = data and data.floors[w[1]]
+        local u, v
+        if w.map then u, v = Geo.ToWorld(w.map, w.x, w.y) else u, v = Geo.FromYards(w[2], w[3], w[4]) end
+        if u and floor then
+            local wing = ns.Name(floor[2])
+            out[#out + 1] = { u = u, v = v, name = ns.Name(d[7]) .. ": " .. wing, level = level, raid = d[5], inst = d[1],
+                floor = w[1], dungeon = ns.Name(d[7]) }
+        end
+    end
+end
+
 local function Collect()
     entrances = {}
     for _, d in ipairs(ns.DUNGEONS) do
         local u, v = Geo.FromYards(d[2], d[3], d[4])
         if u then
             local level = d[6] > 0 and d[6] or LevelOf(ns.Name(d[7]))
-            entrances[#entrances + 1] = { u = u, v = v, name = ns.Name(d[7]), level = level, raid = d[5], inst = d[1] }
+            if WINGS[d[1]] then
+                Wings(d, level, entrances)
+            else
+                entrances[#entrances + 1] = { u = u, v = v, name = ns.Name(d[7]), level = level, raid = d[5], inst = d[1] }
+            end
         end
     end
     -- the game's own list (Forever's new dungeons may only be there)
@@ -65,22 +92,23 @@ function P:Tooltip(pin, tip)
     tip:AddLine(e.raid and L.RAID or L.DUNGEON, 0.7, 0.7, 0.7)
     if e.level then tip:AddLine(L.DUNGEON_LEVEL:format(ns.LevelText(e.level, e.level)), 1, 1, 1) end
     if e.description and e.description ~= "" then tip:AddLine(e.description, 1, 0.82, 0, true) end
-    local floors = e.inst and ns.Dungeon.Floors(e.inst)
+    local floors = e.inst and not e.floor and ns.Dungeon.Floors(e.inst)
     if floors then tip:AddLine(L.DUNGEON_PARTS:format(table.concat(floors, ", ")), 0.85, 0.85, 0.85, true) end
     if e.inst and ns.Dungeon.Has(e.inst) then tip:AddLine(L.DUNGEON_MAP_HINT, 0.6, 0.6, 0.6) end
-    if ns.Journal.Page(e.inst and ns.Journal.EnglishName(e.inst), e.name) then tip:AddLine(L.JOURNAL_HINT, 0.6, 0.6, 0.6) end
+    if ns.Dungeon.JournalPageFor(e.inst, e.dungeon or e.name, e.floor) then tip:AddLine(L.JOURNAL_HINT, 0.6, 0.6, 0.6) end
     tip:AddLine(L.CTRL_NAVIGATE, 0.6, 0.6, 0.6)
 end
 
 function P:OnClick(pin, button)
     if button == "LeftButton" and IsShiftKeyDown() then
-        local page = ns.Journal.Page(pin.entry.inst and ns.Journal.EnglishName(pin.entry.inst), pin.entry.name)
+        local e = pin.entry
+        local page = ns.Dungeon.JournalPageFor(e.inst, e.dungeon or e.name, e.floor)
         if page then ns.Journal.Open(page) end
     elseif button == "LeftButton" and IsControlKeyDown() then
         local mapID, x, y = Geo.ZoneAt(pin.entry.u, pin.entry.v)
         if mapID then ns.Waypoints.Add(mapID, x, y, pin.entry.name, { navigate = true, temp = true }) end
     elseif button == "LeftButton" and pin.entry.inst then
-        ns.Dungeon.Open(pin.entry.inst, pin.entry.name)
+        ns.Dungeon.Open(pin.entry.inst, pin.entry.dungeon or pin.entry.name, pin.entry.floor)
     end
 end
 

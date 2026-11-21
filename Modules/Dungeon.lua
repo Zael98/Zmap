@@ -41,17 +41,21 @@ end
 
 -- DungeonJournal's page for what is shown: the wing on screen, when DungeonJournal has it as a page of its own
 -- (Scarlet Monastery: Library), else the dungeon's
-function D.JournalPage()
-    if not current then return end
-    local d = Data(current.inst)
-    local floor = d and d.floors[current.floor or 1]
-    local english = ns.Journal.EnglishName(current.inst)
+function D.JournalPageFor(inst, name, floorIndex)
+    local d = inst and Data(inst)
+    local floor = d and d.floors[floorIndex or 1]
+    local english = inst and ns.Journal.EnglishName(inst)
     local wing = floor and floor[2] and floor[2][1]
-    if english and wing and wing ~= "" then
+    if english and wing and wing ~= "" and floorIndex then
         local page = ns.Journal.Page(english .. ": " .. wing)
         if page and page:find(wing, 1, true) then return page end
     end
-    return current.journal
+    return ns.Journal.Page(english, name)
+end
+
+function D.JournalPage()
+    if not current then return end
+    return D.JournalPageFor(current.inst, current.name, current.floor)
 end
 function D.IsShown() return view ~= nil and view:IsShown() end
 
@@ -549,7 +553,7 @@ local function FillList()
 end
 
 -- open an instance's map (its instance map ID, as GetInstanceInfo gives it); name: what to call it
-function D.Open(inst, name)
+function D.Open(inst, name, floorIndex)
     local d = Data(inst)
     if not d or not ns.Map.Frame() then return false end
     if not view then Create(ns.Map.Frame().viewport) end
@@ -577,7 +581,7 @@ function D.Open(inst, name)
     end
     view:Show()
     FillList()
-    ShowFloor(1)
+    ShowFloor(floorIndex and d.floors[floorIndex] and floorIndex or 1)
     StartLive()
     return true
 end
