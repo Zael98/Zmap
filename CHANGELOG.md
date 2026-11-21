@@ -1,5 +1,11 @@
 # Zmap
 
+## 1.7.11 — Dungeon wings and DungeonJournal
+
+- **A mark for each wing's door**: Scarlet Monastery's Graveyard, Library, Armory and Cathedral each have their own mark at their door in the Grand Vestibule, and Stratholme its main gate and its service gate. A click opens the dungeon's map on that wing. The game only gives one entrance for the whole dungeon, so the Monastery's doors were measured in game.
+- **DungeonJournal**: with the DungeonJournal addon installed, a "Journal" button on a dungeon's map, and Shift+click on a dungeon's mark, open DungeonJournal on that dungeon (on the wing shown, where it has wings), with its bosses, loot and quests. Zmap uses DungeonJournal's own functions and includes nothing of it.
+- A dungeon's tooltip lists its maps (wings or floors).
+
 ## 1.7.10 — Smoother quest log, zoom per zone
 
 - **The map opens at the zoom you like in each zone**: the zoom you leave in a zone is remembered, so after zooming in once in the Barrens the map opens there at that zoom instead of fitting the whole zone (too far out to read the roads). Zones you have not adjusted still open showing the whole zone.
