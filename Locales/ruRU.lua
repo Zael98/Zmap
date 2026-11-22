@@ -108,6 +108,7 @@ ns.LOCALES.RU = {
     OPT_DUNGEONS = "Подземелья и рейды", OPT_TRANSPORTS = "Корабли и дирижабли", OPT_QUESTS = "Задания",
     OPT_FISH_POOLS = "Косяки рыбы", FISH_POOL = "Косяк рыбы", OPT_HANDYNOTES = "HandyNotes",
     DUNGEON_PARTS = "Карты: %s",
+    QUEST_TO_TAKE = "Задание, которое можно взять",
     JOURNAL = "Журнал", JOURNAL_TIP = "Открыть подземелье в DungeonJournal: боссы, добыча и задания.", JOURNAL_HINT = "Shift+щелчок: открыть в DungeonJournal",
     OPT_GROUP = "Моя группа", OPT_GUILD = "Моя гильдия", OPT_PINS = "Мои метки", OPT_HERBS = "Травы", OPT_ORE = "Руда",
     OPT_TOWNSFOLK = "Полезные NPC", OPT_MINIMAP = "Местность вблизи (миникарта)",

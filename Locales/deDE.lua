@@ -108,6 +108,7 @@ ns.LOCALES.DE = {
     OPT_DUNGEONS = "Dungeons und Schlachtzüge", OPT_TRANSPORTS = "Schiffe und Zeppeline", OPT_QUESTS = "Quests",
     OPT_FISH_POOLS = "Fischschwärme", FISH_POOL = "Fischschwarm", OPT_HANDYNOTES = "HandyNotes",
     DUNGEON_PARTS = "Karten: %s",
+    QUEST_TO_TAKE = "Quest zum Annehmen",
     JOURNAL = "Journal", JOURNAL_TIP = "Diesen Dungeon in DungeonJournal öffnen: Bosse, Beute und Quests.", JOURNAL_HINT = "Umschalt+Klick: in DungeonJournal öffnen",
     OPT_GROUP = "Meine Gruppe", OPT_GUILD = "Meine Gilde", OPT_PINS = "Meine Pins", OPT_HERBS = "Kräuter", OPT_ORE = "Erze",
     OPT_TOWNSFOLK = "Stadtbevölkerung", OPT_MINIMAP = "Gelände aus der Nähe (Minikarte)",

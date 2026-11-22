@@ -145,7 +145,7 @@ function QM.Title(id)
     local title = C_QuestLog.GetTitleForQuestID and C_QuestLog.GetTitleForQuestID(id)
     if title and title ~= "" then return title end
     if C_QuestLog.RequestLoadQuestByID then C_QuestLog.RequestLoadQuestByID(id) end
-    return QUESTS[id] and QUESTS[id][1] or ("#" .. id)
+    return (ns.QUEST_NAMES and ns.QUEST_NAMES[id]) or (QUESTS[id] and QUESTS[id][1]) or ("#" .. id)
 end
 
 -- where a quest meets an NPC: the quest's own place for it when the data has it elsewhere (q[19]: a Forever quest

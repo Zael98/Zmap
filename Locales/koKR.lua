@@ -108,6 +108,7 @@ ns.LOCALES.KO = {
     OPT_DUNGEONS = "던전과 공격대", OPT_TRANSPORTS = "배와 비행선", OPT_QUESTS = "퀘스트",
     OPT_FISH_POOLS = "물고기 떼", FISH_POOL = "물고기 떼", OPT_HANDYNOTES = "HandyNotes",
     DUNGEON_PARTS = "지도: %s",
+    QUEST_TO_TAKE = "수락 가능한 퀘스트",
     JOURNAL = "도감", JOURNAL_TIP = "DungeonJournal에서 이 던전 열기: 우두머리, 전리품, 퀘스트.", JOURNAL_HINT = "Shift+클릭: DungeonJournal에서 열기",
     OPT_GROUP = "내 파티", OPT_GUILD = "내 길드", OPT_PINS = "내 핀", OPT_HERBS = "약초", OPT_ORE = "광석",
     OPT_TOWNSFOLK = "마을 주민", OPT_MINIMAP = "가까운 지형 (미니맵)",

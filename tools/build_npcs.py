@@ -249,6 +249,17 @@ def object_names(locale, ids):
             if isinstance(pos, int) and 0 < pos <= len(all_ids) and all_ids[pos - 1] in ids and isinstance(name, str) and name}
 
 
+def quest_names(locale):
+    """{questID: title} in one language, from QuestieDB's translations."""
+    ids, block = toc_block("X-Quest-IDS"), toc_block(f"X-l10n-{locale}-Quest")
+    if not (ids and block):
+        return {}
+    names = block[0]
+    pairs = names.items() if isinstance(names, dict) else enumerate(names, 1)
+    return {ids[pos - 1]: name for pos, name in pairs
+            if isinstance(pos, int) and 0 < pos <= len(ids) and isinstance(name, str) and name}
+
+
 def quest_texts(locale):
     """{questID: objectives text} in one language, from QuestieDB's translations."""
     ids, block = toc_block("X-Quest-IDS"), toc_block(f"X-l10n-{locale}-Quest")
@@ -672,6 +683,11 @@ def write_quest_texts(quests, objects=None):
         for q in sorted(texts):
             lines.append(f"    [{q}] = {lua_str(texts[q])},")
         lines.append("}")
+        titles = {q: t for q, t in quest_names(locale).items() if q in quests}
+        lines += ["", "-- [questID] = its title in this language (until the game has the quest loaded)", "ns.QUEST_NAMES = {"]
+        for q in sorted(titles):
+            lines.append(f"    [{q}] = {lua_str(titles[q])},")
+        lines.append("}")
         pools = {o for o, d in (objects or {}).items() if d["kind"] == "fish"}
         names = object_names(locale, pools)
         lines += ["", "-- [objectID] = a fishing pool's name in this language", "ns.POOL_NAMES = {"]
@@ -679,7 +695,7 @@ def write_quest_texts(quests, objects=None):
             lines.append(f"    [{o}] = {lua_str(names[o])},")
         lines.append("}")
         (folder / f"{locale}.lua").write_text("\n".join(lines) + "\n", encoding="utf-8")
-        print(f"quest texts {locale}: {len(texts)}, pool names {len(names)}")
+        print(f"quest texts {locale}: {len(texts)}, titles {len(titles)}, pool names {len(names)}")
 
 
 def main():

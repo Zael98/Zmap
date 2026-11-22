@@ -15,6 +15,23 @@ OUT("villadorada: " .. First("villadorada"))
 OUT("minas: " .. First("minas de la"))
 OUT("herb search: " .. (ZNS.Search.Find("flor de")[1] or {}).text)
 OUT("accents: " .. tostring(First("paramos") == First("Páramos")))
+-- a quest you can pick up, by its title in your language: found as one to pick up, and going there sets the arrow
+-- to who gives it
+local avail
+for _, m in ipairs(ZNS.QuestMap.Givers()) do
+    for _, id in ipairs(m.quests) do
+        if not avail and ZNS.QUEST_NAMES and ZNS.QUEST_NAMES[id] and #ZNS.QUEST_NAMES[id] > 12 then avail = id end
+    end
+end
+local hits = ZNS.Search.Find(ZNS.QUEST_NAMES[avail])
+local hit
+for _, c in ipairs(hits) do if c.questID == avail then hit = c end end
+if hit then ZNS.Search.Go(hit) end
+local target = ZNS.Arrow.Target()
+OUT(("quest to pick up: found %s, %s, arrow %s"):format(tostring(hit ~= nil), tostring(hit and hit.sub:find(ZNS.L.QUEST_TO_TAKE, 1, true) == 1),
+    tostring(target ~= nil)))
+ZNS.Waypoints.Stop()
+
 box:SetFocus()
 TYPE(box, "villadorada")
 box.scripts.OnEnterPressed(box)

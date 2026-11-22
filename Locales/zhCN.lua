@@ -108,6 +108,7 @@ ns.LOCALES.ZH = {
     OPT_DUNGEONS = "地下城和团队副本", OPT_TRANSPORTS = "船和飞艇", OPT_QUESTS = "任务",
     OPT_FISH_POOLS = "鱼群", FISH_POOL = "鱼群", OPT_HANDYNOTES = "HandyNotes",
     DUNGEON_PARTS = "地图：%s",
+    QUEST_TO_TAKE = "可接任务",
     JOURNAL = "手册", JOURNAL_TIP = "在 DungeonJournal 中打开此地下城：首领、战利品和任务。", JOURNAL_HINT = "Shift+点击：在 DungeonJournal 中打开",
     OPT_GROUP = "我的队伍", OPT_GUILD = "我的公会", OPT_PINS = "我的标记", OPT_HERBS = "草药", OPT_ORE = "矿石",
     OPT_TOWNSFOLK = "镇民", OPT_MINIMAP = "近处地形（小地图）",

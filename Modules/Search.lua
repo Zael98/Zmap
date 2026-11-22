@@ -157,6 +157,28 @@ local function Dynamic()
             Add(e)
         end
     end
+    -- the quests you can pick up now (those the map marks with a "!"): where each is given, the nearest first
+    if ns.Opt("available") then
+        local given = {}
+        for _, m in ipairs(ns.QuestMap.Givers()) do
+            for _, id in ipairs(m.quests or {}) do
+                local g = given[id]
+                if not g then
+                    g = { spawns = {}, who = m }
+                    given[id] = g
+                end
+                g.spawns[#g.spawns + 1] = { m.m, m.x, m.y }
+            end
+        end
+        for id, g in pairs(given) do
+            local u, v = Geo.ToWorld(g.spawns[1][1], g.spawns[1][2], g.spawns[1][3])
+            local who = g.who.npc and ns.Npcs.Name(g.who.npc) or (ns.OBJECTS and g.who.object and ns.OBJECTS[g.who.object] and ns.OBJECTS[g.who.object][1])
+            local e = Entry("available", ns.QuestMap.Title(id), L.QUEST_TO_TAKE .. (who and (" · " .. who) or ""), u, v, 10,
+                nil, g.who.trivial and "TrivialQuests" or "QuestNormal")
+            e.spawns, e.questID = g.spawns, id
+            Add(e)
+        end
+    end
     local met = {}
     for id, s in pairs(ns.Npcs.SeenList()) do
         if Geo.Kind(s.m) then
@@ -196,7 +218,7 @@ local function Score(name, want)
 end
 
 -- zones and cities first, then subzones and your pins, dungeons, NPCs and flight masters, townsfolk and herbs
-local KIND = { zone = 0, subzone = 1, pin = 1, quest = 1, dungeon = 2, battleground = 2, node = 2, npc = 3, flight = 3, folk = 4, herb = 4 }
+local KIND = { zone = 0, subzone = 1, pin = 1, quest = 1, available = 3, dungeon = 2, battleground = 2, node = 2, npc = 3, flight = 3, folk = 4, herb = 4 }
 
 -- a match's rank (lower first), or nil
 local function Rank(kind, key, alt, subKey, want)
@@ -265,6 +287,12 @@ function Search.Go(c)
         local u, v = Geo.ToWorld(m, x, y)
         ns.Map.GoTo(u, v, math.max(ns.Map.Zoom(), c.zoom or 10))
         ns.Npcs.Show(c.npc)
+    elseif c.kind == "available" then   -- where it is given: the map there, and the arrow
+        ns.Npcs.Show(nil)
+        ns.Map.GoTo(c.u, c.v, math.max(ns.Map.Zoom(), c.zoom or 10))
+        ns.Search.Mark(c.u, c.v, true)
+        local m, x, y = Geo.ZoneAt(c.u, c.v)
+        if m then ns.Waypoints.Add(m, x, y, c.text, { navigate = true, temp = true }) end
     else
         ns.Npcs.Show(nil)
         if c.mapID then

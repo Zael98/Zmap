@@ -108,6 +108,7 @@ ns.LOCALES.IT = {
     OPT_DUNGEONS = "Spedizioni e incursioni", OPT_TRANSPORTS = "Navi e zeppelin", OPT_QUESTS = "Missioni",
     OPT_FISH_POOLS = "Banchi di pesci", FISH_POOL = "Banco di pesci", OPT_HANDYNOTES = "HandyNotes",
     DUNGEON_PARTS = "Mappe: %s",
+    QUEST_TO_TAKE = "Missione da prendere",
     JOURNAL = "Diario", JOURNAL_TIP = "Apri questa spedizione in DungeonJournal: boss, bottino e missioni.", JOURNAL_HINT = "Maiusc+clic: apri in DungeonJournal",
     OPT_GROUP = "Il mio gruppo", OPT_GUILD = "La mia gilda", OPT_PINS = "I miei segnalini", OPT_HERBS = "Erbe", OPT_ORE = "Minerali",
     OPT_TOWNSFOLK = "Abitanti delle città", OPT_MINIMAP = "Terreno da vicino (minimappa)",
