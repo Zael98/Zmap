@@ -31,6 +31,9 @@ local target = ZNS.Arrow.Target()
 OUT(("quest to pick up: found %s, %s, arrow %s"):format(tostring(hit ~= nil), tostring(hit and hit.sub:find(ZNS.L.QUEST_TO_TAKE, 1, true) == 1),
     tostring(target ~= nil)))
 ZNS.Waypoints.Stop()
+local byEnglish
+for _, c in ipairs(ZNS.Search.Find(ZNS.QUESTS[avail][1])) do if c.questID == avail then byEnglish = true end end
+OUT("quest by its english title: " .. tostring(byEnglish == true))
 
 box:SetFocus()
 TYPE(box, "villadorada")

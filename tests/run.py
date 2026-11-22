@@ -64,7 +64,7 @@ CHECKS = {
                       r"^folk pins: [1-9]\d*$", r"^errors 0$"]),
     "search": (False, [r"^ventorm: Ciudad de Ventormenta", r"^villadorada: Villadorada \(Bosque de Elwynn\)$",
                        r"^minas: Minas de la Muerte", r"^herb search: Flor de paz$", r"^go: glided to Goldshire true$",
-                       r"^accents: true$", r"^quest to pick up: found true, true, arrow true$", r"^battleground: Garganta Grito de Guerra \(Campo de batalla\), map shown true$",
+                       r"^accents: true$", r"^quest to pick up: found true, true, arrow true$", r"^quest by its english title: true$", r"^battleground: Garganta Grito de Guerra \(Campo de batalla\), map shown true$",
                        r"^dungeon: (Las )?Minas de la Muerte, map shown true, bosses [1-9]\d*$",
                        r"^rows: [1-9]\d*, name over what it is true$", r"^errors 0$"]),
     "misc": (False, [r"^binding: M -> ZmapToggleButton$", r"^binding off: none$", r"^binding in combat: deferred, then M$",

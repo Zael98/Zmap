@@ -125,6 +125,12 @@ ns.Npcs.OnLearn = function(id)
 end
 
 -- what changes as you play: your pins, the NPCs and townsfolk met that the NPC data lacks, herbs and ore found
+-- a quest's English title (the data's), folded: found by it too in another language
+local function EnglishTitle(id)
+    local q = ns.QUESTS and ns.QUESTS[id]
+    return q and q[1] and ns.Fold(q[1]) or nil
+end
+
 local function Dynamic()
     local out = {}
     local function Add(e) if e.text and e.u then out[#out + 1] = e end end
@@ -153,7 +159,7 @@ local function Dynamic()
         if spawns[1] then
             local u, v = Geo.ToWorld(spawns[1][1], spawns[1][2], spawns[1][3])
             local e = Entry("quest", ns.QuestMap.Title(id), L.QUEST, u, v, 9, nil, "QuestNormal")
-            e.spawns = spawns
+            e.spawns, e.alt = spawns, EnglishTitle(id)
             Add(e)
         end
     end
@@ -175,7 +181,7 @@ local function Dynamic()
             local who = g.who.npc and ns.Npcs.Name(g.who.npc) or (ns.OBJECTS and g.who.object and ns.OBJECTS[g.who.object] and ns.OBJECTS[g.who.object][1])
             local e = Entry("available", ns.QuestMap.Title(id), L.QUEST_TO_TAKE .. (who and (" · " .. who) or ""), u, v, 10,
                 nil, g.who.trivial and "TrivialQuests" or "QuestNormal")
-            e.spawns, e.questID = g.spawns, id
+            e.spawns, e.questID, e.alt = g.spawns, id, EnglishTitle(id)
             Add(e)
         end
     end
