@@ -1,5 +1,11 @@
 # Zmap
 
+## 1.7.12 — Search quests to pick up
+
+- **The search finds the quests you can pick up** (those the map marks with a "!": for your level, race and class, not done yet), as "Quest to pick up · <who gives it>". Choosing one takes the map to the nearest place it is given, marks it and points the arrow there. The quests in your log are found as before, at their nearest objective.
+- Quests are found by their title in your language and in English.
+- Quest titles are in your game's language before you have picked the quest up (from Questie's translations), on the map, in the search and in the quest log.
+
 ## 1.7.11 — Dungeon wings and DungeonJournal
 
 - **A mark for each wing's door**: Scarlet Monastery's Graveyard, Library, Armory and Cathedral each have their own mark at their door in the Grand Vestibule, and Stratholme its main gate and its service gate. A click opens the dungeon's map on that wing. The game only gives one entrance for the whole dungeon, so the Monastery's doors were measured in game.
