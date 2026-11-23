@@ -429,10 +429,10 @@ FRAMES(3)
 OUT(("only mine: classes %d (warrior %s), all %d; profession trainers shown without professions %s"):format(nMine,
     tostring(seenMine.WARRIOR == true), nAll, tostring(profs > 0)))
 
--- a rare on a nameplate: warned once, marked, told to the guild; a guildmate's too
+-- a rare on a nameplate (one rare in every data version): warned once, marked, told to the guild; a guildmate's too
 local sentBefore = #STATE.sent
 local printedBefore = #STATE.printed
-STATE.units.nameplate7 = { id = 471, name = "Madre Colmillo" }
+STATE.units.nameplate7 = { id = 99, name = "Morgaine la Taimada" }
 EVENT("NAME_PLATE_UNIT_ADDED", "nameplate7")
 EVENT("NAME_PLATE_UNIT_ADDED", "nameplate7")
 local rareSent = 0
@@ -451,17 +451,17 @@ local function Tip(id)
     ZNS.RareTooltip({ AddLine = function(_, text) lines[#lines + 1] = text end }, id)
     return table.concat(lines, " / ")
 end
-STATE.units.target = { id = 471, name = "Madre Colmillo", dead = true }
+STATE.units.target = { id = 99, name = "Morgaine la Taimada", dead = true }
 EVENT("UNIT_HEALTH", "target")
-local deadNow, first = ZNS.RareDead(471), Tip(471)
+local deadNow, first = ZNS.RareDead(99), Tip(99)
 ADVANCE(3600)
-STATE.units.target = { id = 471, name = "Madre Colmillo" }
+STATE.units.target = { id = 99, name = "Morgaine la Taimada" }
 EVENT("PLAYER_TARGET_CHANGED")
-local learned = ZNS.db.rareLog[471].respawn
+local learned = ZNS.db.rareLog[99].respawn
 ADVANCE(400)
-STATE.units.target = { id = 471, name = "Madre Colmillo", dead = true }
+STATE.units.target = { id = 99, name = "Morgaine la Taimada", dead = true }
 EVENT("UNIT_HEALTH", "target")
-OUT(("rare death: dead %s, %s; learned %s; again: %s"):format(tostring(deadNow), first, tostring(learned), Tip(471)))
+OUT(("rare death: dead %s, %s; learned %s; again: %s"):format(tostring(deadNow), first, tostring(learned), Tip(99)))
 STATE.units.target = nil
 
 -- quests: one done by reaching a place is offered and marks the place; one asking for something bought marks
