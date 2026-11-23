@@ -18,6 +18,7 @@ import math
 import re
 import struct
 import sys
+import threading
 import time
 import urllib.request
 from pathlib import Path
@@ -41,20 +42,37 @@ HALO_SIZE, CORE_SIZE = 64, 128            # mask textures (stretched over the zo
 SPEED = 30                                # flights, yards a second (calibrated in game by Modules/Flights.lua)
 
 
+# wago.tools throttles bursts (HTTP 429), and is slow for minutes right after a new build: every download waits while
+# any of them has been told to, as long as the server asks (Retry-After) or longer each time
+WAITS = (10, 30, 60, 120, 240, 300)
+_calm_until = 0.0
+_calm_lock = threading.Lock()
+
+
 def fetch(url, path):
+    global _calm_until
     if path.exists():
         return path.read_bytes()
     path.parent.mkdir(parents=True, exist_ok=True)
-    for attempt in range(4):
+    for attempt in range(len(WAITS) + 1):
+        with _calm_lock:
+            pause = _calm_until - time.time()
+        if pause > 0:
+            time.sleep(pause)
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Zmap build_data)"})
             data = urllib.request.urlopen(req, timeout=90).read()
             path.write_bytes(data)
             return data
-        except Exception as e:  # wago.tools throttles bursts, and is slow for minutes right after a new build: retry
-            if attempt == 3:
+        except Exception as e:
+            if attempt == len(WAITS):
                 raise RuntimeError(f"{url}: {e}") from e
-            time.sleep((10, 30, 90)[attempt])
+            wait = WAITS[attempt]
+            asked = getattr(e, "headers", None) and e.headers.get("Retry-After")
+            if asked and str(asked).isdigit():
+                wait = max(wait, int(asked))
+            with _calm_lock:
+                _calm_until = max(_calm_until, time.time() + wait)
 
 
 def table(name, locale="enUS", build=None):
@@ -287,7 +305,7 @@ def build_masks(maps, write=True):
     out.mkdir(parents=True, exist_ok=True)
     from concurrent.futures import ThreadPoolExecutor
     wanted = {f for z in maps.values() for o in z.get("overlays", []) for f in o["fdids"]}
-    with ThreadPoolExecutor(8) as pool:   # download them all first, in parallel
+    with ThreadPoolExecutor(3) as pool:   # download them all first, a few at a time (wago.tools throttles bursts)
         list(pool.map(texture, sorted(wanted)))
     ramp = edge_ramp(ART_W, ART_H)
     zones = {m: z for m, z in sorted(maps.items()) if z["kind"] == "zone"}

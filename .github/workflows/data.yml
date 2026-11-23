@@ -44,6 +44,17 @@ jobs:
           path: tools/cache/wdb
           key: wdb-${{ github.run_id }}
           restore-keys: wdb-
+      # The game's files (textures and tables, by FileDataID), kept between runs: a new build asks for thousands of them,
+      # and wago.tools throttles. Saved even when the run fails, so the next one goes on from there.
+      - name: Caché de los archivos del juego
+        if: steps.check.outputs.build != '' && steps.pending.outputs.skip != 'yes'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            tools/cache/casc
+            tools/cache/tex
+          key: casc-${{ github.run_id }}
+          restore-keys: casc-
       - name: Rehacer los datos
         id: data
         if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes'
@@ -60,6 +71,14 @@ jobs:
           python tests/run.py > tests-report.txt 2>&1
           echo "tests=$?" >> "$GITHUB_OUTPUT"
           cat tests-report.txt
+      - name: Guardar los archivos del juego
+        if: always() && steps.check.outputs.build != '' && steps.pending.outputs.skip != 'yes'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            tools/cache/casc
+            tools/cache/tex
+          key: casc-${{ github.run_id }}
       - name: Unir los datos nuevos (las pruebas pasan)
         if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes' && steps.data.outputs.tests == '0'
         env:
