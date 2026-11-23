@@ -58,6 +58,8 @@ jobs:
       - name: Rehacer los datos
         id: data
         if: steps.check.outputs.label != '' && steps.pending.outputs.skip != 'yes'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip install numpy pillow scipy 'lupa>=2'
           if [ -n "${{ steps.check.outputs.build }}" ]; then

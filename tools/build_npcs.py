@@ -21,6 +21,7 @@ machines, so it is fetched without verifying it (public data, nothing is sent)."
 import base64
 import io
 import json
+import os
 import re
 import ssl
 import struct
@@ -89,7 +90,10 @@ def fetch(url, path, context=None):
     path.parent.mkdir(parents=True, exist_ok=True)
     for attempt in range(5):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Zmap build_npcs)"})
+            headers = {"User-Agent": "Mozilla/5.0 (Zmap build_npcs)"}
+            if "api.github.com" in url and os.environ.get("GH_TOKEN"):   # unauthenticated calls share a tiny quota on CI
+                headers["Authorization"] = "Bearer " + os.environ["GH_TOKEN"]
+            req = urllib.request.Request(url, headers=headers)
             data = urllib.request.urlopen(req, timeout=300, context=context).read()
             path.write_bytes(data)
             return data
